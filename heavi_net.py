@@ -1,16 +1,27 @@
 import tensorflow as tf
 
+from tensorflow.examples.tutorials.mnist import input_data
 
-x1 = tf.constant(5)
-x2 = tf.constant(6)
+#10 classes, 0-9 using one_hot ie. 0 = [1,0,0...]
+mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
-result = tf.multiply(x1,x2)
-print(result)
+n_nodes_hl1 = 500
+n_nodes_hl2 = 500
+n_nodes_hl3 = 500
 
-with tf.Session() as sess:
-    print(sess.run(result))
+n_classes = 10
+batch_size = 100 #100 images per batch
 
+#height x width
+x = tf.placeholder('float', [None,784]) 
+#shape is 'none:squashed' by 28*28, not necessary to include shape [h,w] but this is helpful to give an error if something doesn't match dimensions
 
+y = tf.placeholder('float')
+
+def neural_network_model(data):
+    # input_data * weights + biases
+    hidden_1_layer = {'weights':tf.Variable(tf.random_normal([784,n_nodes_hl1])),
+                      'biases':tf.Variable(tf.random_normal(n_nodes_hl1))}
 
 '''
 # Model parameters
