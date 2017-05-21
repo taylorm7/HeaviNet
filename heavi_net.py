@@ -1,15 +1,18 @@
 import tensorflow as tf
-import numpy as np
-'''
-a = tf.constant(4, name="input_a")
-b = tf.constant(3, name="input_b")
-c = tf.add(a,b,name="add_c")
-d = tf.multiply(a,b,name="mul_d")
-e = tf.multiply(c,d,name="mul_e")
-sess = tf.Session()
-print(sess.run(e))
-'''
 
+
+x1 = tf.constant(5)
+x2 = tf.constant(6)
+
+result = tf.multiply(x1,x2)
+print(result)
+
+with tf.Session() as sess:
+    print(sess.run(result))
+
+
+
+'''
 # Model parameters
 W = tf.Variable([.3], tf.float32)
 b = tf.Variable([-.3], tf.float32)
@@ -35,3 +38,4 @@ for i in range(1000):
 # evaluate training accuracy
 curr_W, curr_b, curr_loss  = sess.run([W, b, loss], {x:x_train, y:y_train})
 print("W: %s b: %s loss: %s"%(curr_W, curr_b, curr_loss))
+'''
