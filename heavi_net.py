@@ -10,10 +10,35 @@ matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
 mat = matrix_file['data']
 
 print(matrix_file)
-
+print(mat.shape)
 print(mat[1:100,0])
 
-print(mat.shape)
+clip_size = 32
+num_classes = 10
+batch_size = 100
+
+t_mat = mat[0:100,:]
+
+print(t_mat.shape)
+
+def single_batch(iterable, start):
+    return iterable[start:start+clip_size, :].reshape( (1,clip_size) )
+
+def batch(iterable, start, batches=0):
+    batch_matrix = single_batch(iterable, start)
+    for i in range(batches):
+        batch_matrix = np.append(batch_matrix, single_batch(iterable, start+i), axis = 0)
+    return batch_matrix
+
+batch_mat = batch(t_mat, 0, 1)
+
+print(batch_mat.shape)
+print(batch_mat)
+
+#for x in batch(range(0, 10)):
+#    print x
+
+quit()
 
 
 from tensorflow.examples.tutorials.mnist import input_data
@@ -22,19 +47,18 @@ data = input_data.read_data_sets("data/MNIST/", one_hot=True)
 #create set of single values for data.test
 data.test.cls = np.array([label.argmax() for label in data.test.labels])
 
+print(mat.shape)
+print(data.test.images.shape)
 print(data.test.labels.shape)
 print(data.test.cls.shape)
 
-clip_size = 28
-num_classes = 10
-batch_size = 100
 
 # input vector
-x = tf.placeholder(tf.float32, [None, clip_size*clip_size])
+x = tf.placeholder(tf.float32, [None, clip_size])
 y_true = tf.placeholder(tf.float32, [None, num_classes])
 y_true_cls = tf.placeholder(tf.int64, [None])
 
-weights = tf.Variable(tf.zeros([clip_size*clip_size, num_classes]))
+weights = tf.Variable(tf.zeros([clip_size, num_classes]))
 biases = tf.Variable(tf.zeros([num_classes]))
 
 logits = tf.matmul(x, weights) + biases
@@ -71,7 +95,7 @@ def optimize(num_iterations):
         # x_batch now holds a batch of images and
         # y_true_batch are the true labels for those images.
         x_batch, y_true_batch = data.train.next_batch(batch_size)
-        
+        print("x batch", x_batch.shape, "y batch", y_true_batch.shape) 
         # Put the batch into a dict with the proper names
         # for placeholder variables in the TensorFlow graph.
         # Note that the placeholder for y_true_cls is not set
@@ -104,8 +128,7 @@ optimize(num_iterations=9)
 
 print_accuracy()
 
-optimize(num_iterations=990)
-# In[36]:
+#optimize(num_iterations=990)
 
 print_accuracy()
 
