@@ -36,7 +36,7 @@ def batch(iterable, start, batches=0):
     return batch_matrix
 
 
-batch_mat = batch(t_mat,0 , 30)
+batch_mat = batch(t_mat,20 , 30)
 
 print(batch_mat.shape)
 print(batch_mat)
