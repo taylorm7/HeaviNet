@@ -13,40 +13,49 @@ print(matrix_file)
 print(mat.shape)
 print(mat[1:100,0])
 
-clip_size = 5
-num_classes = 10
+clip_size = 7
+num_classes = 20
 batch_size = 100
 
 t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
 
-print(t_mat)
-
 def batch(iterable, start, batches=0):
     batch_matrix = iterable[start:start+clip_size, :]
+    y_list = iterable[start+clip_size, 0]
     for i in range(1,batches):
         if start+clip_size+i <= len(iterable):
             batch_matrix = np.append(batch_matrix, iterable[start+i:start+clip_size+i, :], axis = 0) 
-    print len(batch_matrix)
+            y_list = np.append(y_list, iterable[start+i+clip_size, 0])
+
     batch_overflow = len(batch_matrix) % clip_size
-    print batch_overflow
-    print batch_matrix
     if batch_overflow != 0:
         batch_matrix =  batch_matrix[:-batch_overflow or None, :]
     batch_matrix = batch_matrix.reshape( (-1, clip_size) )    
-    return batch_matrix
+
+    print y_list
+    batch_onehot = tf.one_hot(y_list, num_classes)
+    return batch_matrix, batch_onehot
 
 
-batch_mat = batch(t_mat,20 , 30)
+batch_mat, batch_y = batch(t_mat,0, 5)
+
+
+init = tf.initialize_all_variables()
+
+sess = tf.Session()
+sess.run(init)
+v = sess.run(batch_y)    
+print v 
+
+sess.close()
 
 print(batch_mat.shape)
 print(batch_mat)
+print(batch_y.shape)
 
-#for x in batch(range(0, 10)):
-#    print x
+print
 
 quit()
-
-
 from tensorflow.examples.tutorials.mnist import input_data
 data = input_data.read_data_sets("data/MNIST/", one_hot=True)
 
