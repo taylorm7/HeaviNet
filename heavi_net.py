@@ -14,7 +14,7 @@ print(mat.shape)
 print(mat[1:100,0])
 
 clip_size = 7
-num_classes = 21
+num_classes = 256
 batch_size = 100
 
 t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
@@ -23,25 +23,25 @@ t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
 def batch(iterable, start, batches=0):
     if start + clip_size + 1 > len(iterable):
         return np.zeros((0, clip_size)), np.zeros((0 , num_classes))
-    batch_matrix = iterable[start:start+clip_size, :]
-    y_list = iterable[start+clip_size, 0]
+    b_clip = iterable[start:start+clip_size, :]
+    b_y = iterable[start+clip_size, 0]
     for i in range(1,batches):
         if start+clip_size+i+1 <= len(iterable):
-            batch_matrix = np.append(batch_matrix, iterable[start+i:start+clip_size+i, :], axis = 0) 
-            y_list = np.append(y_list, iterable[start+i+clip_size, 0])
+            b_clip = np.append(b_clip, iterable[start+i:start+clip_size+i, :], axis = 0) 
+            b_y = np.append(b_y, iterable[start+i+clip_size, 0])
 
-    batch_overflow = len(batch_matrix) % clip_size
+    batch_overflow = len(b_clip) % clip_size
     if batch_overflow != 0:
-        batch_matrix =  batch_matrix[:-batch_overflow or None, :]
-    batch_matrix = batch_matrix.reshape( (-1, clip_size) )    
+        b_clip =  b_clip[:-batch_overflow or None, :]
+    b_clip = b_clip.reshape( (-1, clip_size) )    
 
-    return batch_matrix, y_list
+    return b_clip, b_y
 
 
-batch_mat, batch_y = batch(t_mat,1, 5)
+batch_clip, batch_y = batch(mat,1, 5)
 
-print(batch_mat.shape)
-print(batch_mat)
+print(batch_clip.shape)
+print(batch_clip)
 print(batch_y.shape)
 print(batch_y)
 
