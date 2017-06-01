@@ -3,7 +3,7 @@ import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-
+from random import randint
 
 matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
 
@@ -43,7 +43,7 @@ def batch(iterable, start, batches=0):
     
     return b_clip, b_onehot, b_y 
 
-
+'''
 batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 1)
 
 print(batch_clip.shape)
@@ -57,6 +57,7 @@ print(batch_y_onehot)
 
 #t_y =  tf.one_hot(batch_y, num_classes)
 quit()
+'''
 print
 
 from tensorflow.examples.tutorials.mnist import input_data
@@ -119,7 +120,7 @@ def optimize(epochs):
             #x_batch, y_true_batch = data.train.next_batch(batch_size)
             x_batch, y_onehot_batch, _ = batch(mat,start, batch_size)
             
-            print(start, "x batch", x_batch.shape, "y batch", y_onehot_batch.shape, type(x_batch), type(y_onehot_batch) )
+            #print(start, "x batch", x_batch.shape, "y batch", y_onehot_batch.shape, type(x_batch), type(y_onehot_batch) )
             # Put the batch into a dict with the proper names
             # for placeholder variables in the TensorFlow graph.
             # Note that the placeholder for y_true_cls is not set
@@ -131,10 +132,9 @@ def optimize(epochs):
             # TensorFlow assigns the variables in feed_dict_train
             # to the placeholder variables and then runs the optimizer.
             session.run(optimizer, feed_dict=feed_dict_train)
+        print "epoch", i, "completed"
 
-test_clip, test_y_onehot, test_y = batch(mat, 2000, batch_size)
-
-#feed_dict_test = {x: data.test.images, y_true: data.test.labels, y_true_cls: data.test.cls}
+test_clip, test_y_onehot, test_y = batch(mat, 30000, batch_size)
 feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y}
 
 #print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
@@ -142,22 +142,24 @@ print("x test", test_clip.shape , "y true", test_y_onehot.shape, "y true cls", t
 
 def print_accuracy():
     # Use TensorFlow to compute the accuracy.
+
+    
     acc = session.run(accuracy, feed_dict=feed_dict_test)
     
     # Print the accuracy.
     print("Accuracy on test-set: {0:.1%}".format(acc))
 
-optimize(epochs=1)
+optimize(1)
 
 print_accuracy()
 
-#optimize(num_iterations=9)
+optimize(5)
 
-#print_accuracy()
+print_accuracy()
 
-#optimize(num_iterations=990)
+optimize(10)
 
-#print_accuracy()
+print_accuracy()
 
 
 session.close()
