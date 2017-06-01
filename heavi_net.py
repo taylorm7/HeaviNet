@@ -13,8 +13,8 @@ print(matrix_file)
 print(mat.shape)
 print(mat[1:100,0])
 
-clip_size = 784
-num_classes = 10
+clip_size = 1024
+num_classes = 256
 batch_size = 100
 
 #t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
@@ -40,7 +40,7 @@ def batch(iterable, start, batches=0):
         b_clip =  b_clip[:-batch_overflow or None, :]
     b_clip = b_clip.reshape( (-1, clip_size) )    
     b_onehot = make_onehot(b_y, num_classes)
-    return b_clip, b_y, b_onehot
+    return b_clip, b_onehot, b_y 
 
 '''
 batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 50)
@@ -84,9 +84,11 @@ logits = tf.matmul(x, weights) + biases
 y_pred = tf.nn.softmax(logits)
 y_pred_cls = tf.argmax(y_pred, dimension=1)
 
-print("logits shape", logits.shape)
+print("x shape", x.shape)
 print("y predicted shape", y_pred.shape)
 print("y predicted class shape", y_pred_cls.shape)
+
+print("logits shape", logits.shape)
 
 cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_true)
 cost = tf.reduce_mean(cross_entropy)
@@ -107,31 +109,36 @@ session.run(tf.global_variables_initializer())
 
 
 
-def optimize(num_iterations):
-    for i in range(num_iterations):
-        # Get a batch of training examples.
-        # x_batch now holds a batch of images and
-        # y_true_batch are the true labels for those images.
-        x_batch, y_true_batch = data.train.next_batch(batch_size)
-        print("x batch", x_batch.shape, "y batch", y_true_batch.shape, type(x_batch), type(y_true_batch) )
-        # Put the batch into a dict with the proper names
-        # for placeholder variables in the TensorFlow graph.
-        # Note that the placeholder for y_true_cls is not set
-        # because it is not used during training.
-        feed_dict_train = {x: x_batch,
-                           y_true: y_true_batch}
+def optimize(epochs):
+    for i in range(epochs):
+        start = 0
+        for start in range(0, 1000, batch_size):
+            # Get a batch of training examples.
+            # x_batch now holds a batch of images and
+            # y_true_batch are the true labels for those images.
+            #x_batch, y_true_batch = data.train.next_batch(batch_size)
+            x_batch, y_onehot_batch, _ = batch(mat,start, batch_size)
+            
+            print(start, "x batch", x_batch.shape, "y batch", y_onehot_batch.shape, type(x_batch), type(y_onehot_batch) )
+            # Put the batch into a dict with the proper names
+            # for placeholder variables in the TensorFlow graph.
+            # Note that the placeholder for y_true_cls is not set
+            # because it is not used during training.
+            feed_dict_train = {x: x_batch,
+                               y_true: y_onehot_batch}
 
-        # Run the optimizer using this batch of training data.
-        # TensorFlow assigns the variables in feed_dict_train
-        # to the placeholder variables and then runs the optimizer.
-        session.run(optimizer, feed_dict=feed_dict_train)
+            # Run the optimizer using this batch of training data.
+            # TensorFlow assigns the variables in feed_dict_train
+            # to the placeholder variables and then runs the optimizer.
+            session.run(optimizer, feed_dict=feed_dict_train)
 
+test_clip, test_y_onehot, test_y = batch(mat, 2000, batch_size)
 
-feed_dict_test = {x: data.test.images,
-                  y_true: data.test.labels,
-                  y_true_cls: data.test.cls}
+#feed_dict_test = {x: data.test.images, y_true: data.test.labels, y_true_cls: data.test.cls}
+feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y}
 
-print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
+#print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
+print("x test", test_clip.shape , "y true", test_y_onehot.shape, "y true cls", test_y.shape)
 
 def print_accuracy():
     # Use TensorFlow to compute the accuracy.
@@ -140,17 +147,17 @@ def print_accuracy():
     # Print the accuracy.
     print("Accuracy on test-set: {0:.1%}".format(acc))
 
-optimize(num_iterations=1)
+optimize(epochs=1)
 
 print_accuracy()
 
-optimize(num_iterations=9)
+#optimize(num_iterations=9)
 
-print_accuracy()
+#print_accuracy()
 
 #optimize(num_iterations=990)
 
-print_accuracy()
+#print_accuracy()
 
 
 session.close()
