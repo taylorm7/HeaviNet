@@ -13,11 +13,11 @@ print(matrix_file)
 print(mat.shape)
 print(mat[1:100,0])
 
-clip_size = 7
-num_classes = 21
+clip_size = 784
+num_classes = 10
 batch_size = 100
 
-t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
+#t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
 
 
 def make_onehot(onehot_values, onehot_classes):
@@ -42,7 +42,7 @@ def batch(iterable, start, batches=0):
     b_onehot = make_onehot(b_y, num_classes)
     return b_clip, b_y, b_onehot
 
-
+'''
 batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 50)
 
 print(batch_clip.shape)
@@ -56,16 +56,6 @@ print(batch_y_onehot)
 
 t_y =  tf.one_hot(batch_y, num_classes)
 
-quit()
-'''
-init = tf.initialize_all_variables()
-
-sess = tf.Session()
-sess.run(init)
-v = sess.run(t_y)    
-print v 
-
-sess.close()
 '''
 print
 
