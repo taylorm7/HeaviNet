@@ -14,11 +14,16 @@ print(mat.shape)
 print(mat[1:100,0])
 
 clip_size = 7
-num_classes = 256
+num_classes = 21
 batch_size = 100
 
 t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
 
+
+def make_onehot(onehot_values, onehot_classes):
+    onehot_matrix = np.zeros((onehot_values.size, onehot_classes))
+    onehot_matrix[np.arange(onehot_values.size),onehot_values] = 1
+    return onehot_matrix
 
 def batch(iterable, start, batches=0):
     if start + clip_size + 1 > len(iterable):
@@ -34,21 +39,25 @@ def batch(iterable, start, batches=0):
     if batch_overflow != 0:
         b_clip =  b_clip[:-batch_overflow or None, :]
     b_clip = b_clip.reshape( (-1, clip_size) )    
+    b_onehot = make_onehot(b_y, num_classes)
+    return b_clip, b_y, b_onehot
 
-    return b_clip, b_y
 
-
-batch_clip, batch_y = batch(mat,1, 5)
+batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 50)
 
 print(batch_clip.shape)
 print(batch_clip)
 print(batch_y.shape)
 print(batch_y)
+print(batch_y_onehot.shape)
+print(batch_y_onehot)
+
 
 
 t_y =  tf.one_hot(batch_y, num_classes)
 
-
+quit()
+'''
 init = tf.initialize_all_variables()
 
 sess = tf.Session()
@@ -57,10 +66,8 @@ v = sess.run(t_y)
 print v 
 
 sess.close()
-
+'''
 print
-
-quit()
 
 from tensorflow.examples.tutorials.mnist import input_data
 data = input_data.read_data_sets("data/MNIST/", one_hot=True)
@@ -116,7 +123,7 @@ def optimize(num_iterations):
         # x_batch now holds a batch of images and
         # y_true_batch are the true labels for those images.
         x_batch, y_true_batch = data.train.next_batch(batch_size)
-        print("x batch", x_batch.shape, "y batch", y_true_batch.shape) 
+        print("x batch", x_batch.shape, "y batch", y_true_batch.shape, type(x_batch), type(y_true_batch) )
         # Put the batch into a dict with the proper names
         # for placeholder variables in the TensorFlow graph.
         # Note that the placeholder for y_true_cls is not set
@@ -133,6 +140,8 @@ def optimize(num_iterations):
 feed_dict_test = {x: data.test.images,
                   y_true: data.test.labels,
                   y_true_cls: data.test.cls}
+
+print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
 
 def print_accuracy():
     # Use TensorFlow to compute the accuracy.
