@@ -17,7 +17,7 @@ clip_size = 1024
 num_classes = 256
 batch_size = 100
 
-#t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
+t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
 
 
 def make_onehot(onehot_values, onehot_classes):
@@ -27,7 +27,7 @@ def make_onehot(onehot_values, onehot_classes):
 
 def batch(iterable, start, batches=0):
     if start + clip_size + 1 > len(iterable):
-        return np.zeros((0, clip_size)), np.zeros((0 , num_classes))
+        return np.zeros((0, clip_size)), np.zeros((0 , num_classes)), np.zeros(0)
     b_clip = iterable[start:start+clip_size, :]
     b_y = iterable[start+clip_size, 0]
     for i in range(1,batches):
@@ -40,10 +40,11 @@ def batch(iterable, start, batches=0):
         b_clip =  b_clip[:-batch_overflow or None, :]
     b_clip = b_clip.reshape( (-1, clip_size) )    
     b_onehot = make_onehot(b_y, num_classes)
+    
     return b_clip, b_onehot, b_y 
 
-'''
-batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 50)
+
+batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 1)
 
 print(batch_clip.shape)
 print(batch_clip)
@@ -54,9 +55,8 @@ print(batch_y_onehot)
 
 
 
-t_y =  tf.one_hot(batch_y, num_classes)
-
-'''
+#t_y =  tf.one_hot(batch_y, num_classes)
+quit()
 print
 
 from tensorflow.examples.tutorials.mnist import input_data
@@ -112,7 +112,7 @@ session.run(tf.global_variables_initializer())
 def optimize(epochs):
     for i in range(epochs):
         start = 0
-        for start in range(0, 1000, batch_size):
+        for start in range(0, len(mat), batch_size):
             # Get a batch of training examples.
             # x_batch now holds a batch of images and
             # y_true_batch are the true labels for those images.
