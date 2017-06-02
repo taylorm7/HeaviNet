@@ -10,12 +10,11 @@ matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
 mat = matrix_file['data']
 
 print(matrix_file)
-print(mat.shape)
 print(mat[1:100,0])
 
-clip_size = 1024
+clip_size = 32
 num_classes = 256
-batch_size = 100
+batch_size = 512
 
 t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
 
@@ -60,17 +59,7 @@ quit()
 '''
 print
 
-from tensorflow.examples.tutorials.mnist import input_data
-data = input_data.read_data_sets("data/MNIST/", one_hot=True)
-
-#create set of single values for data.test
-data.test.cls = np.array([label.argmax() for label in data.test.labels])
-
 print(mat.shape)
-print(data.test.images.shape)
-print(data.test.labels.shape)
-print(data.test.cls.shape)
-
 
 # input vector
 x = tf.placeholder(tf.float32, [None, clip_size])
@@ -113,6 +102,7 @@ session.run(tf.global_variables_initializer())
 def optimize(epochs):
     for i in range(epochs):
         start = 0
+        epoch_loss = 0
         for start in range(0, len(mat), batch_size):
             # Get a batch of training examples.
             # x_batch now holds a batch of images and
@@ -131,10 +121,11 @@ def optimize(epochs):
             # Run the optimizer using this batch of training data.
             # TensorFlow assigns the variables in feed_dict_train
             # to the placeholder variables and then runs the optimizer.
-            session.run(optimizer, feed_dict=feed_dict_train)
-        print "epoch", i, "completed"
+            n, c = session.run([optimizer, cost], feed_dict=feed_dict_train)
+            epoch_loss += c
+        print "epoch", i, "completed w/ loss", epoch_loss
 
-test_clip, test_y_onehot, test_y = batch(mat, 30000, batch_size)
+test_clip, test_y_onehot, test_y = batch(mat, 400000, 100000)
 feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y}
 
 #print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
@@ -149,7 +140,7 @@ def print_accuracy():
     # Print the accuracy.
     print("Accuracy on test-set: {0:.1%}".format(acc))
 
-optimize(1)
+optimize(0)
 
 print_accuracy()
 
