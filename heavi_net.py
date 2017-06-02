@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+#from sklearn.metrics import confusion_matrix
 from random import randint
 
 matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
@@ -125,7 +125,7 @@ def optimize(epochs):
             epoch_loss += c
         print "epoch", i, "completed w/ loss", epoch_loss
 
-test_clip, test_y_onehot, test_y = batch(mat, 400000, 100000)
+test_clip, test_y_onehot, test_y = batch(mat, 1000, batch_size)
 feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y}
 
 #print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
@@ -140,17 +140,35 @@ def print_accuracy():
     # Print the accuracy.
     print("Accuracy on test-set: {0:.1%}".format(acc))
 
-optimize(0)
+def predict():
+    predictions = session.run(y_pred_cls, feed_dict=feed_dict_test)
+    return predictions
 
+def create(song_seed, length):
+    song_index = len(song_seed)
+    for i in range(length):
+        song_new_y = session.run(y_pred_cls, 
+                                {x: song_seed[song_index-clip_size:song_index].reshape( (1,clip_size)) } )
+        song_seed = np.append(song_seed, song_new_y, axis = 0)
+    return song_seed
+
+song = np.zeros((clip_size))
+
+optimize(1)
 print_accuracy()
+song = create(song, 100)
+print song, song.shape
 
-optimize(5)
+#p = predict()
+#print p, p.shape
 
-print_accuracy()
 
-optimize(10)
+#optimize(5)
+#print_accuracy()
 
-print_accuracy()
+
+#optimize(10)
+#print_accuracy()
 
 
 session.close()
