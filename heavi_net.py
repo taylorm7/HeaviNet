@@ -5,19 +5,13 @@ import matplotlib.pyplot as plt
 #from sklearn.metrics import confusion_matrix
 from random import randint
 
-matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
-
-mat = matrix_file['data']
-
-print(matrix_file)
-print(mat[1:100,0])
-
 clip_size = 32
 num_classes = 256
 batch_size = 512
 
-t_mat = np.matrix('1 ; 2 ; 3 ; 4 ;5 ;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20')
-
+n_nodes_hl1 = 500
+n_nodes_hl2 = 500
+n_nodes_hl3 = 500
 
 def make_onehot(onehot_values, onehot_classes):
     onehot_matrix = np.zeros((onehot_values.size, onehot_classes))
@@ -39,65 +33,69 @@ def batch(iterable, start, batches=0):
         b_clip =  b_clip[:-batch_overflow or None, :]
     b_clip = b_clip.reshape( (-1, clip_size) )    
     b_onehot = make_onehot(b_y, num_classes)
-    
     return b_clip, b_onehot, b_y 
 
-'''
-batch_clip, batch_y, batch_y_onehot = batch(t_mat,0, 1)
-
-print(batch_clip.shape)
-print(batch_clip)
-print(batch_y.shape)
-print(batch_y)
-print(batch_y_onehot.shape)
-print(batch_y_onehot)
-
-
-
-#t_y =  tf.one_hot(batch_y, num_classes)
-quit()
-'''
-print
-
-print(mat.shape)
+matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
+mat = matrix_file['data']
+#print(matrix_file)
+#print(mat[1:100,0], mat.shape)
 
 # input vector
 x = tf.placeholder(tf.float32, [None, clip_size])
 y_true = tf.placeholder(tf.float32, [None, num_classes])
 y_true_cls = tf.placeholder(tf.int64, [None])
 
-weights = tf.Variable(tf.zeros([clip_size, num_classes]))
-biases = tf.Variable(tf.zeros([num_classes]))
+def neural_network_model(data):
+    hidden_1_layer = {'weights':tf.Variable(tf.random_normal([clip_size, n_nodes_hl1])),
+                      'biases':tf.Variable(tf.random_normal([n_nodes_hl1]))}
 
-logits = tf.matmul(x, weights) + biases
+    hidden_2_layer = {'weights':tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
+                      'biases':tf.Variable(tf.random_normal([n_nodes_hl2]))}
+
+    hidden_3_layer = {'weights':tf.Variable(tf.random_normal([n_nodes_hl2, n_nodes_hl3])),
+                      'biases':tf.Variable(tf.random_normal([n_nodes_hl3]))}
+
+    output_layer = {'weights':tf.Variable(tf.random_normal([n_nodes_hl3, num_classes])),
+                    'biases':tf.Variable(tf.random_normal([num_classes]))}
+
+
+    l1 = tf.add(tf.matmul(data,hidden_1_layer['weights']), hidden_1_layer['biases'])
+    l1 = tf.nn.relu(l1)
+
+    l2 = tf.add(tf.matmul(l1,hidden_2_layer['weights']), hidden_2_layer['biases'])
+    l2 = tf.nn.relu(l2)
+
+    l3 = tf.add(tf.matmul(l2,hidden_3_layer['weights']), hidden_3_layer['biases'])
+    l3 = tf.nn.relu(l3)
+
+    output = tf.matmul(l3,output_layer['weights']) + output_layer['biases']
+
+    return output
+
+#weights = tf.Variable(tf.zeros([clip_size, num_classes]))
+#biases = tf.Variable(tf.zeros([num_classes]))
+#logits = tf.matmul(x, weights) + biases
+logits = neural_network_model(x)
 
 y_pred = tf.nn.softmax(logits)
 y_pred_cls = tf.argmax(y_pred, dimension=1)
 
+
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y_true)
+cost = tf.reduce_mean(cross_entropy)
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5).minimize(cost)
+correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
 print("x shape", x.shape)
 print("y predicted shape", y_pred.shape)
 print("y predicted class shape", y_pred_cls.shape)
-
 print("logits shape", logits.shape)
-
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_true)
-cost = tf.reduce_mean(cross_entropy)
-
 print("cross entropy shape", cross_entropy.shape)
 print("cost shape", cost.shape)
 
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5).minimize(cost)
-
-correct_prediction = tf.equal(y_pred_cls, y_true_cls)
-
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
 session = tf.Session()
-
-
 session.run(tf.global_variables_initializer())
-
-
 
 def optimize(epochs):
     for i in range(epochs):
