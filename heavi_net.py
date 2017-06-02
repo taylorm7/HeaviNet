@@ -72,18 +72,19 @@ def neural_network_model(data):
 
     return output
 
-#weights = tf.Variable(tf.zeros([clip_size, num_classes]))
-#biases = tf.Variable(tf.zeros([num_classes]))
-#logits = tf.matmul(x, weights) + biases
-logits = neural_network_model(x)
+weights = tf.Variable(tf.zeros([clip_size, num_classes]))
+biases = tf.Variable(tf.zeros([num_classes]))
+logits = tf.matmul(x, weights) + biases
+#logits = neural_network_model(x)
 
 y_pred = tf.nn.softmax(logits)
 y_pred_cls = tf.argmax(y_pred, dimension=1)
 
 
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y_true)
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_true)
 cost = tf.reduce_mean(cross_entropy)
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5).minimize(cost)
+#optimizer = tf.train.AdamOptimizer().minimize(cost)
 correct_prediction = tf.equal(y_pred_cls, y_true_cls)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
@@ -96,6 +97,12 @@ print("cost shape", cost.shape)
 
 session = tf.Session()
 session.run(tf.global_variables_initializer())
+
+def print_accuracy(feed_dict_test):
+    # Use TensorFlow to compute the accuracy.
+    acc = session.run(accuracy, feed_dict=feed_dict_test)
+    # Print the accuracy.
+    print("Accuracy on test-set: {0:.1%}".format(acc))
 
 def optimize(epochs):
     for i in range(epochs):
@@ -123,20 +130,12 @@ def optimize(epochs):
             epoch_loss += c
         print "epoch", i, "completed w/ loss", epoch_loss
 
-test_clip, test_y_onehot, test_y = batch(mat, 1000, batch_size)
-feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y}
+        test_index = randint(0, len(mat)-1000)
+        print "test at", test_index
+        test_clip, test_y_onehot, test_y = batch(mat, test_index, 10000)
+        feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y} 
+        print_accuracy(feed_dict_test)
 
-#print("x test", data.test.images.shape , "y true", data.test.labels.shape, "y true cls", data.test.cls.shape)
-print("x test", test_clip.shape , "y true", test_y_onehot.shape, "y true cls", test_y.shape)
-
-def print_accuracy():
-    # Use TensorFlow to compute the accuracy.
-
-    
-    acc = session.run(accuracy, feed_dict=feed_dict_test)
-    
-    # Print the accuracy.
-    print("Accuracy on test-set: {0:.1%}".format(acc))
 
 def predict():
     predictions = session.run(y_pred_cls, feed_dict=feed_dict_test)
@@ -152,8 +151,7 @@ def create(song_seed, length):
 
 song = np.zeros((clip_size))
 
-optimize(1)
-print_accuracy()
+optimize(10)
 song = create(song, 100)
 print song, song.shape
 
