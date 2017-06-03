@@ -37,6 +37,7 @@ def batch(iterable, start, batches=0):
 
 matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
 mat = matrix_file['data']
+print type(mat)
 #print(matrix_file)
 #print(mat[1:100,0], mat.shape)
 
@@ -60,28 +61,28 @@ def neural_network_model(data):
 
 
     l1 = tf.add(tf.matmul(data,hidden_1_layer['weights']), hidden_1_layer['biases'])
-    l1 = tf.nn.relu(l1)
+    l1 = tf.nn.tanh(l1)
 
     l2 = tf.add(tf.matmul(l1,hidden_2_layer['weights']), hidden_2_layer['biases'])
-    l2 = tf.nn.relu(l2)
+    l2 = tf.nn.tanh(l2)
 
     l3 = tf.add(tf.matmul(l2,hidden_3_layer['weights']), hidden_3_layer['biases'])
-    l3 = tf.nn.relu(l3)
+    l3 = tf.nn.tanh(l3)
 
     output = tf.matmul(l3,output_layer['weights']) + output_layer['biases']
 
     return output
 
-weights = tf.Variable(tf.zeros([clip_size, num_classes]))
-biases = tf.Variable(tf.zeros([num_classes]))
-logits = tf.matmul(x, weights) + biases
-#logits = neural_network_model(x)
+#weights = tf.Variable(tf.zeros([clip_size, num_classes]))
+#biases = tf.Variable(tf.zeros([num_classes]))
+#logits = tf.matmul(x, weights) + biases
+logits = neural_network_model(x)
 
 y_pred = tf.nn.softmax(logits)
 y_pred_cls = tf.argmax(y_pred, dimension=1)
 
 
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_true)
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y_true)
 cost = tf.reduce_mean(cross_entropy)
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5).minimize(cost)
 #optimizer = tf.train.AdamOptimizer().minimize(cost)
@@ -104,16 +105,18 @@ def print_accuracy(feed_dict_test):
     # Print the accuracy.
     print("Accuracy on test-set: {0:.1%}".format(acc))
 
-def optimize(epochs):
+def optimize(epochs, iterations=len(mat) ):
     for i in range(epochs):
         start = 0
         epoch_loss = 0
-        for start in range(0, len(mat), batch_size):
+        epoch_correct = 0
+        epoch_total = 0
+        for start in range(0, iterations, batch_size):
             # Get a batch of training examples.
             # x_batch now holds a batch of images and
             # y_true_batch are the true labels for those images.
             #x_batch, y_true_batch = data.train.next_batch(batch_size)
-            x_batch, y_onehot_batch, _ = batch(mat,start, batch_size)
+            x_batch, y_onehot_batch, y_class_batch = batch(mat,start, batch_size)
             
             #print(start, "x batch", x_batch.shape, "y batch", y_onehot_batch.shape, type(x_batch), type(y_onehot_batch) )
             # Put the batch into a dict with the proper names
@@ -121,14 +124,17 @@ def optimize(epochs):
             # Note that the placeholder for y_true_cls is not set
             # because it is not used during training.
             feed_dict_train = {x: x_batch,
-                               y_true: y_onehot_batch}
+                               y_true: y_onehot_batch,
+                               y_true_cls: y_class_batch }
 
             # Run the optimizer using this batch of training data.
             # TensorFlow assigns the variables in feed_dict_train
             # to the placeholder variables and then runs the optimizer.
-            n, c = session.run([optimizer, cost], feed_dict=feed_dict_train)
+            o, c, cor = session.run([optimizer, cost, correct_prediction], feed_dict=feed_dict_train)
+            epoch_correct += np.sum(cor)
+            epoch_total += cor.size
             epoch_loss += c
-        print "epoch", i, "completed w/ loss", epoch_loss
+        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , float(epoch_correct) / float(epoch_total)
 
         test_index = randint(0, len(mat)-1000)
         print "test at", test_index
@@ -149,9 +155,10 @@ def create(song_seed, length):
         song_seed = np.append(song_seed, song_new_y, axis = 0)
     return song_seed
 
-song = np.zeros((clip_size))
+song, _, _ = batch(mat, 20000, 1)
+song = song.reshape( (clip_size) )
 
-optimize(10)
+optimize(1)
 song = create(song, 100)
 print song, song.shape
 
