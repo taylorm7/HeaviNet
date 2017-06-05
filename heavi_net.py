@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from random import randint
 
 clip_size = 32
+n_clips = 128
+
 num_classes = 256
 batch_size = 512
 
@@ -161,17 +163,5 @@ song = song.reshape( (clip_size) )
 optimize(1)
 song = create(song, 100)
 print song, song.shape
-
-#p = predict()
-#print p, p.shape
-
-
-#optimize(5)
-#print_accuracy()
-
-
-#optimize(10)
-#print_accuracy()
-
 
 session.close()
