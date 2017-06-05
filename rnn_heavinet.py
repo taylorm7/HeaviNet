@@ -10,7 +10,7 @@ n_clips = 32
 
 num_classes = 256
 
-batch_size = 128
+batch_size = 512
 
 rnn_size = 128
 
@@ -118,14 +118,14 @@ def optimize(epochs, iterations=len(mat) ):
         epoch_loss = 0
         epoch_correct = 0
         epoch_total = 0
-        for start in range(0, iterations, batch_size):
+        for start in range(0, iterations - batch_size*2, batch_size):
             # Get a batch of training examples.
             # x_batch now holds a batch of images and
             # y_true_batch are the true labels for those images.
             #x_batch, y_true_batch = data.train.next_batch(batch_size)
             x_batch, y_onehot_batch, y_class_batch = batch(mat,start, batch_size)
             x_batch, _, _ = batch_r3(mat, start, batch_size)
-            print(start, "x batch", x_batch.shape, "y batch", y_onehot_batch.shape, type(x_batch), type(y_onehot_batch) )
+            #print(start, "x batch", x_batch.shape, "y batch", y_onehot_batch.shape, type(x_batch), type(y_onehot_batch) )
             # Put the batch into a dict with the proper names
             # for placeholder variables in the TensorFlow graph.
             # Note that the placeholder for y_true_cls is not set
@@ -137,11 +137,12 @@ def optimize(epochs, iterations=len(mat) ):
             # Run the optimizer using this batch of training data.
             # TensorFlow assigns the variables in feed_dict_train
             # to the placeholder variables and then runs the optimizer.
-            o, c, cor = session.run([optimizer, cost, correct_prediction], feed_dict=feed_dict_train)
+            o, c, cor, y = session.run([optimizer, cost, correct_prediction, y_pred_cls], feed_dict=feed_dict_train)
             epoch_correct += np.sum(cor)
             epoch_total += cor.size
             epoch_loss += c
-        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , float(epoch_correct) / float(epoch_total)
+            print y
+        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , 100.0 * float(epoch_correct) / float(epoch_total)
 
         #test_index = randint(0, len(mat)-1000)
         #print "test at", test_index
@@ -165,7 +166,7 @@ def create(song_seed, length):
 #song, _, _ = batch(mat, 20000, 1)
 #song = song.reshape( (clip_size) )
 
-optimize(1, 10)
+optimize(20, 10000)
 #song = create(song, 100)
 #print song, song.shape
 
