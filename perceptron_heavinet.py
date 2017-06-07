@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 #from sklearn.metrics import confusion_matrix
 from random import randint
 
-clip_size = 1
+clip_size = 4
 
 num_classes = 256
 batch_size = 512
@@ -45,13 +45,12 @@ print type(mat)
 # input vector
 x = tf.placeholder(tf.float32, [None, clip_size])
 x_onehot = tf.one_hot(tf.cast(x,tf.int32), num_classes)
-x_onehot = tf.reshape(x_onehot, (-1, num_classes))
-print x_onehot
+x_onehot = tf.reshape(x_onehot, (-1, clip_size*num_classes))
 y_true = tf.placeholder(tf.float32, [None, num_classes])
 y_true_cls = tf.placeholder(tf.int64, [None])
 
 def neural_network_model(data):
-    hidden_1_layer = {'weights':tf.Variable(tf.random_normal([num_classes, n_nodes_hl1])),
+    hidden_1_layer = {'weights':tf.Variable(tf.random_normal([num_classes*clip_size, n_nodes_hl1])),
                       'biases':tf.Variable(tf.random_normal([n_nodes_hl1]))}
 
     hidden_2_layer = {'weights':tf.Variable(tf.random_normal([n_nodes_hl1, n_nodes_hl2])),
@@ -74,7 +73,6 @@ def neural_network_model(data):
     l3 = tf.nn.tanh(l3)
 
     output = tf.matmul(l3,output_layer['weights']) + output_layer['biases']
-
     return output
 
 weights = tf.Variable(tf.random_normal([num_classes, num_classes]))
@@ -94,6 +92,7 @@ correct_prediction = tf.equal(y_pred_cls, y_true_cls)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 print("x shape", x.shape)
+print("x_one shape", x_onehot.shape)
 print("y predicted shape", y_pred.shape)
 print("y predicted class shape", y_pred_cls.shape)
 print("logits shape", logits.shape)
@@ -139,7 +138,7 @@ def optimize(epochs, iterations=len(mat) ):
             epoch_correct += np.sum(cor)
             epoch_total += cor.size
             epoch_loss += c
-        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , float(epoch_correct) / float(epoch_total)
+        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , 100.0 * float(epoch_correct) / float(epoch_total)
         test_index = randint(0, len(mat)-1000)
         test_clip, test_y_onehot, test_y = batch(mat, test_index, 10000)
         feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y} 
@@ -161,7 +160,7 @@ def create(song_seed, length):
 song, _, _ = batch(mat, 20000, 1)
 song = song.reshape( (clip_size) )
 
-optimize(10)
+optimize(4, 1000)
 song = create(song, 100)
 print song, song.shape
 
