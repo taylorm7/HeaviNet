@@ -1,14 +1,15 @@
 import tensorflow as tf
 import numpy as np
 import scipy.io as sio
+import scipy.io.wavfile as siow
 import matplotlib.pyplot as plt
 #from sklearn.metrics import confusion_matrix
 from random import randint
 
-clip_size = 4
+clip_size = 32
 
 num_classes = 256
-batch_size = 512
+batch_size = 128
 
 n_nodes_hl1 = 500
 n_nodes_hl2 = 500
@@ -36,16 +37,17 @@ def batch(iterable, start, batches=0):
     b_onehot = make_onehot(b_y, num_classes)
     return b_clip, b_onehot, b_y 
 
-matrix_file= sio.loadmat('/home/sable/AudioFiltering/Testing/test.mat')
+matrix_file= sio.loadmat('/home/sable/HeaviNet/data/input.mat')
 mat = matrix_file['data']
 print type(mat)
 #print(matrix_file)
-#print(mat[1:100,0], mat.shape)
+print(mat[1:100,0], mat.shape)
 
 # input vector
 x = tf.placeholder(tf.float32, [None, clip_size])
 x_onehot = tf.one_hot(tf.cast(x,tf.int32), num_classes)
 x_onehot = tf.reshape(x_onehot, (-1, clip_size*num_classes))
+x_onehot = tf.cast(x_onehot, tf.float32)
 y_true = tf.placeholder(tf.float32, [None, num_classes])
 y_true_cls = tf.placeholder(tf.int64, [None])
 
@@ -139,10 +141,10 @@ def optimize(epochs, iterations=len(mat) ):
             epoch_total += cor.size
             epoch_loss += c
         print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , 100.0 * float(epoch_correct) / float(epoch_total)
-        test_index = randint(0, len(mat)-1000)
-        test_clip, test_y_onehot, test_y = batch(mat, test_index, 10000)
-        feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y} 
-        print_accuracy(feed_dict_test)
+        #test_index = randint(0, len(mat)-1000)
+        #test_clip, test_y_onehot, test_y = batch(mat, test_index, 10000)
+        #feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y} 
+        #print_accuracy(feed_dict_test)
 
 
 def predict():
@@ -160,8 +162,13 @@ def create(song_seed, length):
 song, _, _ = batch(mat, 20000, 1)
 song = song.reshape( (clip_size) )
 
-optimize(4, 1000)
+optimize(1, 10000)
 song = create(song, 100)
+song = np.reshape(song, (-1,1)).astype(np.uint8)
 print song, song.shape
+sio.savemat('/home/sable/HeaviNet/data/out.mat', mdict={'song_out': song})
+
+print mat.size
+siow.write('/home/sable/HeaviNet/data/song.wav', 8000, mat)
 
 session.close()

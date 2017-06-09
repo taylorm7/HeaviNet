@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 #from sklearn.metrics import confusion_matrix
 from random import randint
 
-clip_size = 1024
-clip_image = 32
+clip_size = 4
+clip_image = 2
 
 num_classes = 256
 batch_size = 512
@@ -170,12 +170,16 @@ print type(mat)
 
 # input vector
 x = tf.placeholder(tf.float32, [None, clip_size])
+x_onehot = tf.one_hot(tf.cast(x,tf.int32), num_classes)
+x_onehot = tf.reshape(x_onehot, (-1, clip_size*num_classes))
+x_onehot = tf.cast(x_onehot, tf.float32)
+
 x_image = tf.reshape(x, [-1, clip_image, clip_image, num_channels])
 y_true = tf.placeholder(tf.float32, [None, num_classes])
 y_true_cls = tf.placeholder(tf.int64, [None])
 
 def neural_network_model(data):
-    layer_conv1, weights_conv1 = new_conv_layer(input=x_image, 
+    layer_conv1, weights_conv1 = new_conv_layer(input=data, 
         num_input_channels=num_channels,
         filter_size=filter_size1,
         num_filters=num_filters1,
@@ -209,7 +213,7 @@ def neural_network_model(data):
 #weights = tf.Variable(tf.zeros([clip_size, num_classes]))
 #biases = tf.Variable(tf.zeros([num_classes]))
 #logits = tf.matmul(x, weights) + biases
-logits = neural_network_model(x)
+logits = neural_network_model(x_image)
 
 y_pred = tf.nn.softmax(logits)
 y_pred_cls = tf.argmax(y_pred, dimension=1)
@@ -263,18 +267,18 @@ def optimize(epochs, iterations=len(mat) ):
             # TensorFlow assigns the variables in feed_dict_train
             # to the placeholder variables and then runs the optimizer.
             o, c, cor, l, y_t = session.run([optimizer, cost, correct_prediction, y_pred_cls, y_true_cls], feed_dict=feed_dict_train)
-            print l
-            print y_t
+            #print l
+            #print y_t
             epoch_correct += np.sum(cor)
             epoch_total += cor.size
             epoch_loss += c
-        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , float(epoch_correct) / float(epoch_total)
+        print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , 100.0 * float(epoch_correct) / float(epoch_total)
 
-        #test_index = randint(0, len(mat)-1000)
-        #print "test at", test_index
-        #test_clip, test_y_onehot, test_y = batch(mat, test_index, 10000)
-        #feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y} 
-        #print_accuracy(feed_dict_test)
+        test_index = randint(0, len(mat)-1000)
+        print "test at", test_index
+        test_clip, test_y_onehot, test_y = batch(mat, test_index, 10000)
+        feed_dict_test = {x: test_clip, y_true: test_y_onehot, y_true_cls: test_y} 
+        print_accuracy(feed_dict_test)
 
 
 def predict():
@@ -292,8 +296,8 @@ def create(song_seed, length):
 song, _, _ = batch(mat, 20000, 1)
 song = song.reshape( (clip_size) )
 
-optimize(10, 1000)
-song = create(song, 100)
-print song, song.shape
+optimize(10)
+#song = create(song, 100)
+#print song, song.shape
 
 session.close()

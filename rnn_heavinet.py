@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from tensorflow.contrib import rnn
 from random import randint
 
-clip_size = 32*4*120
+clip_size = 1
 n_clips = 1
 
 num_classes = 256
@@ -147,7 +147,7 @@ def optimize(epochs, iterations=len(mat) ):
             epoch_correct += np.sum(cor)
             epoch_total += cor.size
             epoch_loss += c
-            print y.shape, "y predicted", y
+            #print y.shape, "y predicted", y
             #print correct_prediction
         print epoch_total,":epoch", i, "completed w/ loss", epoch_loss, "correct", epoch_correct, "and percentage" , 100.0 * float(epoch_correct) / float(epoch_total)
 
@@ -173,7 +173,7 @@ def create(song_seed, length):
 #song, _, _ = batch(mat, 20000, 1)
 #song = song.reshape( (clip_size) )
 
-optimize(3, batch_size)
+optimize(10, 1000)
 #song = create(song, 100)
 #print song, song.shape
 
