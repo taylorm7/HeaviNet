@@ -1,42 +1,49 @@
-function [song_clipped, x_down, fx, x_expanded, y_compressed, z] = audio_formatting(bits, song_location, data_location)
+function [] = audio_formatting(bits)
+e1 = create_level(bits, '/home/sable/HeaviNet/data/songs/yellow.mp3');
+e2 = create_level(bits, '/home/sable/HeaviNet/data/songs/mind.mp3');
+e3 = create_level(bits, '/home/sable/HeaviNet/data/songs/ghost.mp3');
+e4 = create_level(bits, '/home/sable/HeaviNet/data/songs/clams.mp3');
+e5 = create_level(bits, '/home/sable/HeaviNet/data/songs/manila.mp3');
+error = e1 + e2+e3+e4+e5;
+fprintf("error:%g\n", error);
+end
+
+function [MSE, song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_location, data_location)
     if 1 %nargin == 2 
         data_location = '/home/sable/HeaviNet/data/input.mat';
-        song_location = '/home/sable/HeaviNet/data/songs/ghost.mp3';
+        %song_location = '/home/sable/HeaviNet/data/songs/yellow.mp3';
     %elseif nargin == 2
         %data_location = '/home/sable/HeaviNet/data/input.mat';
     end
 
-    [song, song_rate] = audioread(song_location);
+    [song, fx] = audioread(song_location);
     song_info = audioinfo(song_location);
     if song_info.NumChannels == 2
         song = (song(:,1) + song(:,2))/2;
     end
-    
     clipped_length =floor(length(song)/2^bits)*2^bits;
-    song_clipped = song(1:clipped_length);
+    song = song(1:clipped_length);
 
     N = 2^(bits);
     mu = N-1;
+    fprintf('Bits:%d N:%d mu%d\n', bits,N,mu);
+
     
-    disp('Bits,N,mu,Q,');
-    disp([bits,N,mu]);
-    
-    fx = song_info.SampleRate / 2^(9-bits);
-    %x = resample(song, fx, song_rate);
-    x_down = down_sample(song_clipped, bits);
+    y_fx = fx / 2^(9-bits);
+    x_down = down_sample(song, bits);
     x_up = up_sample(x_down, bits);
-    D=x_up-song_clipped;
+    D=x_up-song;
     MSE=mean(D.^2);
-    fprintf('\n Error between original and downsampled = %g\n\n',MSE )
+    fprintf('Error between original and downsampled = %g\n',MSE )
     
 
-    [x_expanded, y_compressed, Q] = mulaw(x_down, N, mu, song_clipped);
+    [y_expanded, y_compressed, Q] = mulaw(x_down, N, mu, song);
     
-    z = up_sample(x_expanded, bits);
+    z = up_sample(y_expanded, bits);
     
-    D=z-song_clipped;
+    D=z-song;
     MSE=mean(D.^2);
-    fprintf('\n Error between original and final = %g\n\n',MSE )
+    fprintf('Error between original and final = %g\n',MSE )
     
     %plot_q(x, x_expanded);
     %data = audioread(song_location, 'native');
@@ -70,19 +77,19 @@ function [xq, yq, Q] = mulaw(x, N,mu, s)
     % Calculate the MSE
     D=x-xq;
     MSE=mean(D.^2);
-    fprintf('\n Error between original and quantized = %g\n\n',MSE )
+    fprintf('Error between original and quantized = %g\n',MSE )
 end
 
 function [z] = up_sample(y, bits)
 z = y;
-    for i = 0: (9-bits)
-        z = interp(z,2);
+    for i = 0: (8-bits)
+        z = interp(z,2, 8);
     end
 end
 
 function [y] = down_sample(x, bits)
 y = x;
-for i = 0: (9-bits)
+for i = 0: (8-bits)
     y = decimate(y,2,'fir');
 end
 
