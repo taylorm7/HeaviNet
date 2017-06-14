@@ -1,60 +1,80 @@
 %function [song, fx, x_down, y_expanded, y_fx, z] = audio_formatting(bits)
-function [song, fx, x_down, y_expanded, y_fx, z] = audio_formatting(bits)
+function [song, fx, x_down, x_fx, y, z] = audio_formatting(bits)
 %if nargin == 1
-song_location = '/home/sable/HeaviNet/data/songs/ghost.mp3';
+song_location = '/home/sable/HeaviNet/data/songs/clams.mp3';
 
-[song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_location);
+[song, fx] = audioread(song_location);
+song_info = audioinfo(song_location);
+if song_info.NumChannels == 2
+    song = (song(:,1) + song(:,2))/2;
+end
+clipped_length =floor(length(song)/2^bits)*2^bits;
+song = song(1:clipped_length);
 
-N = 2^(bits);
-mu = N-1;
-xmax = 1;
-xmin = -1;
-Q=(xmax-xmin)/N;
 
-y_nonlinear = mu_trasform(x_down, mu, Q);
-y_digital = analog2digital(y_nonlinear, Q);
-y_analog = digital2analog(y_digital, Q);
-y = mu_inverse(y_analog, mu, Q);
+[x_down, x_fx, y, z] = create_level(bits, song, fx);
 
-    D=x_down-y;
-    MSE=mean(D.^2);
-    fprintf('New MU error between original and quantized = %g\n',MSE )
+% N = 2^(bits);
+% mu = N-1;
+% xmax = 1;
+% xmin = -1;
+% Q=(xmax-xmin)/N;
+% 
+% y_nonlinear = mu_trasform(x_down, mu, Q);
+% y_digital = analog2digital(y_nonlinear, Q);
+% y_analog = digital2analog(y_digital, Q);
+% y = mu_inverse(y_analog, mu, Q);
+% 
+% D=x_down-y;
+% MSE=mean(D.^2);
+% fprintf('New MU error between original and quantized = %g\n',MSE )
 
 end
 
-function [song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_location)
+function [x_down, x_fx, y, z] = create_level(bits, song, fx)
     data_location = '/home/sable/HeaviNet/data/input.mat';
     
-    [song, fx] = audioread(song_location);
-    song_info = audioinfo(song_location);
-    if song_info.NumChannels == 2
-        song = (song(:,1) + song(:,2))/2;
-    end
-    clipped_length =floor(length(song)/2^bits)*2^bits;
-    song = song(1:clipped_length);
+    %[song, fx] = audioread(song_location);
+    %song_info = audioinfo(song_location);
+    %if song_info.NumChannels == 2
+    %    song = (song(:,1) + song(:,2))/2;
+    %end
+    %clipped_length =floor(length(song)/2^bits)*2^bits;
+    %song = song(1:clipped_length);
 
     N = 2^(bits);
     mu = N-1;
-    fprintf('Bits:%d N:%d mu%d\n', bits,N,mu);
-
+    xmax = 1;
+    xmin = -1;
+    Q=(xmax-xmin)/N;
     
-    y_fx = fx / 2^(9-bits);
+    fprintf('Bits:%d N:%d mu:%d Q:%g \n', bits,N,mu, Q);
+
+    x_fx = fx / 2^(9-bits);
     x_down = down_sample(song, bits);
     x_up = up_sample(x_down, bits);
     D=x_up-song;
     MSE=mean(D.^2);
     fprintf('Error between original and downsampled = %g\n',MSE )
-    
 
-    [y_expanded, y_compressed, Q] = mulaw(x_down, N, mu);
+    y_nonlinear = mu_trasform(x_down, mu, Q);
+    y_digital = analog2digital(y_nonlinear, Q);
+    y_analog = digital2analog(y_digital, Q);
+    y = mu_inverse(y_analog, mu, Q);
+
+    D=x_down-y;
+    MSE=mean(D.^2);
+    fprintf('Error between original and quantized = %g\n',MSE )
+
+    %[y_expanded, y_compressed, Q] = mulaw(x_down, N, mu);
     
-    z = up_sample(y_expanded, bits);
+    z = up_sample(y, bits);
     
     D=z-song;
     MSE=mean(D.^2);
     fprintf('Error between original and final = %g\n',MSE )
     
-    plot_q(x_down, y_expanded);
+    plot_q(x_down, y);
     %data = audioread(song_location, 'native');
     %save(data_location,'data');
 end
