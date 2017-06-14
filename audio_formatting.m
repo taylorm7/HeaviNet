@@ -1,21 +1,30 @@
-function [] = audio_formatting(bits)
-e1 = create_level(bits, '/home/sable/HeaviNet/data/songs/yellow.mp3');
-e2 = create_level(bits, '/home/sable/HeaviNet/data/songs/mind.mp3');
-e3 = create_level(bits, '/home/sable/HeaviNet/data/songs/ghost.mp3');
-e4 = create_level(bits, '/home/sable/HeaviNet/data/songs/clams.mp3');
-e5 = create_level(bits, '/home/sable/HeaviNet/data/songs/manila.mp3');
-error = e1 + e2+e3+e4+e5;
-fprintf("error:%g\n", error);
+%function [song, fx, x_down, y_expanded, y_fx, z] = audio_formatting(bits)
+function [song, fx, x_down, y_expanded, y_fx, z] = audio_formatting(bits)
+%if nargin == 1
+song_location = '/home/sable/HeaviNet/data/songs/ghost.mp3';
+
+[song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_location);
+
+N = 2^(bits);
+mu = N-1;
+xmax = 1;
+xmin = -1;
+Q=(xmax-xmin)/N;
+
+y_nonlinear = mu_trasform(x_down, mu, Q);
+y_digital = analog2digital(y_nonlinear, Q);
+y_analog = digital2analog(y_digital, Q);
+y = mu_inverse(y_analog, mu, Q);
+
+    D=x_down-y;
+    MSE=mean(D.^2);
+    fprintf('New MU error between original and quantized = %g\n',MSE )
+
 end
 
-function [MSE, song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_location, data_location)
-    if 1 %nargin == 2 
-        data_location = '/home/sable/HeaviNet/data/input.mat';
-        %song_location = '/home/sable/HeaviNet/data/songs/yellow.mp3';
-    %elseif nargin == 2
-        %data_location = '/home/sable/HeaviNet/data/input.mat';
-    end
-
+function [song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_location)
+    data_location = '/home/sable/HeaviNet/data/input.mat';
+    
     [song, fx] = audioread(song_location);
     song_info = audioinfo(song_location);
     if song_info.NumChannels == 2
@@ -37,7 +46,7 @@ function [MSE, song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_
     fprintf('Error between original and downsampled = %g\n',MSE )
     
 
-    [y_expanded, y_compressed, Q] = mulaw(x_down, N, mu, song);
+    [y_expanded, y_compressed, Q] = mulaw(x_down, N, mu);
     
     z = up_sample(y_expanded, bits);
     
@@ -45,13 +54,13 @@ function [MSE, song, fx, x_down, y_expanded, y_fx, z] = create_level(bits, song_
     MSE=mean(D.^2);
     fprintf('Error between original and final = %g\n',MSE )
     
-    %plot_q(x, x_expanded);
+    plot_q(x_down, y_expanded);
     %data = audioread(song_location, 'native');
     %save(data_location,'data');
 end
 
 % Modified from source Yao Wang, Polytechnic University, 2/11/2004
-function [xq, yq, Q] = mulaw(x, N,mu, s)
+function [xq, yq, Q] = mulaw(x, N,mu)
     %magmax=max(abs(x));
     %xmin=-magmax, xmax=magmax;
     
@@ -65,7 +74,6 @@ function [xq, yq, Q] = mulaw(x, N,mu, s)
 
     %apply uniform quantization on the absolute value each sample
     yq=floor((y-xmin)/Q)*Q+Q/2+xmin;
-
     %apply inverse mu-law transform to the quantized sequence
     %also use the original sign
     xq=(xmax/mu)*(10.^((log10(1+mu)/xmax)*yq)-1).*sign(x);
@@ -78,6 +86,29 @@ function [xq, yq, Q] = mulaw(x, N,mu, s)
     D=x-xq;
     MSE=mean(D.^2);
     fprintf('Error between original and quantized = %g\n',MSE )
+end
+
+function [y_nonlinear] = mu_trasform(x, mu, Q)
+    y_nonlinear = sign(x).*log(1+mu.*abs(x))./log(1+mu);
+    %y_nonlinear = sign(x).*log10(1+abs(x)*(mu/xmax))/log10(1+mu);
+end
+
+function [y] = mu_inverse(y_nonlinear, mu, Q)
+    xmax = 1;
+    xmin = -1;
+    y_quantized_nonlinear = floor((y_nonlinear-xmin)/Q)*Q+Q/2+xmin;
+    y = sign(y_quantized_nonlinear).*(1/mu).*((1+mu).^(abs(y_quantized_nonlinear))-1);
+    %y = (xmax/mu)*(10.^((log10(1+mu)/xmax)*y_nonlinear)-1).*sign(y_nonlinear);
+end
+
+function [y_digital] = analog2digital(y_nonlinear, Q)
+    analog = y_nonlinear + 1;
+    y_digital =floor(analog/Q);
+end
+
+function [y_nonlinear] = digital2analog(y_digital, Q)
+    analog = y_digital*Q;
+    y_nonlinear = analog -1;
 end
 
 function [z] = up_sample(y, bits)
