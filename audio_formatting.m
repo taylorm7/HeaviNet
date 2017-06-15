@@ -90,7 +90,11 @@ end
 % convert compressed analog signal to uniform integer values
 function [y_digital] = analog2digital(y_nonlinear, Q)
     analog = y_nonlinear + 1;
-    y_digital = int32(floor(analog/Q));
+    y_digital = floor(analog/Q);
+    % exclude any digital values out of range (-1,1)
+    y_digital(y_digital >= 2/Q) = (2-Q)/Q;
+    y_digital(y_digital < 0) = 0;
+    y_digital = int32(y_digital);
 end
 
 % convert uniform integer values into analog signal
