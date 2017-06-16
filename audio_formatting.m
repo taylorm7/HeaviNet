@@ -4,7 +4,7 @@
 function [song, fx, x_down7, x_fx7, y7, level_7, ytrue_7, y_final8, z7] = audio_formatting(bits)
 %if nargin == 1
 %song_location = '/home/sable/HeaviNet/data/songs/clams.mp3';pieces_pittoresques
-song_location = '/home/sable/HeaviNet/data/songs/mind.mp3';
+song_location = '/home/sable/HeaviNet/data/songs/voice.wav';
 
 data_location = '/home/sable/HeaviNet/data/matlabSong2heavinet.mat';
 % read from song location, make audio mono, and clip to valid length for
