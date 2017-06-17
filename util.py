@@ -6,7 +6,7 @@ import cPickle as pkl
 def name_level(n_levels):
     x_name = []
     ytrue_name = []
-    for i in range(1,n_levels+1):
+    for i in range(0,n_levels):
         x_name.append(str( "level_" + str(i)))
         ytrue_name.append(str("ytrue_" + str(i)))
     return x_name, ytrue_name
@@ -44,8 +44,8 @@ def read_data(receptive_field, level_names, ytrue_names, force_read=False):
         x_data = data_list[0]
         ytrue_data = data_list[1]
     else:
-        print "Matlab Load file matlabSong2heavinet.mat" 
-        matlab_input = scipy.io.loadmat("data/matlabSong2heavinet.mat")
+        print "Matlab Load file matlab_song.mat" 
+        matlab_input = scipy.io.loadmat("data/matlab_song.mat")
         for name in level_names:
             x_data[name] = format_level(matlab_input[name], receptive_field)   
         for name in ytrue_names:
