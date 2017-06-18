@@ -14,7 +14,7 @@ song_info = audioinfo(song_location);
 if song_info.NumChannels == 2
     song = (song(:,1) + song(:,2))/2;
 end
-downsample_rate = 2;
+downsample_rate = 0;
 clipped_length =floor(length(song)/2^(bits+downsample_rate))*2^(bits+downsample_rate);
 song = song(1:clipped_length);
 [song] = down_sample(song, downsample_rate);
