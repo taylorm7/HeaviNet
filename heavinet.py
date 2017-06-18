@@ -18,8 +18,8 @@ for xn, ytn in zip(x_names, ytrue_names):
     print x_data[xn].size, ytrue_data[ytn].size
 
 
-net = Model( 0, receptive_field, x_data[x_names[0]], ytrue_data[ytrue_names[0]] ) 
-net.train(x_data[x_names[0]], ytrue_data[ ytrue_names[0] ] )
+net = Model( 3, receptive_field, x_data[x_names[3]], ytrue_data[ytrue_names[3]] ) 
+net.train(x_data[x_names[3]], ytrue_data[ ytrue_names[3] ] )
 
 
 '''

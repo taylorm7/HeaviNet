@@ -68,7 +68,6 @@ class Model(object):
 
         self.x = np.reshape(x, (-1, clip_size))
         self.ytrue_class = np.reshape(ytrue, (-1))
-        self.ytrue = make_onehot(ytrue, n_target_classes)
 
         inputs = tf.placeholder(tf.int32, [None,clip_size])
         onehot = tf.one_hot(inputs, n_input_classes)
@@ -76,10 +75,10 @@ class Model(object):
         onehot = tf.cast(onehot, tf.float32)
 
         target_class = tf.placeholder(tf.int64, [None])
-        target = tf.placeholder(tf.int64, [None, n_target_classes])
+        #target = tf.placeholder(tf.int64, [None, n_target_classes])
         
-        #target = tf.one_hot(target_class, n_target_classes)
-        #target = tf.reshape(target, (-1, n_target_classes))
+        target = tf.one_hot(target_class, n_target_classes)
+        target = tf.reshape(target, (-1, n_target_classes))
         #target = tf.placeholder(tf.float32, [None, n_target_classes])
 
         logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size,
@@ -109,15 +108,18 @@ class Model(object):
 
 
     def train(self, x_data, ytrue_data, epochs=1 ):
-        print "Trainging:",  self.level, self.x.shape,  self.ytrue.shape, self.ytrue_class.shape
+        print "Trainging:",  self.level, self.x.shape, self.ytrue_class.shape
+        print self.x[300,:]
+        print self.ytrue_class[300]
         for e in range(epochs):
             epoch_loss = 0
             feed_dict_train = {self.inputs: self.x,
-                               self.target: self.ytrue,
                                self.target_class: self.ytrue_class}
             onehot,target = self.sess.run([self.onehot, self.target], feed_dict = feed_dict_train)
             
-            print onehot.size, target.size 
+            print onehot[300,:]
+
+            print target[300,:]
             
             #epoch_loss+= c
             #print "epoch loss", epoch_loss
