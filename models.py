@@ -109,19 +109,13 @@ class Model(object):
 
     def train(self, x_data, ytrue_data, epochs=1 ):
         print "Trainging:",  self.level, self.x.shape, self.ytrue_class.shape
-        print self.x[300,:]
-        print self.ytrue_class[300]
         for e in range(epochs):
             epoch_loss = 0
             feed_dict_train = {self.inputs: self.x,
                                self.target_class: self.ytrue_class}
-            onehot,target = self.sess.run([self.onehot, self.target], feed_dict = feed_dict_train)
+            _, c = self.sess.run([self.optimize, self.cost], feed_dict = feed_dict_train)
             
-            print onehot[300,:]
-
-            print target[300,:]
-            
-            #epoch_loss+= c
-            #print "epoch loss", epoch_loss
+            epoch_loss+= c
+            print "epoch loss", epoch_loss
 
 
