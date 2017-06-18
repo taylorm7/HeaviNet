@@ -18,9 +18,12 @@ for xn, ytn in zip(x_names, ytrue_names):
     print x_data[xn].size, ytrue_data[ytn].size
 
 
-net = Model( 0, receptive_field, x_data[x_names[0]], ytrue_data[ytrue_names[0]] ) 
-net.train(x_data[x_names[0]], ytrue_data[ ytrue_names[0] ] )
-
+net = Model( 0, receptive_field  )
+net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=10 )
+net.save()
+net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=10 )
+net.load()
+net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=10 )
 
 '''
 nets = []
@@ -28,9 +31,9 @@ for i in range(n_levels):
     nets.append( Model( 
                     i,
                     receptive_field,
-                    x_names[i], 
-                    ytrue_names[i]) )
+                    x_data[x_names[i]], 
+                    ytrue_data[ytrue_names[i]]) )
 
 for net in nets:
-    net.train()
+    net.train(epochs=10)
 '''

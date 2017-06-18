@@ -46,7 +46,7 @@ class Model(object):
         output = tf.matmul(l3,output_layer['weights']) + output_layer['biases']
         return output
 
-    def __init__(self, level, receptive_field, x, ytrue,
+    def __init__(self, level, receptive_field,
                        batch_size=128, 
                        n_nodes_hl1=500,
                        n_nodes_hl2=500,
@@ -66,8 +66,7 @@ class Model(object):
         n_input_classes = 2**(level+1)
         n_target_classes = 2**(level+2)
 
-        self.x = np.reshape(x, (-1, clip_size))
-        self.ytrue_class = np.reshape(ytrue, (-1))
+
 
         inputs = tf.placeholder(tf.int32, [None,clip_size])
         onehot = tf.one_hot(inputs, n_input_classes)
@@ -79,6 +78,7 @@ class Model(object):
         
         target = tf.one_hot(target_class, n_target_classes)
         target = tf.reshape(target, (-1, n_target_classes))
+        target = tf.cast(target, tf.float32)
         #target = tf.placeholder(tf.float32, [None, n_target_classes])
 
         logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size,
@@ -94,8 +94,11 @@ class Model(object):
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32) )
 
         sess = tf.Session()
+        saver = tf.train.Saver()
+
         sess.run(tf.global_variables_initializer())
-        
+
+        self.clip_size = clip_size
         self.inputs = inputs
         self.target = target
         self.target_class = target_class
@@ -103,19 +106,35 @@ class Model(object):
 
         self.optimizer = optimizer
         self.cost = cost
+        self.accuracy = accuracy
 
         self.sess = sess
+        self.saver = saver
+        self.save_path = "data/model_" + str(level) + ".ckpt"
+        
+        print self.save_path
 
+    def train(self, x, ytrue_class, epochs=1 ):
+        x = np.reshape(x, (-1, self.clip_size))
+        ytrue_class = np.reshape(ytrue_class, (-1))
+        print "Trainging:",  self.level, x.shape, ytrue_class.shape
 
-    def train(self, x_data, ytrue_data, epochs=1 ):
-        print "Trainging:",  self.level, self.x.shape, self.ytrue_class.shape
         for e in range(epochs):
             epoch_loss = 0
-            feed_dict_train = {self.inputs: self.x,
-                               self.target_class: self.ytrue_class}
-            _, c = self.sess.run([self.optimize, self.cost], feed_dict = feed_dict_train)
+            feed_dict_train = {self.inputs: x,
+                               self.target_class: ytrue_class}
+            _, c, a = self.sess.run([self.optimizer, self.cost, self.accuracy], feed_dict = feed_dict_train)
             
             epoch_loss+= c
-            print "epoch loss", epoch_loss
+            print "epoch", e, "loss", epoch_loss, "accuracy", a*100
 
+    def save(self):
+        self.saver.save(self.sess, self.save_path)
+        print "Saving level", self.level, "at", self.save_path
 
+    def load(self):
+        self.saver.restore(self.sess, self.save_path)
+        print "Loading level", self.level
+
+    def close(self):
+        self.sess.close()
