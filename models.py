@@ -1,13 +1,6 @@
 import tensorflow as tf
 import numpy as np
 
-def make_onehot(onehot_values, onehot_classes):
-    onehot_matrix = np.zeros((onehot_values.size, onehot_classes))
-    onehot_matrix[np.arange(onehot_values.size),onehot_values] = 1
-    return onehot_matrix
-
-
-
 class Model(object):
     def perceptron_nn(self, data, n_input_classes, n_target_classes, clip_size, 
                       n_nodes_hl1, n_nodes_hl2, n_nodes_hl3):
@@ -46,7 +39,7 @@ class Model(object):
         output = tf.matmul(l3,output_layer['weights']) + output_layer['biases']
         return output
 
-    def __init__(self, level, receptive_field,
+    def __init__(self, level, receptive_field, data_location,
                        batch_size=128, 
                        n_nodes_hl1=500,
                        n_nodes_hl2=500,
@@ -110,7 +103,7 @@ class Model(object):
 
         self.sess = sess
         self.saver = saver
-        self.save_path = "data/model_" + str(level) + ".ckpt"
+        self.save_path = data_location + "/model_" + str(level) + ".ckpt"
         
         print self.save_path
 

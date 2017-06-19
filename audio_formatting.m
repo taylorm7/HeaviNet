@@ -1,12 +1,13 @@
 % Format audio for level structure for use in HeaviNet Neural Network
 % for more information visit https://github.com/taylorm7/HeaviNet
 
-function [song, fx, x_down6, x_fx6, y6, level_6, ytrue_6, y_final7, z6] = audio_formatting(bits)
+function [song, fx, x_down6, x_fx6, y6, level_6, ytrue_6, y_final7, z6] = audio_formatting(bits, song_location, data_location)
 %if nargin == 1
-%song_location = '/home/sable/HeaviNet/data/songs/clams.mp3';pieces_pittoresques
-song_location = '/home/sable/HeaviNet/data/songs/voice.wav';
-
-data_location = '/home/sable/HeaviNet/data/matlab_song.mat';
+%song_location = '/home/sable/HeaviNet/data/songs/voice.wav';pieces_pittoresques
+%song_name = 'voice.wav';
+%song_location = '/home/sable/HeaviNet/data/songs/' + song_name;
+disp(song_location);
+disp(data_location);
 % read from song location, make audio mono, and clip to valid length for
 % downsampling
 [song, fx] = audioread(song_location);
@@ -40,7 +41,7 @@ fx = fx/2^downsample_rate;
 [ytrue_6, y_final7] = create_solution(7, song, fx, bits);
 %[ytrue_8,yt8] = create_solution(8, song, fx, bits);
 
-save(data_location,'level_0', 'ytrue_0', 'level_1', 'ytrue_1', 'level_2', 'ytrue_2', 'level_3', 'ytrue_3','level_4','ytrue_4','level_5', 'ytrue_5', 'level_6', 'ytrue_6' );
+save(data_location, 'song_location', 'level_0', 'ytrue_0', 'level_1', 'ytrue_1', 'level_2', 'ytrue_2', 'level_3', 'ytrue_3','level_4','ytrue_4','level_5', 'ytrue_5', 'level_6', 'ytrue_6' );
 
 end
 
@@ -55,7 +56,7 @@ function [y_digital,y] = create_solution(level, song, fx, total_levels)
     fx_factor = total_levels - level;
     x_fx = fx / 2^(fx_factor);
     
-    fprintf('Solution Level:%d fx:%g N:%d mu:%d Q:%g \n', level,x_fx, N,mu, Q);
+    fprintf('Solution Level:%d bits:%d fx:%g N:%d mu:%d Q:%g \n', level-1, level,x_fx, N,mu, Q);
     
     % downsample and upsample based on bit level 
     % (higher precision, lower downsampling)
@@ -104,7 +105,7 @@ function [x_down, x_fx, y, y_digital, z] = create_level(level, song, fx, total_l
     fx_factor = total_levels - level;
     x_fx = fx / 2^(fx_factor);
     
-    fprintf('Level:%d x_fx:%g N:%d mu:%d Q:%g \n', level,x_fx, N,mu, Q);
+    fprintf('Level:%d bits:%d x_fx:%g N:%d mu:%d Q:%g \n', level-1, level,x_fx, N,mu, Q);
     
     % downsample and upsample based on bit level 
     % (higher precision, lower downsampling)
