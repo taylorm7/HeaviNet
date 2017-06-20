@@ -33,21 +33,20 @@ def format_level(iterable, receptive_field):
     return level
 
 def read_data(receptive_field, level_names, ytrue_names, data_location, force_read=False):
-
     x_data = {}
     ytrue_data = {}
     
     read_file = data_location + "/matlab_song.mat"
-    store_file = data_location + "/x_ytrue.pkl"
+    store_file = data_location + "/x_ytrue_r" + str(receptive_field) + ".pkl"
 
     if os.path.isfile(store_file) and force_read==False :
-        print "Pickle Load file x_ytrue.pkl"
+        print "Pickle load:", store_file
         with open(store_file, "rb") as input_file:
             data_list = pkl.load(input_file)
         x_data = data_list[0]
         ytrue_data = data_list[1]
     else:
-        print "Matlab Load file matlab_song.mat" 
+        print "Matlab load:", read_file
         matlab_input = scipy.io.loadmat(read_file)
         for name in level_names:
             x_data[name] = format_level(matlab_input[name], receptive_field)   

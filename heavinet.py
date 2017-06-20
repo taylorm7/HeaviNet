@@ -1,32 +1,54 @@
 import tensorflow as tf
 import numpy as np
 import scipy.io as sio
+import sys
 
 from util import read_data, name_level, format_level
 from models import Model
 
-receptive_field = 5
-n_levels = 7
-data_location = "./data/voice.wav.data"
+def train(data_location, receptive_field=7, force_read=False):
+    print "Trainging on ", data_location, "with receptive_field:" , receptive_field
+    n_levels = 7
+    #data_location = "./data/voice.wav.data"
 
-x_names, ytrue_names = name_level(n_levels)
+    x_names, ytrue_names = name_level(n_levels)
 
-print x_names, ytrue_names
+    print x_names, ytrue_names
 
-x_data, ytrue_data = read_data(receptive_field, x_names, ytrue_names, 
-                                data_location, force_read=True)
+    x_data, ytrue_data = read_data(receptive_field, x_names, ytrue_names, 
+                                    data_location, force_read=force_read)
 
-for xn, ytn in zip(x_names, ytrue_names):
-    print x_data[xn].size, ytrue_data[ytn].size
+    for xn, ytn in zip(x_names, ytrue_names):
+        print x_data[xn].size, ytrue_data[ytn].size
 
 
-net = Model( 0, receptive_field, data_location )
-net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=1 )
-net.save()
-net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=2 )
-net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=2 )
-net.save()
+    net = Model( 0, receptive_field, data_location )
+    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=1 )
+    net.save()
+    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=2 )
+    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=2 )
+    net.save()
 
+def generate():
+    print "Generating\n"
+
+if __name__ == '__main__':
+    if len(sys.argv) >= 3:
+        if sys.argv[1]=='train':
+            if len(sys.argv) >= 4 and sys.argv[3].isdigit():
+                print "Input receptive field:", int(sys.argv[3])
+                train(sys.argv[2], receptive_field= int(sys.argv[3]) )
+            else:
+                print "Default receptive field"
+                train(sys.argv[2])
+        elif sys.argv[1]=='generate':
+            generate()
+        else:
+            print "Invalid call, use: heavinet train /path/to/data train [receptive field]"
+            print "or: heavinet generate /path/to/data /path/to/seed/"
+    else:
+        print "Please supply more  arguments; 'heavinet /path/to/data train [receptive field]"
+        print "or 'heavinet /path/to/data generate /path/to/seed/"
 '''
 nets = []
 for i in range(n_levels):
