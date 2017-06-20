@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import os.path
 
 class Model(object):
     def perceptron_nn(self, data, n_input_classes, n_target_classes, clip_size, 
@@ -46,6 +47,7 @@ class Model(object):
                        n_nodes_hl3=500):
         self.level = level
         self.batch_size = batch_size
+        self.receptive_field = receptive_field
         '''
         self.x_name = x_name
         self.ytrue_name = ytrue_name
@@ -103,9 +105,11 @@ class Model(object):
 
         self.sess = sess
         self.saver = saver
-        self.save_path = data_location + "/model_" + str(level) + ".ckpt"
+        self.save_path = data_location + "/model_" + str(level) + "_r" + str(receptive_field) + ".ckpt"
         
         print self.save_path
+        self.load()
+
 
     def train(self, x, ytrue_class, epochs=1 ):
         x = np.reshape(x, (-1, self.clip_size))
@@ -124,10 +128,14 @@ class Model(object):
     def save(self):
         self.saver.save(self.sess, self.save_path)
         print "Saving level", self.level, "at", self.save_path
+        self.sess.close()
 
     def load(self):
-        self.saver.restore(self.sess, self.save_path)
-        print "Loading level", self.level
+        if os.path.isfile(self.save_path + ".meta"): 
+            self.saver.restore(self.sess, self.save_path)
+            print "Loading level", self.level
+        else:
+            print "Initial training set"
 
     def close(self):
         self.sess.close()

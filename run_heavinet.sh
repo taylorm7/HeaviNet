@@ -34,7 +34,16 @@ elif [ $ACTION = "train" ]; then
 elif [ $ACTION = "generate" ]; then
 	echo "Generating..."
 	SEED=$3
+	RECEPTIVE_FIELD=$4
 	SEEDPATH="./data/songs/$SEED"
+	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
+		echo "Generating on song $SONG from seed $SEED"
+		python heavinet.py $ACTION $DATAPATH $SEEDPATH $RECEPTIVE_FIELD
+	else
+		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
+		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
+		echo "Then training with ./run_heavinet.sh train song_name.mp3"
+	fi
 
 else
 	echo "Please enter an action, 'load song.mp3', 'train song.wav', or 'generate song.mp4 seed.mp3'"

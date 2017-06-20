@@ -9,8 +9,7 @@ from models import Model
 def train(data_location, receptive_field=7, force_read=False):
     print "Trainging on ", data_location, "with receptive_field:" , receptive_field
     n_levels = 7
-    #data_location = "./data/voice.wav.data"
-
+    
     x_names, ytrue_names = name_level(n_levels)
 
     print x_names, ytrue_names
@@ -21,16 +20,14 @@ def train(data_location, receptive_field=7, force_read=False):
     for xn, ytn in zip(x_names, ytrue_names):
         print x_data[xn].size, ytrue_data[ytn].size
 
-
     net = Model( 0, receptive_field, data_location )
     net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=1 )
     net.save()
-    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=2 )
-    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=2 )
-    net.save()
 
-def generate():
+def generate(data_location, receptive_field=7):
     print "Generating\n"
+    net = Model( 0, receptive_field, data_location )
+    net.load()
 
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
@@ -42,7 +39,7 @@ if __name__ == '__main__':
                 print "Default receptive field"
                 train(sys.argv[2])
         elif sys.argv[1]=='generate':
-            generate()
+            generate(sys.argv[2])
         else:
             print "Invalid call, use: heavinet train /path/to/data train [receptive field]"
             print "or: heavinet generate /path/to/data /path/to/seed/"
