@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import os.path
+import os
 
 class Model(object):
     def perceptron_nn(self, data, n_input_classes, n_target_classes, clip_size, 
@@ -102,40 +102,65 @@ class Model(object):
         self.optimizer = optimizer
         self.cost = cost
         self.accuracy = accuracy
+        self.correct_prediction = correct_prediction
 
         self.sess = sess
         self.saver = saver
-        self.save_path = data_location + "/model_" + str(level) + "_r" + str(receptive_field) + ".ckpt"
         
-        print self.save_path
-        self.load()
+        self.name = "model_" + str(level) + "_r" + str(receptive_field)
+        self.save_dir = data_location + "/" + self.name
+        self.save_file = self.save_dir + "/" + self.name + ".ckpt"
+
+        if( os.path.isdir(self.save_dir) ):
+            print "Loading previous:", self.name
+            self.load()
+        else:
+            os.makedirs( self.save_dir )
+            print "Creating level directory at:", self.save_dir
+        print self.save_file
 
 
     def train(self, x, ytrue_class, epochs=1 ):
         x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
-        print "Trainging:",  self.level, x.shape, ytrue_class.shape
+        print "Trainging:",  self.name, x.shape, ytrue_class.shape
 
         for e in range(epochs):
             epoch_loss = 0
-            feed_dict_train = {self.inputs: x,
-                               self.target_class: ytrue_class}
-            _, c, a = self.sess.run([self.optimizer, self.cost, self.accuracy], feed_dict = feed_dict_train)
-            
-            epoch_loss+= c
-            print "epoch", e, "loss", epoch_loss, "accuracy", a*100
+            epoch_correct = 0
+            epoch_total = 0
+            for i in range(0, len(x), self.batch_size):
+                feed_dict_train = {self.inputs: x[i:i+self.batch_size,:],
+                                   self.target_class: ytrue_class[i:i+self.batch_size] }
+                
+                # train without calculating accuracy
+                #_, c = self.sess.run([self.optimizer, self.cost],
+                #                        feed_dict = feed_dict_train)
+                
+                # train while calculating epoch accuracy
+                _, c, correct = self.sess.run([self.optimizer, self.cost, self.correct_prediction ],
+                                        feed_dict = feed_dict_train)
+                epoch_correct+= np.sum(correct)
+                epoch_total+= correct.size
+                
+                epoch_loss+= c
 
-    def save(self):
-        self.saver.save(self.sess, self.save_path)
-        print "Saving level", self.level, "at", self.save_path
-        self.sess.close()
+            print "epoch", e, "loss", epoch_loss
+            if (epoch_total != 0):
+                print "accuracy:", 100.0 * float(epoch_correct) / float(epoch_total)
+
+    def save(self, close=False):
+        self.saver.save(self.sess, self.save_file)
+        print "Saving:", self.name
+        if close==True:
+            self.sess.close()
 
     def load(self):
-        if os.path.isfile(self.save_path + ".meta"): 
-            self.saver.restore(self.sess, self.save_path)
-            print "Loading level", self.level
+        if os.path.isdir(self.save_dir):
+            self.saver.restore(self.sess, self.save_file)
+            print "Loading:", self.name
         else:
-            print "Initial training set"
+            print "Failed loading:", self.name
 
     def close(self):
         self.sess.close()

@@ -21,8 +21,8 @@ def train(data_location, receptive_field=7, force_read=False):
         print x_data[xn].size, ytrue_data[ytn].size
 
     net = Model( 0, receptive_field, data_location )
-    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=1 )
-    net.save()
+    net.train( x_data[x_names[0]], ytrue_data[ytrue_names[0]], epochs=5 )
+    net.save(close=True)
 
 def generate(data_location, receptive_field=7):
     print "Generating\n"
