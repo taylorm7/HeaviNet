@@ -12,19 +12,29 @@ MATLABSEED="$DATAPATH/matlab_seed.mat"
 
 MATLABCODE="/home/sable/HeaviNet/matlab_code"
 
-if [ $ACTION = "load" ]; then
-	echo "Loading song:$SONG at:$SONGPATH"
+if [ $ACTION = "format" ]; then
+	LEVELS=$3
+	echo "Formatting song:$SONG at:$SONGPATH"
 	if [ -f $SONGPATH ]; then
 		echo "Formatting '$SONG':"
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_song(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_song('$SONGPATH', '$MATLABSONG', 7 ); quit;"
 		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
 		echo "The file '$SONG' not found at '$SONGPATH'"
 		echo "Make sure song_name.wav is located in ./data/songs/"
 	fi
+elif [ $ACTION = "load" ]; then
+	RECEPTIVE_FIELD=$3
+	if [ -f $MATLABSONG ]; then
+		echo "Loading song:$SONG in $MATLABSONG"
+		python heavinet.py $ACTION $DATAPATH $RECEPTIVE_FIELD
+	else
+		echo "The file '$SONG' not found at '$MATLABSONG'"
+		echo "Try loading with ./run_heavinet.sh load song_name.mp3"
+	fi	
 elif [ $ACTION = "train" ]; then
 	RECEPTIVE_FIELD=$3
 	if [ -f $MATLABSONG ]; then
@@ -44,7 +54,7 @@ elif [ $ACTION = "generate" ]; then
 		echo "Data path:$DATAPATH"
 		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$MATLABSEED', 0, 7 ); quit;"
 
-		python heavinet.py $ACTION $DATAPATH $MATLABSEED 2 $RECEPTIVE_FIELD
+		python heavinet.py $ACTION $DATAPATH $MATLABSEED 1 $RECEPTIVE_FIELD
 
 
 	else

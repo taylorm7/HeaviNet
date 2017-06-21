@@ -3,15 +3,25 @@ import numpy as np
 import scipy.io as sio
 import sys
 
-from util import read_data, name_level, read_seed
+from util import read_data, name_level, read_seed, load_matlab, read_2
 from models import Model
 
-def load(data_location, receptive_field):
-    print "Formatting", data_location, "for receptive field:", receptive_field
+def load(data_location, receptive_field=7):
+    print "Loading", data_location, "for receptive field:", receptive_field
+    load_matlab(data_location, receptive_field)
 
 
 def train(data_location, receptive_field=7, force_read=False):
     print "Trainging on ", data_location, "with receptive_field:" , receptive_field
+    
+    x_data, ytrue_data = read_2(data_location, receptive_field, 1)
+    
+    net = Model( 1, receptive_field, data_location )
+    net.train( x_data, ytrue_data, epochs=1 )
+    net.save(close=True)
+
+
+'''
     n_levels = 7
     
     x_names, ytrue_names = name_level(n_levels)
@@ -30,7 +40,7 @@ def train(data_location, receptive_field=7, force_read=False):
 
 
     #net = Model( 1, receptive_field, data_location )
-'''
+
     for i in range(n_levels):
         print type(i)
         net =  Model( i,receptive_field, data_location)
@@ -59,7 +69,14 @@ def generate(data_location, seed_file, level, receptive_field=7):
 
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
-        if sys.argv[1]=='train':
+        if sys.argv[1]=='load':
+            if len(sys.argv) >= 4 and sys.argv[3].isdigit():
+                print "Input receptive field:", int(sys.argv[3])
+                load(sys.argv[2], receptive_field= int(sys.argv[3]) )
+            else:
+                print "Default receptive field"
+                load(sys.argv[2])
+        elif sys.argv[1]=='train':
             if len(sys.argv) >= 4 and sys.argv[3].isdigit():
                 print "Input receptive field:", int(sys.argv[3])
                 train(sys.argv[2], receptive_field= int(sys.argv[3]) )
