@@ -1,14 +1,16 @@
 #!/bin/bash
 
 ACTION=$1
-
 SONG=$2
+dot="$(cd "$(dirname "$0")"; pwd)"
 
-SONGPATH="./data/songs/$SONG"
-DATAPATH="./data/$SONG.data"
+SONGPATH="$dot/data/songs/$SONG"
+DATAPATH="$dot/data/$SONG.data"
 
 MATLABSONG="$DATAPATH/matlab_song.mat"
 MATLABSEED="$DATAPATH/matlab_seed.mat"
+
+MATLABCODE="/home/sable/HeaviNet/matlab_code"
 
 if [ $ACTION = "load" ]; then
 	echo "Loading song:$SONG at:$SONGPATH"
@@ -16,7 +18,8 @@ if [ $ACTION = "load" ]; then
 		echo "Formatting '$SONG':"
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_song(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
+		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
 		echo "The file '$SONG' not found at '$SONGPATH'"
