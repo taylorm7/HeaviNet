@@ -58,3 +58,8 @@ def read_data(receptive_field, level_names, ytrue_names, data_location, force_re
         with open(store_file, "wb") as output_file:
             pkl.dump(data_list, output_file)
     return x_data, ytrue_data
+
+def read_seed(seed_file):
+    matlab_input = scipy.io.loadmat(seed_file)
+    seed_data = matlab_input['seed']
+    return seed_data

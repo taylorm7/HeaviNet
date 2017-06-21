@@ -157,10 +157,13 @@ class Model(object):
 
     def load(self):
         if os.path.isdir(self.save_dir):
+            print "Loading:", self.name, self.save_file
             self.saver.restore(self.sess, self.save_file)
-            print "Loading:", self.name
+            return True
         else:
             print "Failed loading:", self.name
+            return False
 
     def close(self):
+        print "Closing" , self.name
         self.sess.close()

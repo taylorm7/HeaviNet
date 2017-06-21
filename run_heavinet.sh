@@ -38,10 +38,15 @@ elif [ $ACTION = "generate" ]; then
 	echo "Generating..."
 	SEED=$3
 	RECEPTIVE_FIELD=$4
-	SEEDPATH="./data/songs/$SEED"
+	SEEDPATH="$dot/data/songs/$SEED"
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		echo "Generating on song $SONG from seed $SEED"
-		python heavinet.py $ACTION $DATAPATH $SEEDPATH $RECEPTIVE_FIELD
+		echo "Data path:$DATAPATH"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$MATLABSEED', 0, 7 ); quit;"
+
+		python heavinet.py $ACTION $DATAPATH $MATLABSEED 2 $RECEPTIVE_FIELD
+
+
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
 		echo "First try loading with ./run_heavinet.sh load song_name.mp3"

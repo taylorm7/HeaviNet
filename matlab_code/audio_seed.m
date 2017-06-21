@@ -1,6 +1,6 @@
-function [song, fx] = audio_seed(level, song_location, data_location, downsample_rate, total_levels)
-song_location = '/home/sable/HeaviNet/data/songs/voice.wav';
-data_location = '/home/sable/HeaviNet/data/voice.wav.data';
+function [song, fx, seed] = audio_seed(level, song_location, data_location, downsample_rate, total_levels)
+%song_location = '/home/sable/HeaviNet/data/songs/voice.wav';
+%data_location = '/home/sable/HeaviNet/data/voice.wav.data';
 
 [song, fx] = audioread(song_location);
 song_info = audioinfo(song_location);
@@ -13,4 +13,8 @@ clipped_length =floor(length(song)/2^(total_levels+downsample_rate))*2^(total_le
 song = song(1:clipped_length);
 [song] = down_sample(song, downsample_rate);
 fx = fx/2^downsample_rate;
+
+[x_seed, x_fx_seed, y_seed, seed, z_seed] = create_level(bits, song, fx, total_levels);
+
+save(data_location, 'seed');
 end
