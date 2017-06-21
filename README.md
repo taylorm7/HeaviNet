@@ -1,9 +1,11 @@
 # HeaviNet
 Music Generation Neural Network
 
-This is a project developed by Taylor McGough for a Master of Science Thesis
-in the Computer Engineering Department of Virginia Tech. For questions please
-contact TaylorM7@vt.edu
+This is a project developed by Taylor McGough advised by JoAnn Paul for 
+a Master of Science Thesis in the Computer Engineering Department 
+of Virginia Tech. 
+
+For questions please contact TaylorM7@vt.edu
 
 Publication is forthcoming. If you use any code or information, please reference
 
