@@ -104,6 +104,8 @@ class Model(object):
         self.accuracy = accuracy
         self.correct_prediction = correct_prediction
 
+        self.prediction_class = prediction_class
+
         self.sess = sess
         self.saver = saver
         
@@ -148,6 +150,16 @@ class Model(object):
             print "epoch", e, "loss", epoch_loss
             if (epoch_total != 0):
                 print "accuracy:", 100.0 * float(epoch_correct) / float(epoch_total)
+    def generate(self, x_seed):
+        x_seed = np.reshape(x_seed, (-1, self.clip_size))
+        print "Generating with seed:", x_seed.shape
+        y_generated = []
+        for i in range(0, len(x_seed), self.batch_size):
+            feed_dict_gen = {self.inputs: x_seed[i:i+self.batch_size,:]}
+            y_g = self.sess.run( [self.prediction_class], feed_dict=feed_dict_gen)
+            y_generated = np.append(y_generated, y_g)
+        print "Generated song:",  len(y_generated)
+        return y_generated
 
     def save(self, close=False):
         self.saver.save(self.sess, self.save_file)

@@ -12,7 +12,7 @@ DATAPATH="$dot/data/$SONG.data"
 MATLABSONG="$DATAPATH/matlab_song.mat"
 MATLABSEED="$DATAPATH/matlab_seed.mat"
 
-MATLABCODE="/home/sable/HeaviNet/matlab_code"
+MATLABCODE="$dot/matlab_code"
 
 if [ $ACTION = "format" ]; then
 	if [ -z $3 ]; then
@@ -84,7 +84,10 @@ elif [ $ACTION = "generate" ]; then
 		echo "Data path:$DATAPATH"
 		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$MATLABSEED', $DOWNSAMPLE_RATE, $LEVELS ); quit;"
 
-		python heavinet.py $ACTION $DATAPATH $MATLABSEED 0 $RECEPTIVE_FIELD
+		python heavinet.py $ACTION $DATAPATH $MATLABSEED 0 $RECEPTIVE_FIELD True
+		SONGNAME="song_0_r$RECEPTIVE_FIELD"
+		
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "upsample_level('$DATAPATH', '$SONGNAME' ); quit;"
 
 
 	else

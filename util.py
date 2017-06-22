@@ -90,7 +90,17 @@ def read_2(data_location, receptive_field, level):
         print "Failed to load:", store_file
     
 
-def read_seed(seed_file):
+def read_seed(seed_file, receptive_field):
     matlab_input = scipy.io.loadmat(seed_file)
     seed_data = matlab_input['seed']
-    return seed_data
+    formated_seed_data = format_level(seed_data,receptive_field)
+    print "Read seed:", seed_data.size, " formatted:", formated_seed_data.size
+    return formated_seed_data
+
+def write_song(song, data_location, level, receptive_field):
+    song_name = "song_" + str(level) + "_r" + str(receptive_field)
+    song_file = data_location + "/" + song_name + ".mat"
+    scipy.io.savemat(song_file, mdict={ song_name: song})
+    print "Saved song:", song_file
+    return song_name
+
