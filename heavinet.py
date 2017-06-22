@@ -6,12 +6,12 @@ import sys
 from util import read_data, name_level, read_seed, load_matlab, read_2
 from models import Model
 
-def load(data_location, receptive_field=7):
+def load(data_location, receptive_field):
     print "Loading", data_location, "for receptive field:", receptive_field
     load_matlab(data_location, receptive_field)
 
 
-def train(data_location, receptive_field=7, force_read=False):
+def train(data_location, receptive_field):
     print "Trainging on ", data_location, "with receptive_field:" , receptive_field
     
     x_data, ytrue_data = read_2(data_location, receptive_field, 1)
@@ -54,13 +54,12 @@ def train(data_location, receptive_field=7, force_read=False):
     #for net in nets:
     #    net.save(close=True)
 
-def generate(data_location, seed_file, level, receptive_field=7):
+def generate(data_location, seed_file, level, receptive_field):
     print "Generating:", level, data_location, seed_file, receptive_field
     seed_data = read_seed(seed_file)
     print seed_data.size
 
-    print type(1) 
-    net = Model( 1, receptive_field, data_location )
+    net = Model( level, receptive_field, data_location )
     net.close()
     #nets = []
     #for i in range(7):
@@ -68,6 +67,29 @@ def generate(data_location, seed_file, level, receptive_field=7):
  
 
 if __name__ == '__main__':
+    if len(sys.argv) >= 3:
+        if sys.argv[1]=='load': 
+            load(sys.argv[2], receptive_field=int(sys.argv[3]) )
+        elif sys.argv[1]=='train':
+            train(sys.argv[2], receptive_field=int(sys.argv[3]) )
+        elif sys.argv[1]=='generate':
+            generate(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]))
+        else:
+            print "Invalid call, use:"
+            print " heavinet load [/path/to/data] [receptive field]"
+            print " heavinet train [/path/to/data] [receptive field]"
+            print " heavinet generate [/path/to/data] [/path/to/seed/] [level] [receptive_field]"
+    else:
+        print "Invalid call, not enough arguments. Use:"
+        print " heavinet load [/path/to/data] [receptive field]"
+        print " heavinet train [/path/to/data] [receptive field]"
+        print " heavinet generate [/path/to/data] [/path/to/seed/] [level] [receptive_field]"
+
+
+
+
+
+'''
     if len(sys.argv) >= 3:
         if sys.argv[1]=='load':
             if len(sys.argv) >= 4 and sys.argv[3].isdigit():
@@ -95,7 +117,7 @@ if __name__ == '__main__':
     else:
         print "Please supply more  arguments; 'heavinet /path/to/data train [receptive field]"
         print "or 'heavinet /path/to/data generate /path/to/seed/"
-'''
+
 nets = []
 for i in range(n_levels):
     nets.append( Model( 
