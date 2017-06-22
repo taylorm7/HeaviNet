@@ -15,12 +15,16 @@ MATLABSEED="$DATAPATH/matlab_seed.mat"
 MATLABCODE="/home/sable/HeaviNet/matlab_code"
 
 if [ $ACTION = "format" ]; then
-	echo "Formatting song:$SONG at:$SONGPATH with levels:$LEVELS"
+	if [ -z $3 ]; then
+		DOWNSAMPLE_RATE=0
+	else
+		DOWNSAMPLE_RATE=$3
+	fi
+	echo "Formatting song:$SONG at:$SONGPATH with levels:$LEVELS and downsample rate:$DOWNSAMPLE_RATE"
 	if [ -f $SONGPATH ]; then
-		echo "Formatting '$SONG':"
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_song('$SONGPATH', '$MATLABSONG', $LEVELS ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_song('$SONGPATH', '$MATLABSONG', $DOWNSAMPLE_RATE, $LEVELS ); quit;"
 		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
@@ -55,7 +59,6 @@ elif [ $ACTION = "train" ]; then
 		echo "Training on song $SONG in $MATLABSONG"
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
-			echo $i
 			python heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS
 		done
 	else
@@ -79,7 +82,7 @@ elif [ $ACTION = "generate" ]; then
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		echo "Generating on song $SONG from seed $SEED"
 		echo "Data path:$DATAPATH"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$MATLABSEED', 0, $LEVELS ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$MATLABSEED', $DOWNSAMPLE_RATE, $LEVELS ); quit;"
 
 		python heavinet.py $ACTION $DATAPATH $MATLABSEED 0 $RECEPTIVE_FIELD
 

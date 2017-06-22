@@ -1,7 +1,7 @@
 % Format audio for level structure for use in HeaviNet Neural Network
 % for more information visit https://github.com/taylorm7/HeaviNet
 
-function [song, fx, x_down6, x_fx6, y6, level_6, ytrue_6, y_final7, z6] = audio_song(song_location, data_location, n_levels)
+function [song, fx, x_down6, x_fx6, y6, level_6, ytrue_6, y_final7, z6] = audio_song(song_location, data_location, downsample_rate,n_levels)
 %if nargin == 1
 %song_location = '/home/sable/HeaviNet/data/songs/voice.wav';pieces_pittoresques
 %song_name = 'voice.wav';
@@ -15,7 +15,7 @@ song_info = audioinfo(song_location);
 if song_info.NumChannels == 2
     song = (song(:,1) + song(:,2))/2;
 end
-downsample_rate = 0;
+
 clipped_length =floor(length(song)/2^(n_levels+downsample_rate))*2^(n_levels+downsample_rate);
 song = song(1:clipped_length);
 [song] = down_sample(song, downsample_rate);
