@@ -69,6 +69,7 @@ elif [ $ACTION = "generate" ]; then
 	echo "Generating..."
 	SEED=$3
 	SEEDPATH="$dot/data/songs/$SEED"
+	FINISHPATH="$DATAPATH/SONG.wav"
 	if [ -z $4 ]; then
 		RECEPTIVE_FIELD=1
 	else
@@ -82,13 +83,27 @@ elif [ $ACTION = "generate" ]; then
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		echo "Generating on song $SONG from seed $SEED"
 		echo "Data path:$DATAPATH"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$MATLABSEED', $DOWNSAMPLE_RATE, $LEVELS ); quit;"
 
-		python heavinet.py $ACTION $DATAPATH $MATLABSEED 0 $RECEPTIVE_FIELD True
-		SONGNAME="song_0_r$RECEPTIVE_FIELD"
+		GENSEEDNAME="seed_0_r$RECEPTIVE_FIELD"
+		GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
+
+
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS ); quit;"
+
+		for (( I=1; I<=$LEVELS; I++ ))
+		do
+			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
+			GENSONGPATH="$DATAPATH/$GENSONGNAME.mat"
+
+			python heavinet.py $ACTION $DATAPATH $GENSEEDPATH $(($I-1)) $RECEPTIVE_FIELD
 		
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "upsample_level('$DATAPATH', '$SONGNAME' ); quit;"
-
+			GENSEEDNAME="seed_$I""_r$RECEPTIVE_FIELD"
+			GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
+			
+			~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "upsample_level('$GENSONGPATH', '$GENSEEDPATH', $I ); quit;"
+		done
+		
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$SONGPATH', $LEVELS ); quit;"
 
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"

@@ -98,7 +98,7 @@ def read_seed(seed_file, receptive_field):
     return formated_seed_data
 
 def write_song(song, data_location, level, receptive_field):
-    song_name = "song_" + str(level) + "_r" + str(receptive_field)
+    song_name = "song_" + str(level+1) + "_r" + str(receptive_field)
     song_file = data_location + "/" + song_name + ".mat"
     scipy.io.savemat(song_file, mdict={ song_name: song})
     print "Saved song:", song_file
