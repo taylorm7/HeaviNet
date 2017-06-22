@@ -27,6 +27,7 @@ def generate(data_location, seed_file, level, receptive_field):
     seed_data = read_seed(seed_file, receptive_field)
     gen_net = Model( level, receptive_field, data_location )
     song_data = gen_net.generate(seed_data)
+    gen_net.close()
     song_name = write_song( song_data, data_location, level, receptive_field)
 
     #net = Model( level, receptive_field, data_location )
