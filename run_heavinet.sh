@@ -135,10 +135,10 @@ elif [ $ACTION = "run" ]; then
 	fi
 
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
-		#./run_heavinet.sh format $SONG
-		#./run_heavinet.sh load $SONG $RECEPTIVE_FIELD
-		#./run_heavinet.sh train $SONG $RECEPTIVE_FIELD $EPOCHS
-		#./run_heavinet.sh generate $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
+		./$0 "format" $SONG $DOWNSAMPLE_RATE
+		./$0 "load" $SONG $RECEPTIVE_FIELD
+		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
+		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		echo "Compled Run"
 
 	else

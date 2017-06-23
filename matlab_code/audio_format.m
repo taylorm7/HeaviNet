@@ -1,4 +1,11 @@
 function [song, fx, x_down, x_fx, y, inputs, input_z, targets, target_z] = audio_format(song_location, data_location, downsample_rate,n_levels)
+disp(song_location);
+disp(data_location);
+disp("Downsample");
+disp(downsample_rate);
+disp("Levels");
+disp(n_levels);
+
 [song, fx] = audioread(song_location);
 song_info = audioinfo(song_location);
 if song_info.NumChannels == 2
@@ -24,6 +31,11 @@ for i = 1:n_levels
 [x_down{i}, x_fx{i}, y{i}, inputs{i}, input_z{i}] = create_level(i, song, fx, n_levels);
 [targets{i}, target_z{i}] = create_solution(i, song, fx, n_levels);
 end
+
+disp("Song");
+disp(length(song));
+disp("Fx");
+disp(fx);
 
 save(data_location, 'n_levels', 'inputs', 'targets');
 end

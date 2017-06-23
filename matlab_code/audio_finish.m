@@ -1,4 +1,4 @@
-function [finished_song, finished_fx , input_digital] = audio_finish(read_location, write_location, original_location, level)
+function [finished_song, finished_fx , input_digital] = audio_finish(read_location, write_location, original_location, level, downsample_rate)
     disp(read_location);
     disp(write_location);
     
@@ -14,6 +14,7 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     input_digital = transpose(importdata(read_location));
     input_analog = digital_to_analog(input_digital, Q);
     finished_song = mu_inverse(input_analog, mu, Q);
-    finished_fx = original_fx / 1;
+    finished_fx = original_fx / 2^downsample_rate;
+    disp("Final fx:", finished_fx);
     audiowrite(write_location, finished_song, finished_fx);
 end
