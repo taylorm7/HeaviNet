@@ -16,15 +16,20 @@ MATLABCODE="$dot/matlab_code"
 
 if [ $ACTION = "format" ]; then
 	if [ -z $3 ]; then
+		RECEPTIVE_FIELD=1
+	else
+		RECEPTIVE_FIELD=$3
+	fi
+	if [ -z $4 ]; then
 		DOWNSAMPLE_RATE=0
 	else
-		DOWNSAMPLE_RATE=$3
+		DOWNSAMPLE_RATE=$4
 	fi
 	echo "Formatting song:$SONG at:$SONGPATH with levels:$LEVELS and downsample rate:$DOWNSAMPLE_RATE"
 	if [ -f $SONGPATH ]; then
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_format('$SONGPATH', '$MATLABSONG', $DOWNSAMPLE_RATE, $LEVELS ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_format('$SONGPATH', '$MATLABSONG', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
 		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
@@ -105,7 +110,7 @@ elif [ $ACTION = "generate" ]; then
 			~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "upsample_level('$GENSONGPATH', '$GENSEEDPATH', $I ); quit;"
 		done
 		
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$SONGPATH', $LEVELS ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$SONGPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
 
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
@@ -135,7 +140,7 @@ elif [ $ACTION = "run" ]; then
 	fi
 
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
-		./$0 "format" $SONG $DOWNSAMPLE_RATE
+		./$0 "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		./$0 "load" $SONG $RECEPTIVE_FIELD
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
 		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE

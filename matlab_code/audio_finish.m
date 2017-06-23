@@ -3,7 +3,7 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     disp(write_location);
     
     original_info = audioinfo(original_location)
-    original_fx = original_info.SampleRate 
+    original_fx = original_info.SampleRate / 2^downsample_rate 
     
     N = 2^(level);
     mu = N-1;
@@ -15,6 +15,10 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     input_analog = digital_to_analog(input_digital, Q);
     finished_song = mu_inverse(input_analog, mu, Q);
     finished_fx = original_fx / 2^downsample_rate;
-    disp("Final fx:", finished_fx);
+    
+    disp('Song saved at');
     audiowrite(write_location, finished_song, finished_fx);
+    final_info = audioinfo(write_location)
+    finished_fx
+    
 end
