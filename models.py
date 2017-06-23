@@ -42,9 +42,9 @@ class Model(object):
 
     def __init__(self, level, receptive_field, data_location,
                        batch_size=128, 
-                       n_nodes_hl1=500,
-                       n_nodes_hl2=500,
-                       n_nodes_hl3=500):
+                       n_nodes_hl1=100,
+                       n_nodes_hl2=100,
+                       n_nodes_hl3=100):
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
@@ -77,7 +77,7 @@ class Model(object):
         #target = tf.placeholder(tf.float32, [None, n_target_classes])
 
         logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size,
-                                n_nodes_hl1, n_nodes_hl2, n_nodes_hl3)
+                                (level+1)*n_nodes_hl1, (level+1)*n_nodes_hl2, (level+1)*n_nodes_hl3)
         
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -103,6 +103,7 @@ class Model(object):
         self.cost = cost
         self.accuracy = accuracy
         self.correct_prediction = correct_prediction
+        self.best_accuracy = 0
 
         self.prediction_class = prediction_class
 
@@ -125,9 +126,11 @@ class Model(object):
     def train(self, x, ytrue_class, epochs=1 ):
         x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
-        print "Trainging:",  self.name, x.shape, ytrue_class.shape
+        print "Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs
 
-        for e in range(epochs):
+        #for e in range(epochs):
+        e = 0
+        while ((e < epochs) and (self.best_accuracy < 100 )):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
@@ -148,8 +151,14 @@ class Model(object):
                 epoch_loss+= c
 
             print "epoch", e, "loss", epoch_loss
+            e = e+1
+
             if (epoch_total != 0):
-                print "accuracy:", 100.0 * float(epoch_correct) / float(epoch_total)
+                epoch_accuracy = 100.0 * float(epoch_correct) / float(epoch_total)
+                print "accuracy:", epoch_accuracy
+                if epoch_accuracy > self.best_accuracy :
+                    self.best_accuracy = epoch_accuracy
+
     def generate(self, x_seed):
         x_seed = np.reshape(x_seed, (-1, self.clip_size))
         print "Generating with seed:", x_seed.shape

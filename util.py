@@ -62,8 +62,18 @@ def load_matlab(data_location, receptive_field):
     read_file = data_location + "/matlab_song.mat"
     matlab_input = scipy.io.loadmat(read_file)
     n_levels = int(matlab_input['n_levels'])
-    x_names, ytrue_names = name_level(n_levels)
-    
+    x_data = matlab_input['inputs']
+    ytrue_data = matlab_input['targets']
+    for i in range(n_levels):
+        store_file = data_location + "/xytrue_" + str(i) + "_r" + str(receptive_field) + ".pkl"
+        x_d = format_level(x_data[i,0], receptive_field)
+        y_d = ytrue_data[i,0]
+        print "Read level", i, "x:", x_d.size, "ytrue:", y_d.size
+        data_list = [x_d, y_d]
+        with open(store_file, "wb") as output_file:
+            pkl.dump(data_list, output_file)
+
+''' 
     x_data = {}
     ytrue_data = {}
     for xn, ytn in zip(x_names, ytrue_names):
@@ -77,17 +87,19 @@ def load_matlab(data_location, receptive_field):
         with open(store_file, "wb") as output_file:
             pkl.dump(data_list, output_file)
         print "Stored:", store_file
-
+'''
 def read_2(data_location, receptive_field, level):
     store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"
-    if os.path.isfile(store_file):
-        with open(store_file, "rb") as input_file:
-            data_list = pkl.load(input_file)
-        x_data = data_list[0]
-        ytrue_data = data_list[1]
-        return x_data, ytrue_data
-    else:
+    try: 
+        os.path.isfile(store_file)
+    except IOError:
         print "Failed to load:", store_file
+
+    with open(store_file, "rb") as input_file:
+        data_list = pkl.load(input_file)
+    x_data = data_list[0]
+    ytrue_data = data_list[1]
+    return x_data, ytrue_data
     
 
 def read_seed(seed_file, receptive_field):
