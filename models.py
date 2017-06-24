@@ -104,6 +104,7 @@ class Model(object):
         self.accuracy = accuracy
         self.correct_prediction = correct_prediction
         self.best_accuracy = 0
+        self.loss_change = 0
 
         self.prediction_class = prediction_class
 
@@ -124,7 +125,7 @@ class Model(object):
 
 
     def train(self, x, ytrue_class, epochs=1 ):
-        x = np.reshape(x, (-1, self.clip_size))
+        #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print "Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs
 

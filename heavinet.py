@@ -14,7 +14,7 @@ def load(data_location, receptive_field):
 def train(data_location, level, receptive_field, epochs):
     print "Trainging on ", data_location, "with receptive_field:" , receptive_field
     
-    x_data, ytrue_data = read_2(data_location, receptive_field, level)
+    x_data, ytrue_data = read_data(data_location, receptive_field, level)
     
     net = Model( level, receptive_field, data_location )
     net.train( x_data, ytrue_data, epochs=epochs )

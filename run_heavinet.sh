@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LEVELS=1
+LEVELS=7
 
 ACTION=$1
 SONG=$2
@@ -8,6 +8,56 @@ dot="$(cd "$(dirname "$0")"; pwd)"
 
 SONGPATH="$dot/data/songs/$SONG"
 DATAPATH="$dot/data/$SONG.data"
+
+if [ $ACTION = "generate" ] || [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
+	SEED=$3
+	SEEDPATH="$dot/data/songs/$SEED"
+	FINISHPATH="$DATAPATH/SONG.wav"
+	if [ -z $4 ]; then
+		RECEPTIVE_FIELD=1
+	else
+		RECEPTIVE_FIELD=$4
+	fi
+	if [ -z $5 ]; then
+		EPOCHS=1
+	else
+		EPOCHS=$5
+	fi
+
+	if [ -z $6 ]; then
+		DOWNSAMPLE_RATE=0
+	else
+		DOWNSAMPLE_RATE=$6
+	fi
+else
+	if [ -z $3 ]; then
+		RECEPTIVE_FIELD=1
+	else
+		RECEPTIVE_FIELD=$3
+	fi
+
+	if [ $ACTION = "train" ]; then
+		if [ -z $4 ]; then
+			EPOCHS=1
+		else
+			EPOCHS=$4
+		fi
+	else
+		if [ -z $4 ]; then
+			DOWNSAMPLE_RATE=0
+		else
+			DOWNSAMPLE_RATE=$4
+		fi
+		if [ -z $5 ]; then
+			EPOCHS=1
+		else
+			EPOCHS=$5
+		fi
+	fi
+
+fi
+
+
 
 MATLABSONG="$DATAPATH/matlab_song.mat"
 MATLABSEED="$DATAPATH/matlab_seed.mat"
@@ -29,7 +79,7 @@ if [ $ACTION = "format" ]; then
 	if [ -f $SONGPATH ]; then
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_format('$SONGPATH', '$MATLABSONG', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
 		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else

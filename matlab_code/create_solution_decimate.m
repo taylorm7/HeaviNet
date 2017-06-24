@@ -1,7 +1,7 @@
-function [y_digital, y ] = create_level_downsample(level, song, fx, total_levels)
-    
+function [y_digital,y] = create_solution_decimate(level, song, fx, total_levels)
+
     % set values for mu transform, assuming standard -1,1 audio
-    N = 2^(level);
+    N = 2^(level + 1);
     mu = N-1;
     xmax = 1;
     xmin = -1;
@@ -9,7 +9,7 @@ function [y_digital, y ] = create_level_downsample(level, song, fx, total_levels
     fx_factor = total_levels - level;
     x_fx = fx / 2^(fx_factor);
     
-    fprintf('Downsample Level:%d bits:%d x_fx:%g N:%d mu:%d Q:%g \n', level-1, level,x_fx, N,mu, Q);
+    fprintf('Solution Decimate Level:%d bits:%d fx:%g N:%d mu:%d Q:%g \n', level-1, level,x_fx, N,mu, Q);
     
     % downsample and upsample based on bit level 
     % (higher precision, lower downsampling)
@@ -20,25 +20,22 @@ function [y_digital, y ] = create_level_downsample(level, song, fx, total_levels
     % compute error for downsampling and upsampling
     D=x_up-song;
     MSE=mean(D.^2);
-    fprintf('Error between original and downsampled = %g\n',MSE )
+    fprintf('Error between original and filtered = %g\n',MSE )
 
     % perform mu-law transform and digitize compressed data
-    y_nonlinear = mu_trasform(x_down, mu, Q);
+    y_nonlinear = mu_trasform(x_up, mu, Q);
     y_digital = analog_to_digital(y_nonlinear, Q);
     % compute analog to digital, and perform inverse mu-law transform
     y_analog = digital_to_analog(y_digital, Q);
     y = mu_inverse(y_analog, mu, Q);
     
     % compute error for mu-law transform
-    D=x_down-y;
+    D=x_up-y;
     MSE=mean(D.^2);
-    fprintf('Error between downsample/filtered and quantized = %g\n',MSE )
-    
-    % upsample companded audio to origianl sampling frequency
-    z = up_sample(y, fx_factor);
+    fprintf('Error between filtered and quantized = %g\n',MSE )
     
     % compute final error for companded and digitized data
-    D=z-song;
+    D=y-song;
     MSE=mean(D.^2);
     fprintf('Error between original and final = %g\n',MSE )
     

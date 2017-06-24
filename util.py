@@ -31,7 +31,7 @@ def format_level(iterable, receptive_field):
         level = np.append(level, l)
     
     return level
-
+'''
 def read_data(receptive_field, level_names, ytrue_names, data_location, force_read=False):
     x_data = {}
     ytrue_data = {}
@@ -58,18 +58,19 @@ def read_data(receptive_field, level_names, ytrue_names, data_location, force_re
         with open(store_file, "wb") as output_file:
             pkl.dump(data_list, output_file)
     return x_data, ytrue_data
+'''
 def load_matlab(data_location, receptive_field):
     read_file = data_location + "/matlab_song.mat"
     matlab_input = scipy.io.loadmat(read_file)
+    r_field = int(matlab_input['receptive_field'])
     n_levels = int(matlab_input['n_levels'])
-    x_data = matlab_input['inputs']
+    x_data = matlab_input['inputs_formatted']
     ytrue_data = matlab_input['targets']
+    print "Reading", read_file, " receptive field:", r_field, "levels:", n_levels
     for i in range(n_levels):
         store_file = data_location + "/xytrue_" + str(i) + "_r" + str(receptive_field) + ".pkl"
-        x_d = format_level(x_data[i,0], receptive_field)
-        y_d = ytrue_data[i,0]
-        print "Read level", i, "x:", x_d.size, "ytrue:", y_d.size
-        data_list = [x_d, y_d]
+        print "Read level", i, "x:", x_data[i,0].shape, "ytrue:", ytrue_data[i,0].shape
+        data_list = [ x_data[i,0], ytrue_data[i,0] ]
         with open(store_file, "wb") as output_file:
             pkl.dump(data_list, output_file)
 
@@ -88,7 +89,7 @@ def load_matlab(data_location, receptive_field):
             pkl.dump(data_list, output_file)
         print "Stored:", store_file
 '''
-def read_2(data_location, receptive_field, level):
+def read_data(data_location, receptive_field, level):
     store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"
     try: 
         os.path.isfile(store_file)
