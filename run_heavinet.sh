@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LEVELS=6
+LEVELS=1
 
 ACTION=$1
 SONG=$2

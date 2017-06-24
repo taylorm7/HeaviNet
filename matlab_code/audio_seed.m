@@ -17,7 +17,7 @@ song = song(1:clipped_length);
 [song] = down_sample(song, downsample_rate);
 fx = fx/2^downsample_rate;
 
-[x_seed, x_fx_seed, y_seed, seed, z_seed] = create_level(bits, song, fx, total_levels);
+[x_seed, x_fx_seed, y_seed, seed, z_seed] = create_level_downsample(bits, song, fx, total_levels);
 
 save(data_location, 'level', 'seed');
 end

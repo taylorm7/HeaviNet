@@ -30,8 +30,8 @@ targets = cell(n_levels,1);
 target_z = cell(n_levels,1);
 
 for i = 1:n_levels
-[x_down{i}, x_fx{i}, y{i}, inputs{i}, input_z{i}] = create_level(i, song, fx, n_levels);
-[targets{i}, target_z{i}] = create_solution(i, song, fx, n_levels);
+[x_down{i}, x_fx{i}, y{i}, inputs{i}, input_z{i}] = create_level_downsample(i, song, fx, n_levels);
+[targets{i}, target_z{i}] = create_solution_downsample(i, song, fx, n_levels);
 end
 
 for i = 1:n_levels

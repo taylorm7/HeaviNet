@@ -1,7 +1,7 @@
-function [x_down, x_fx, y, y_digital, z] = create_level(level, song, fx, total_levels)
-    
+function [y_digital,y] = create_solution_downsample(level, song, fx, total_levels)
+
     % set values for mu transform, assuming standard -1,1 audio
-    N = 2^(level);
+    N = 2^(level + 1);
     mu = N-1;
     xmax = 1;
     xmin = -1;
@@ -9,7 +9,7 @@ function [x_down, x_fx, y, y_digital, z] = create_level(level, song, fx, total_l
     fx_factor = total_levels - level;
     x_fx = fx / 2^(fx_factor);
     
-    fprintf('Level:%d bits:%d x_fx:%g N:%d mu:%d Q:%g \n', level-1, level,x_fx, N,mu, Q);
+    fprintf('Solution Level:%d bits:%d fx:%g N:%d mu:%d Q:%g \n', level-1, level,x_fx, N,mu, Q);
     
     % downsample and upsample based on bit level 
     % (higher precision, lower downsampling)
@@ -46,3 +46,4 @@ function [x_down, x_fx, y, y_digital, z] = create_level(level, song, fx, total_l
     %plot_q(x_down, y);
 
 end
+
