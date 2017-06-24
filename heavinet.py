@@ -3,7 +3,7 @@ import numpy as np
 import scipy.io as sio
 import sys
 
-from util import read_data, name_level, read_seed, load_matlab, read_2, write_song
+from util import read_data, read_seed, load_matlab, write_song
 from models import Model
 
 def load(data_location, receptive_field):

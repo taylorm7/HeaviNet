@@ -1,4 +1,4 @@
-function [song, fx, seed] = audio_seed(level, song_location, data_location, downsample_rate, total_levels)
+function [song, fx, seed, seed_signal] = audio_seed(level, song_location, data_location, downsample_rate, total_levels, receptive_field)
 %song_location = '/home/sable/HeaviNet/data/songs/voice.wav';
 %data_location = '/home/sable/HeaviNet/data/voice.wav.data';
 
@@ -17,7 +17,8 @@ song = song(1:clipped_length);
 [song] = down_sample(song, downsample_rate);
 fx = fx/2^downsample_rate;
 
-[x_seed, x_fx_seed, y_seed, seed, z_seed] = create_level_downsample(bits, song, fx, total_levels);
+[seed, seed_signal] = create_level_decimate(bits, song, fx, total_levels);
+seed = format_level(seed, receptive_field);
 
 save(data_location, 'level', 'seed');
 end

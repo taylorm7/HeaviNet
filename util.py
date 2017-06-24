@@ -60,7 +60,7 @@ def read_data(receptive_field, level_names, ytrue_names, data_location, force_re
     return x_data, ytrue_data
 '''
 def load_matlab(data_location, receptive_field):
-    read_file = data_location + "/matlab_song.mat"
+    read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
     matlab_input = scipy.io.loadmat(read_file)
     r_field = int(matlab_input['receptive_field'])
     n_levels = int(matlab_input['n_levels'])
@@ -104,11 +104,14 @@ def read_data(data_location, receptive_field, level):
     
 
 def read_seed(seed_file, receptive_field):
-    matlab_input = scipy.io.loadmat(seed_file)
+    try:
+        matlab_input = scipy.io.loadmat(seed_file)
+    except IOError:
+        print "Failed to load:", seed_file
+    print "Opened:", seed_file
     seed_data = matlab_input['seed']
-    formated_seed_data = format_level(seed_data,receptive_field)
-    print "Read seed:", seed_data.size, " formatted:", formated_seed_data.size
-    return formated_seed_data
+    print "Read seed:", seed_data.shape
+    return seed_data
 
 def write_song(song, data_location, level, receptive_field):
     song_name = "song_" + str(level+1) + "_r" + str(receptive_field)
