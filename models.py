@@ -4,7 +4,7 @@ import os
 
 class Model(object):
     def perceptron_nn(self, data, n_input_classes, n_target_classes, clip_size, 
-                      n_nodes_hl1, n_nodes_hl2, n_nodes_hl3):
+                      n_nodes_hl1, n_nodes_hl2, n_nodes_hl3, n_nodes_hl4):
 
         hidden_1_layer = {'weights':tf.Variable(tf.random_normal(
                             [n_input_classes*clip_size, n_nodes_hl1])),
@@ -21,9 +21,14 @@ class Model(object):
                           'biases':tf.Variable(tf.random_normal(
                             [n_nodes_hl3]))}
 
+        hidden_4_layer = {'weights':tf.Variable(tf.random_normal(
+                            [n_nodes_hl3, n_nodes_hl4])),
+                          'biases':tf.Variable(tf.random_normal(
+                            [n_nodes_hl4]))}
+
 
         output_layer = {'weights':tf.Variable(tf.random_normal(
-                            [n_nodes_hl3, n_target_classes])),
+                            [n_nodes_hl4, n_target_classes])),
                         'biases':tf.Variable(tf.random_normal(
                             [n_target_classes]))}
 
@@ -37,14 +42,18 @@ class Model(object):
         l3 = tf.add(tf.matmul(l2,hidden_3_layer['weights']), hidden_3_layer['biases'])
         l3 = tf.nn.relu(l3)
 
-        output = tf.matmul(l3,output_layer['weights']) + output_layer['biases']
+        l4 = tf.add(tf.matmul(l3,hidden_4_layer['weights']), hidden_4_layer['biases'])
+        l4 = tf.nn.relu(l4)
+
+        output = tf.matmul(l4,output_layer['weights']) + output_layer['biases']
         return output
 
     def __init__(self, level, receptive_field, data_location,
                        batch_size=128, 
-                       n_nodes_hl1=100,
-                       n_nodes_hl2=100,
-                       n_nodes_hl3=100):
+                       n_nodes_hl1=250,
+                       n_nodes_hl2=200,
+                       n_nodes_hl3=150,
+                       n_nodes_hl4=150):
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
@@ -77,7 +86,7 @@ class Model(object):
         #target = tf.placeholder(tf.float32, [None, n_target_classes])
 
         logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size,
-                                (level+1)*n_nodes_hl1, (level+1)*n_nodes_hl2, (level+1)*n_nodes_hl3)
+                                (level+1)*n_nodes_hl1, (level+1)*n_nodes_hl2, (level+1)*n_nodes_hl3, (level+1)*n_nodes_hl4)
         
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
