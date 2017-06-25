@@ -34,7 +34,7 @@ for i = 1:n_levels
 end
 
 for i = 1:n_levels
-inputs_formatted{i} = format_level(inputs{i}, receptive_field);
+inputs_formatted{i} = format_level(inputs{i}, receptive_field, i, n_levels);
 inputs_formatted{i} = int32(inputs_formatted{i});
 end
 

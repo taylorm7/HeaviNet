@@ -14,11 +14,11 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     input_digital = transpose(importdata(read_location));
     input_analog = digital_to_analog(input_digital, Q);
     finished_song = mu_inverse(input_analog, mu, Q);
-    finished_fx = original_fx / 2^downsample_rate;
+    finished_fx = round(original_fx)
     
     disp('Song saved at');
     audiowrite(write_location, finished_song, finished_fx);
     final_info = audioinfo(write_location)
-    finished_fx
+    
     
 end

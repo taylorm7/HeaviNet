@@ -2,58 +2,28 @@ import tensorflow as tf
 import numpy as np
 import os
 
+def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
+    hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
+    hl_bias = tf.Variable(tf.random_normal([n_nodes]))
+    if(not output_layer):
+        layer = tf.add(tf.matmul(input_layer, hl_weight), hl_bias)
+        layer = tf.nn.relu(layer)
+    else:
+        layer =  tf.matmul(input_layer, hl_weight) + hl_bias
+    return layer
+
 class Model(object):
-    def perceptron_nn(self, data, n_input_classes, n_target_classes, clip_size, 
-                      n_nodes_hl1, n_nodes_hl2, n_nodes_hl3, n_nodes_hl4):
+    def perceptron_nn(self, data, n_input_classes, n_target_classes, clip_size, n_nodes):
+        layers = []
+        for i, nodes in enumerate( n_nodes ):
+            if i == 0:
+                layers.append(nn_layer(data, n_input_classes*clip_size, n_nodes[0]))
+            else:
+                layers.append(nn_layer(layers[i-1], n_nodes[i-1], n_nodes[i]))
+        output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
+        return output_layer
 
-        hidden_1_layer = {'weights':tf.Variable(tf.random_normal(
-                            [n_input_classes*clip_size, n_nodes_hl1])),
-                          'biases':tf.Variable(tf.random_normal(
-                            [n_nodes_hl1]))}
-
-        hidden_2_layer = {'weights':tf.Variable(tf.random_normal(
-                            [n_nodes_hl1, n_nodes_hl2])),
-                          'biases':tf.Variable(tf.random_normal(
-                            [n_nodes_hl2]))}
-
-        hidden_3_layer = {'weights':tf.Variable(tf.random_normal(
-                            [n_nodes_hl2, n_nodes_hl3])),
-                          'biases':tf.Variable(tf.random_normal(
-                            [n_nodes_hl3]))}
-
-        hidden_4_layer = {'weights':tf.Variable(tf.random_normal(
-                            [n_nodes_hl3, n_nodes_hl4])),
-                          'biases':tf.Variable(tf.random_normal(
-                            [n_nodes_hl4]))}
-
-
-        output_layer = {'weights':tf.Variable(tf.random_normal(
-                            [n_nodes_hl4, n_target_classes])),
-                        'biases':tf.Variable(tf.random_normal(
-                            [n_target_classes]))}
-
-
-        l1 = tf.add(tf.matmul(data,hidden_1_layer['weights']), hidden_1_layer['biases'])
-        l1 = tf.nn.relu(l1)
-
-        l2 = tf.add(tf.matmul(l1,hidden_2_layer['weights']), hidden_2_layer['biases'])
-        l2 = tf.nn.relu(l2)
-
-        l3 = tf.add(tf.matmul(l2,hidden_3_layer['weights']), hidden_3_layer['biases'])
-        l3 = tf.nn.relu(l3)
-
-        l4 = tf.add(tf.matmul(l3,hidden_4_layer['weights']), hidden_4_layer['biases'])
-        l4 = tf.nn.relu(l4)
-
-        output = tf.matmul(l4,output_layer['weights']) + output_layer['biases']
-        return output
-
-    def __init__(self, level, receptive_field, data_location,
-                       batch_size=128, 
-                       n_nodes_hl1=250,
-                       n_nodes_hl2=200,
-                       n_nodes_hl3=150,
-                       n_nodes_hl4=150):
+    def __init__(self, level, receptive_field, data_location, batch_size=128 ):
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
@@ -85,8 +55,8 @@ class Model(object):
         target = tf.cast(target, tf.float32)
         #target = tf.placeholder(tf.float32, [None, n_target_classes])
 
-        logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size,
-                                (level+1)*n_nodes_hl1, (level+1)*n_nodes_hl2, (level+1)*n_nodes_hl3, (level+1)*n_nodes_hl4)
+        n_nodes = [ (level+1)*400, (level+1)*300, (level+1)*50, ]
+        logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size, n_nodes)
         
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)

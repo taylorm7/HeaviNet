@@ -15,6 +15,7 @@ function [y_digital, y] = create_level_decimate(level, song, fx, total_levels)
     % (higher precision, lower downsampling)
     
     x_down = down_sample(song, fx_factor);
+    fprintf('Length of downsampled:%d\n', length(x_down));
     x_up = up_sample(x_down, fx_factor);
     
     % compute error for downsampling and upsampling

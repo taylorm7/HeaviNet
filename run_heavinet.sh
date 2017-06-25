@@ -86,6 +86,7 @@ if [ $ACTION = "format" ]; then
 	if [ -f $SONGPATH ]; then
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
+		echo "matlab audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD )"
 		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
 		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
@@ -133,10 +134,9 @@ elif [ $ACTION = "generate" ]; then
 		
 			GENSEEDNAME="seed_$I""_r$RECEPTIVE_FIELD"
 			GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
-			echo "$I $LEVELS"
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
-				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD ); quit;"
+				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, $LEVELS ); quit;"
 			else
 				echo "finish song"
 				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$SONGPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
