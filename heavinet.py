@@ -17,7 +17,7 @@ def train(data_location, level, receptive_field, epochs):
     x_data, ytrue_data = read_data(data_location, receptive_field, level)
     
     net = Model( level, receptive_field, data_location )
-    net.test(x_data, ytrue_data)
+    net.test_io_onehot(x_data, ytrue_data)
     net.close()
     #net.train( x_data, ytrue_data, epochs=epochs )
     #net.save(close=True)

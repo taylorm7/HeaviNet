@@ -48,45 +48,47 @@ class Model(object):
         inputs = tf.placeholder(tf.int64, [None,clip_size])
         target_class = tf.placeholder(tf.int64, [None])
 
-        #normalize inputs, and create one_hot value for normalized inputs
-
-        # slices tensor from middle value -> [0, middle_index] 
-        # to end of None -> [-1(end), 1 (one value only)] 
-        self.middle = tf.slice(inputs, [0,  receptive_field] , [-1, 1])
-        middle_ = tf.reshape(self.middle, [-1] )
-        self.normalized = tf.subtract(inputs, self.middle)
-        self.normalized_pos = self.normalized + input_classes_max
-         
-        input_norm_onehot_range = input_classes_max*2+1
-        normalized_onehot = tf.one_hot(self.normalized_pos, input_norm_onehot_range)
-        normalized_onehot = tf.reshape(normalized_onehot, (-1, clip_size*input_norm_onehot_range))
-        self.normalized_onehot = tf.cast(normalized_onehot, tf.float32)
-
         #create onehot value for non-normalized inputs
         onehot = tf.one_hot(inputs, n_input_classes)
         onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
         onehot = tf.cast(onehot, tf.float32)
-
-        
-        # normalize targets based on difference from input values to scaled targets
-        target_norm_onehot_range = target_classes_max*2+1
-        self.inputs_scaled = tf.multiply(middle_ , 2)
-        
-        self.target_normalized = tf.subtract(target_class, self.inputs_scaled)
-        self.target_normalized_pos = self.target_normalized + target_classes_max
-        self.target_normalized_onehot = tf.one_hot(
-                self.target_normalized_pos, target_norm_onehot_range)
-        self.target_normalized_onehot = tf.reshape(
-                self.target_normalized_onehot, (-1, target_norm_onehot_range) )
-
         # create regular onehot values for target
         target = tf.one_hot(target_class, n_target_classes)
         target = tf.reshape(target, (-1, n_target_classes))
         target = tf.cast(target, tf.float32)
 
-        
+        #normalized inputs and target, along with corresponding onehot
 
+        # slices tensor from middle value -> [0, middle_index] 
+        # to end of None -> [-1(end), 1 (one value only)] 
+        middle = tf.slice(inputs, [0,  receptive_field] , [-1, 1])
+        middle_ = tf.reshape(middle, [-1] )
+        normalized = tf.subtract(inputs, middle)
+        normalized_pos = normalized + input_classes_max
+         
+        input_norm_onehot_range = input_classes_max*2+1
+        normalized_onehot = tf.one_hot(normalized_pos, input_norm_onehot_range)
+        normalized_onehot = tf.reshape(normalized_onehot, (-1, clip_size*input_norm_onehot_range))
+        normalized_onehot = tf.cast(normalized_onehot, tf.float32)
+                
+        # normalize targets based on difference from input values to scaled targets
+        target_norm_onehot_range = target_classes_max*2+1
+        inputs_scaled = tf.multiply(middle_ , 2)
+        
+        target_normalized = tf.subtract(target_class, inputs_scaled)
+        target_normalized_pos = target_normalized + target_classes_max
+        target_normalized_onehot = tf.one_hot(
+                target_normalized_pos, target_norm_onehot_range)
+        target_normalized_onehot = tf.reshape(
+                target_normalized_onehot, (-1, target_norm_onehot_range) )
+
+        #create list of perceptron levels with the number of corresponding nodes per level
         n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
+
+        nn_inputs = onehot
+        nn_targets = target
+        nn_target_class = target_class
+
         logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size, n_nodes)
         
         prediction = tf.nn.softmax(logits)
@@ -104,10 +106,22 @@ class Model(object):
         sess.run(tf.global_variables_initializer())
 
         self.clip_size = clip_size
+
         self.inputs = inputs
         self.target = target
+
         self.target_class = target_class
         self.onehot = onehot
+        
+        self.middle = middle
+        self.normalized = normalized
+        self.normalized_pos = normalized_pos
+        self.normalized_onehot = normalized_onehot
+
+        self.inputs_scaled = inputs_scaled
+        self.target_normalized = target_normalized
+        self.target_normalized_pos = target_normalized_pos
+        self.target_normalized_onehot = target_normalized_onehot
 
         self.optimizer = optimizer
         self.cost = cost
@@ -133,7 +147,7 @@ class Model(object):
             print "Creating level directory at:", self.save_dir
         print self.save_file
 
-    def test(self, x, ytrue_class):
+    def test_io_onehot(self, x, ytrue_class):
         np.set_printoptions(threshold=np.inf)
         #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
@@ -141,24 +155,25 @@ class Model(object):
         for i in range(len(x)/2, len(x)/2 + 1, 10):
             feed_dict_test = {self.inputs: x[i:i+10,:],
                                self.target_class: ytrue_class[i:i+10] }
-            inp, mid, norm, norm_pos, norm_one, one, targ_c, in_scale, tar_nor, tar_nor_pos, tar_nor_pos_one = self.sess.run(
+            inp, mid, norm, norm_pos, norm_one, one, targ_c, in_scale, tar_nor, tar_nor_pos, tar_nor_pos_one, tar = self.sess.run(
                     [self.inputs, self.middle, self.normalized, self.normalized_pos, 
                      self.normalized_onehot, self.onehot, self.target_class, self.inputs_scaled,
                      self.target_normalized, self.target_normalized_pos, 
-                     self.target_normalized_onehot],
+                     self.target_normalized_onehot, self.target],
                     feed_dict=feed_dict_test)
             print "inputs\n", inp
             print "middle value of receptive_field\n", mid
             print "normalized inputs\n", norm
             print "positive normalized\n", norm_pos
             print "onehot normalized inputs\n", norm_one
+            print "regular onehot inputs\n", one
             
             print "inputs scaled to next level\n", in_scale
             print "target classes\n", targ_c
             print "targets normalized\n", tar_nor
             print "positive normalized targets\n", tar_nor_pos
             print "onehot normalized targets\n", tar_nor_pos_one
-            print "regular onehot targets\n", one
+            print "regular onehot targets\n", tar
 
 
     def train(self, x, ytrue_class, epochs=1 ):
