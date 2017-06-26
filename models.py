@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 import os
 
+np.set_printoptions(threshold=np.inf)
+
 def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
     hl_bias = tf.Variable(tf.random_normal([n_nodes]))
@@ -38,15 +40,23 @@ class Model(object):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
+        input_classes_max = n_input_classes - 1
         n_target_classes = 2**(level+2)
+        target_classes_max = n_target_classes - 1
 
 
 
         inputs = tf.placeholder(tf.int32, [None,clip_size])
         # slices tensor from middle value -> [0, middle_index] 
-        # to end of None -> [-1(end), middle_index] 
-        self.middle = tf.slice(inputs, [0,  receptive_field] , [-1, receptive_field])
+        # to end of None -> [-1(end), 1 (one value only)] 
+        self.middle = tf.slice(inputs, [0,  receptive_field] , [-1, 1])
         self.normalized = tf.subtract(inputs, self.middle)
+        self.normalized_pos = self.normalized + input_classes_max
+         
+        norm_one_range = input_classes_max*2+1
+        normalized_onehot = tf.one_hot(self.normalized_pos, norm_one_range)
+        #normalized_onehot = tf.reshape(normalized_onehot, (-1, clip_size*norm_one_range))
+        self.normalized_onehot = tf.cast(normalized_onehot, tf.float32)
 
         onehot = tf.one_hot(inputs, n_input_classes)
         onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
@@ -111,12 +121,19 @@ class Model(object):
         #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print "Testing:",  self.name, x.shape, ytrue_class.shape
-        for i in range(len(x)/2, len(x)/2 + 1, self.batch_size):
-            feed_dict_test = {self.inputs: x[i:i+self.batch_size,:],
-                               self.target_class: ytrue_class[i:i+self.batch_size] }
-            mid, inp = self.sess.run([self.middle, self.inputs], feed_dict=feed_dict_test)
-            print mid
+        for i in range(len(x)/2, len(x)/2 + 1, 10):
+            feed_dict_test = {self.inputs: x[i:i+10,:],
+                               self.target_class: ytrue_class[i:i+10] }
+            inp, mid, norm, norm_pos, norm_one, one = self.sess.run(
+                    [self.inputs, self.middle, self.normalized, self.normalized_pos, 
+                     self.normalized_onehot, self.onehot],
+                    feed_dict=feed_dict_test)
+            #print mid
             print inp
+            print norm
+            print norm_pos
+            print norm_one
+            #print one
 
 
     def train(self, x, ytrue_class, epochs=1 ):
