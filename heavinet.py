@@ -17,8 +17,10 @@ def train(data_location, level, receptive_field, epochs):
     x_data, ytrue_data = read_data(data_location, receptive_field, level)
     
     net = Model( level, receptive_field, data_location )
-    net.train( x_data, ytrue_data, epochs=epochs )
-    net.save(close=True)
+    net.test(x_data, ytrue_data)
+    net.close()
+    #net.train( x_data, ytrue_data, epochs=epochs )
+    #net.save(close=True)
 
 
 def generate(data_location, seed_file, level, receptive_field):

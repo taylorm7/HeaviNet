@@ -152,12 +152,17 @@ elif [ $ACTION = "generate" ]; then
 	fi
 
 elif [ $ACTION = "run" ]; then
+	date
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
 		./$0 "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
+		date
 		./$0 "load" $SONG $RECEPTIVE_FIELD
+		date
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
+		date
 		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		echo "Compled Run"
+		date
 
 	else
 		echo "Invalid $SONG or $SEED"

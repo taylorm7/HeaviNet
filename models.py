@@ -43,6 +43,11 @@ class Model(object):
 
 
         inputs = tf.placeholder(tf.int32, [None,clip_size])
+        # slices tensor from middle value -> [0, middle_index] 
+        # to end of None -> [-1(end), middle_index] 
+        self.middle = tf.slice(inputs, [0,  receptive_field] , [-1, receptive_field])
+        self.normalized = tf.subtract(inputs, self.middle)
+
         onehot = tf.one_hot(inputs, n_input_classes)
         onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
         onehot = tf.cast(onehot, tf.float32)
@@ -55,7 +60,7 @@ class Model(object):
         target = tf.cast(target, tf.float32)
         #target = tf.placeholder(tf.float32, [None, n_target_classes])
 
-        n_nodes = [ (level+1)*400, (level+1)*300, (level+1)*50, ]
+        n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
         logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size, n_nodes)
         
         prediction = tf.nn.softmax(logits)
@@ -102,12 +107,23 @@ class Model(object):
             print "Creating level directory at:", self.save_dir
         print self.save_file
 
+    def test(self, x, ytrue_class):
+        #x = np.reshape(x, (-1, self.clip_size))
+        ytrue_class = np.reshape(ytrue_class, (-1))
+        print "Testing:",  self.name, x.shape, ytrue_class.shape
+        for i in range(len(x)/2, len(x)/2 + 1, self.batch_size):
+            feed_dict_test = {self.inputs: x[i:i+self.batch_size,:],
+                               self.target_class: ytrue_class[i:i+self.batch_size] }
+            mid, inp = self.sess.run([self.middle, self.inputs], feed_dict=feed_dict_test)
+            print mid
+            print inp
+
 
     def train(self, x, ytrue_class, epochs=1 ):
         #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print "Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs
-
+        
         #for e in range(epochs):
         e = 0
         while ((e < epochs) and (self.best_accuracy < 100 )):
