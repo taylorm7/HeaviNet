@@ -24,7 +24,8 @@ class Model(object):
         output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
         return output_layer
 
-    def __init__(self, level, receptive_field, data_location, batch_size=128 ):
+    def __init__(self, level, receptive_field, data_location, 
+                 batch_size=128, normalize_mode=True ):
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
@@ -74,9 +75,11 @@ class Model(object):
         # normalize targets based on difference from input values to scaled targets
         target_norm_onehot_range = target_classes_max*2+1
         inputs_scaled = tf.multiply(middle_ , 2)
+        inputs_scaled_ = tf.reshape(inputs_scaled, [-1])
         
         target_normalized = tf.subtract(target_class, inputs_scaled)
         target_normalized_pos = target_normalized + target_classes_max
+        target_normalize_pos_ = tf.reshape(target_normalized_pos, [-1])
         target_normalized_onehot = tf.one_hot(
                 target_normalized_pos, target_norm_onehot_range)
         target_normalized_onehot = tf.reshape(
@@ -85,21 +88,36 @@ class Model(object):
         #create list of perceptron levels with the number of corresponding nodes per level
         n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
 
-        nn_inputs = onehot
-        nn_targets = target
-        nn_target_class = target_class
 
-        logits = self.perceptron_nn(onehot, n_input_classes, n_target_classes, clip_size, n_nodes)
+        if normalize_mode == True:
+            nn_inputs = normalized_onehot
+            nn_targets = target_normalized_onehot
+            nn_target_class = target_normalize_pos_
+            nn_n_inputs = input_norm_onehot_range
+            nn_n_targets = target_norm_onehot_range
+        else:
+            nn_inputs = onehot
+            nn_targets = target
+            nn_target_class = target_class
+            nn_n_inputs = n_input_classes
+            nn_n_targets = n_target_classes
+
+        logits = self.perceptron_nn(nn_inputs, nn_n_inputs, nn_n_targets, clip_size, n_nodes)
         
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
 
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=target)
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=nn_targets)
         cost = tf.reduce_mean(cross_entropy)
         optimizer = tf.train.AdamOptimizer().minimize(cost)
-        correct_prediction = tf.equal(target_class, prediction_class)
+        correct_prediction = tf.equal(nn_target_class, prediction_class)
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32) )
 
+        if normalize_mode == True:
+            prediction_value = (prediction_class - target_classes_max) + inputs_scaled_
+        else:
+            prediction_value = prediction_class
+        
         sess = tf.Session()
         saver = tf.train.Saver()
 
@@ -130,7 +148,7 @@ class Model(object):
         self.best_accuracy = 0
         self.loss_change = 0
 
-        self.prediction_class = prediction_class
+        self.prediction_value = prediction_value
 
         self.sess = sess
         self.saver = saver
@@ -218,7 +236,7 @@ class Model(object):
         y_generated = []
         for i in range(0, len(x_seed), self.batch_size):
             feed_dict_gen = {self.inputs: x_seed[i:i+self.batch_size,:]}
-            y_g = self.sess.run( [self.prediction_class], feed_dict=feed_dict_gen)
+            y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated = np.append(y_generated, y_g)
         print "Generated song:",  len(y_generated)
         return y_generated
