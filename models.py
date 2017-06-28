@@ -2,14 +2,6 @@ import tensorflow as tf
 import numpy as np
 import os
 
-# Convolutional layers referenced and modified from:
-# https://github.com/Hvass-Labs/TensorFlow-Tutorials -> 02_Convolutional_Neural_Network.ipynb
-
-def new_weights(shape):
-    return tf.Variable(tf.truncated_normal(shape, stddev=0.05))
-
-def new_biases(length):
-    return tf.Variable(tf.constant(0.05, shape=[length]))
 
 def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
@@ -20,6 +12,16 @@ def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     if(not output_layer):
         layer = tf.nn.relu(layer)
     return layer
+
+
+
+# Weights, bias, and convolutional layer helper methods referenced and modified from:
+# https://github.com/Hvass-Labs/TensorFlow-Tutorials -> 02_Convolutional_Neural_Network.ipynb
+def new_weights(shape):
+    return tf.Variable(tf.truncated_normal(shape, stddev=0.05))
+
+def new_biases(length):
+    return tf.Variable(tf.constant(0.05, shape=[length]))
 
 def new_conv_layer(input,              # The previous layer.
                    num_input_channels, # Num. channels in prev. layer.
@@ -61,8 +63,8 @@ def new_conv_layer(input,              # The previous layer.
         # consider 2x2 windows and select the largest value
         # in each window. Then we move 2 pixels to the next window.
         layer = tf.nn.max_pool(value=layer,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
+                               ksize=[1, 4, 4, 1],
+                               strides=[1, 4, 4, 1],
                                padding='SAME')
 
     # Rectified Linear Unit (ReLU).
@@ -122,8 +124,29 @@ def new_fc_layer(input,          # The previous layer.
 
     return layer
 
+def nn_fc_layers(input, n_input_classes, n_target_classes, n_nodes):
+    layers = []
+    for i, node in enumerate( n_nodes ):
+        if i == 0:
+            layers.append(new_fc_layer(input, n_input_classes, node, use_relu=True))
+        else:
+            layers.append(new_fc_layer(layers[i-1], n_nodes[i-1], node, use_relu=True))
 
+    layers.append(new_fc_layer(layers[-1], n_nodes[-1], n_target_classes, use_relu=False))
+    return layers
 
+def nn_conv_layers(data_image,  filter_sizes, filter_nodes, use_pooling ):
+    layers = []
+    weights = []
+    
+    for i, (size, num) in enumerate( zip(filter_sizes, filter_nodes) ):
+        if i == 0:
+            l, w = new_conv_layer(data_image, 1, size, num, use_pooling)
+        else:
+            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size, num, use_pooling)
+        layers.append(l)
+        weights.append(w)
+    return layers, weights
 
 class Model(object):
     def perceptron_nn(self, input, n_input_classes, n_target_classes, clip_size, n_nodes):
@@ -136,74 +159,41 @@ class Model(object):
         output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
         return output_layer
 
-    def nn_fc_layers(self, input, n_input_classes, n_target_classes, n_nodes):
-        layers = []
-        for i, nodes in enumerate( n_nodes ):
-            if i == 0:
-                layers.append(new_fc_layer(input, n_input_classes, n_nodes[0], use_relu=True))
-            else:
-                layers.append(new_fc_layer(layers[i-1], n_nodes[i-1], n_nodes[i], use_relu=True))
+    def neural_network_model(self, data_image, n_target_classes):
+        conv_sizes = [ (self.level + 1) , (self.level+1) ]
+        conv_nodes = [ 8 , 16 ]
+        fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
 
-        output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, use_relu=False)
-        return output_layer
+        if self.level >= 5:
+            use_pooling=True
+        else:
+            use_pooling=False
+        for i, (s, f) in enumerate(zip(conv_sizes, conv_nodes)):
+            print "  conv Layer", i, "filter size", s, "number of channels", f, "use pooling", use_pooling
+        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, use_pooling)
+        
+        conv_flat, n_features = flatten_layer(conv_layers[-1])
+        print "  flat layer number of features", n_features
+    
+        for i, n in enumerate(fc_nodes):
+            print "  fully connected layer", i, "number of nodes", n
+        print "  targets", n_target_classes
+        fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
 
-    def nn_conv_layers(self, input, filter_size, filter_num ):
-        layers = []
-        weights = []
+        return fc_layers[-1]
 
-    def neural_network_model(self, data_image, n_target_classes, 
-            n_channels=1, 
-            s_filter1=5, n_filter1=16, 
-            s_filter2=5, n_filter2=36,
-            fc_size = 256 ):
-
-        layer_conv1, weights_conv1 = new_conv_layer(input=data_image, 
-            num_input_channels=n_channels,
-            filter_size= s_filter1,
-            num_filters= n_filter1,
-            use_pooling=False)
-
-        layer_conv2, weights_conv2 = new_conv_layer(input=layer_conv1,
-            num_input_channels= n_filter1,
-            filter_size= s_filter2,
-            num_filters= n_filter2,
-            use_pooling=False)
-
-        layer_flat, num_features = flatten_layer(layer_conv2)
-
-        layer_fc1 = new_fc_layer(input=layer_flat,
-            num_inputs= num_features,
-            num_outputs= fc_size,
-            use_relu=True)
-
-        layer_fc2 = new_fc_layer(input=layer_fc1,
-             num_inputs=fc_size,
-             num_outputs=n_target_classes,
-             use_relu=False)
-
-        return layer_fc2
 
     def __init__(self, level, receptive_field, data_location, 
                  batch_size=128, normalize_mode=True ):
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
-        '''
-        self.x_name = x_name
-        self.ytrue_name = ytrue_name
-        self.batch_size = batch_size
-        self.n_nodes_hl1 = n_nodes_hl1
-        self.n_nodes_hl2 = n_nodes_hl2
-        self.n_nodes_hl3 = n_nodes_hl3
-        '''
-
+        
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
         input_classes_max = n_input_classes - 1
         n_target_classes = 2**(level+2)
         target_classes_max = n_target_classes - 1
-
-
 
         inputs = tf.placeholder(tf.int64, [None,clip_size])
         target_class = tf.placeholder(tf.int64, [None])
@@ -249,7 +239,7 @@ class Model(object):
 
         #create list of perceptron levels with the number of corresponding nodes per level
         #n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
-        n_nodes = [ 1024, 512, 256, ]
+        #n_nodes = [ 1024, 512, 256, ]
 
 
         if normalize_mode == True:
@@ -387,12 +377,12 @@ class Model(object):
                 
                 epoch_loss+= c
 
-            print "epoch", e, "loss", epoch_loss
+            print " epoch", e, "loss", epoch_loss
             e = e+1
 
             if (epoch_total != 0):
                 epoch_accuracy = 100.0 * float(epoch_correct) / float(epoch_total)
-                print "accuracy:", epoch_accuracy
+                print " accuracy:", epoch_accuracy
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
 
