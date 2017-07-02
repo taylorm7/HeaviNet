@@ -29,8 +29,8 @@ targets = cell(n_levels,1);
 targets_signal = cell(n_levels,1);
 
 for i = 1:n_levels
-[inputs{i}, inputs_signal{i}] = create_level_decimate(i, song, fx, n_levels);
-[targets{i}, targets_signal{i}] = create_solution_decimate(i, song, fx, n_levels);
+[inputs{i}, inputs_signal{i}] = create_level_filter(i, song, fx, n_levels);
+[targets{i}, targets_signal{i}] = create_solution_filter(i, song, fx, n_levels);
 end
 
 for i = 1:n_levels

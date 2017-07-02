@@ -17,15 +17,15 @@ if limit >= len_iterable
     error(error_msg);
 end
 
-for i = 0: limit - 1
+parfor i = 0: limit - 1
     format_iterable(i+1,:) = iterable( mod((i+index),len_iterable)+1 );
 end
 
-for i = limit:len_iterable-limit -1 
+parfor i = limit:len_iterable-limit -1 
     format_iterable(i+1,:) = iterable( i + index + 1 );
 end
 
-for i = len_iterable-limit: len_iterable - 1
+parfor i = len_iterable-limit: len_iterable - 1
     format_iterable(i+1,:) = iterable( mod((i+index),len_iterable)+1 );
 end
 
