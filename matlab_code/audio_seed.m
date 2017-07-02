@@ -20,5 +20,5 @@ fx = fx/2^downsample_rate;
 [seed, seed_signal] = create_level_decimate(bits, song, fx, n_levels);
 seed = format_level(seed, receptive_field, level, n_levels);
 
-save(data_location, 'level', 'seed');
+save(data_location, 'level', 'seed', '-v7.3');
 end

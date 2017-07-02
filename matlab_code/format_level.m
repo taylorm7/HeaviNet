@@ -1,5 +1,5 @@
 
-function [format_iterable, index] = format_level(iterable, receptive_field, level, n_levels)
+function [format_iterable] = format_level(iterable, receptive_field, level, n_levels)
 
 index = make_index(receptive_field, level, n_levels);
 

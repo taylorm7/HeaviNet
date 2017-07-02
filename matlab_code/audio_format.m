@@ -33,6 +33,12 @@ for i = 1:n_levels
 [targets{i}, targets_signal{i}] = create_solution_filter(i, song, fx, n_levels);
 end
 
+% job = batch('format_level', 1 , {inputs{1}, receptive_field, 1, n_levels}, 'pool', 2);
+% wait(job);
+% diary(job);
+% test_job = fetchOutputs(job);
+% delete(job);
+
 for i = 1:n_levels
 fprintf('Formatting level:%d\n', i);
 inputs_formatted{i} = format_level(inputs{i}, receptive_field, i, n_levels);
@@ -44,5 +50,5 @@ disp(length(song));
 disp("Fx");
 disp(fx);
 
-save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets');
+save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', '-v7.3');
 end

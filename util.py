@@ -1,6 +1,7 @@
 import numpy as np
 import os.path
 import scipy.io
+import h5py
 import cPickle as pkl
 
 def name_level(n_levels):
@@ -31,37 +32,12 @@ def format_level(iterable, receptive_field):
         level = np.append(level, l)
     
     return level
-'''
-def read_data(receptive_field, level_names, ytrue_names, data_location, force_read=False):
-    x_data = {}
-    ytrue_data = {}
-    
-    read_file = data_location + "/matlab_song.mat"
-    store_file = data_location + "/x_ytrue_r" + str(receptive_field) + ".pkl"
 
-    if os.path.isfile(store_file) and force_read==False :
-        print "Pickle load:", store_file
-        with open(store_file, "rb") as input_file:
-            data_list = pkl.load(input_file)
-        x_data = data_list[0]
-        ytrue_data = data_list[1]
-    else:
-        print "Matlab load:", read_file
-        matlab_input = scipy.io.loadmat(read_file)
-        for name in level_names:
-            x_data[name] = format_level(matlab_input[name], receptive_field)   
-        for name in ytrue_names:
-            ytrue_data[name] = matlab_input[name]
-        
-        data_list = [x_data, ytrue_data]
-        
-        with open(store_file, "wb") as output_file:
-            pkl.dump(data_list, output_file)
-    return x_data, ytrue_data
-'''
 def load_matlab(data_location, receptive_field):
     read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
-    matlab_input = scipy.io.loadmat(read_file)
+    #matlab_input = scipy.io.loadmat(read_file)
+    matlab_input = h5py.File(read_file)
+    print matlab_input.keys()
     r_field = int(matlab_input['receptive_field'])
     n_levels = int(matlab_input['n_levels'])
     x_data = matlab_input['inputs_formatted']
@@ -74,21 +50,6 @@ def load_matlab(data_location, receptive_field):
         with open(store_file, "wb") as output_file:
             pkl.dump(data_list, output_file)
 
-''' 
-    x_data = {}
-    ytrue_data = {}
-    for xn, ytn in zip(x_names, ytrue_names):
-        x_data[xn] = format_level(matlab_input[xn], receptive_field)   
-        ytrue_data[ytn] = matlab_input[ytn]
-        print "Read", xn ,"x:" , x_data[xn].size, "ytrue:", ytrue_data[ytn].size
-
-    for xn, ytn, i in zip(x_names, ytrue_names, range(n_levels)):
-        store_file = data_location + "/xytrue_" + str(i) + "_r" + str(receptive_field) + ".pkl"
-        data_list = [x_data[xn], ytrue_data[ytn]]
-        with open(store_file, "wb") as output_file:
-            pkl.dump(data_list, output_file)
-        print "Stored:", store_file
-'''
 def read_data(data_location, receptive_field, level):
     store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"
     try: 

@@ -82,6 +82,7 @@ MATLABSONG="$DATAPATH/matlab_song_r$RECEPTIVE_FIELD.mat"
 
 
 if [ $ACTION = "format" ]; then
+	SECONDS=0
 	echo "Formatting song:$SONG at:$SONGPATH with levels:$LEVELS and downsample rate:$DOWNSAMPLE_RATE"
 	if [ -f $SONGPATH ]; then
 		mkdir $DATAPATH
@@ -94,26 +95,38 @@ if [ $ACTION = "format" ]; then
 		echo "The file '$SONG' not found at '$SONGPATH'"
 		echo "Make sure song_name.wav is located in ./data/songs/"
 	fi
+	duration=$SECONDS
+	echo "Format: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "load" ]; then
+	SECONDS=0
 	if [ -f $MATLABSONG ]; then
 		echo "Loading song:$SONG in $MATLABSONG"
 		python heavinet.py $ACTION $DATAPATH $RECEPTIVE_FIELD
 	else
 		echo "The file '$SONG' not found at '$MATLABSONG'"
 		echo "Try loading with ./run_heavinet.sh load song_name.mp3"
-	fi	
+	fi
+	duration=$SECONDS
+	echo "Load: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "train" ]; then
+	SECONDS=0
 	if [ -f $MATLABSONG ]; then
 		echo "Training on song $SONG in $MATLABSONG"
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
-			python heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS
+			python heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS &
 		done
+
+		wait
+		echo "Training finished"
 	else
 		echo "The file '$SONG' not found at '$MATLABSONG'"
 		echo "Try loading with ./run_heavinet.sh load song_name.mp3"
 	fi
+	duration=$SECONDS
+	echo "Train: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "generate" ]; then
+	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		echo "Generating on song $SONG from seed $SEED"
 		echo "Data path:$DATAPATH"
@@ -143,31 +156,27 @@ elif [ $ACTION = "generate" ]; then
 			fi
 		done
 		
-		#~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSEEDPATH', '$FINISHPATH', '$SONGPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
-
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
 		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
 		echo "Then training with ./run_heavinet.sh train song_name.mp3"
 	fi
-
+	duration=$SECONDS
+	echo "Generate: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "run" ]; then
-	date
+	$SECONDS=0
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
 		./$0 "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
-		date
 		./$0 "load" $SONG $RECEPTIVE_FIELD
-		date
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
-		date
 		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		echo "Compled Run"
-		date
 
 	else
 		echo "Invalid $SONG or $SEED"
 	fi
-
+	duration=$SECONDS
+	echo "Run: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "train_generate" ]; then
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
@@ -177,7 +186,6 @@ elif [ $ACTION = "train_generate" ]; then
 	else
 		echo "Invalid $SONG or $SEED"
 	fi
-
 else
 	echo "Please enter an action, 'load song.mp3', 'train song.wav', or 'generate song.mp4 seed.mp3'"
 fi
