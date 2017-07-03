@@ -37,16 +37,25 @@ def load_matlab(data_location, receptive_field):
     read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
     #matlab_input = scipy.io.loadmat(read_file)
     matlab_input = h5py.File(read_file)
-    print matlab_input.keys()
-    r_field = int(matlab_input['receptive_field'])
-    n_levels = int(matlab_input['n_levels'])
-    x_data = matlab_input['inputs_formatted']
-    ytrue_data = matlab_input['targets']
+    print matlab_input.get('receptive_field')[0,0]
+
+    r_field = int(matlab_input.get('receptive_field')[0,0])
+    n_levels = int(matlab_input.get('n_levels')[0,0])
+    
+    #x_data = [matlab_input[element[0]][:] for element in matlab_input['inputs_formatted']] 
+    #ytrue_data = [matlab_input[element[0]][:] for element in matlab_input['targets']]
+
+    #np.set_printoptions(threshold=np.inf)
+    
     print "Reading", read_file, " receptive field:", r_field, "levels:", n_levels
     for i in range(n_levels):
+        x_data = [matlab_input[element[i]][:] for element in matlab_input['inputs_formatted']] 
+        ytrue_data = [matlab_input[element[i]][:] for element in matlab_input['targets']]
+        x_data = x_data[0].transpose()
+        ytrue_data = ytrue_data[0].transpose()
         store_file = data_location + "/xytrue_" + str(i) + "_r" + str(receptive_field) + ".pkl"
-        print "Read level", i, "x:", x_data[i,0].shape, "ytrue:", ytrue_data[i,0].shape
-        data_list = [ x_data[i,0], ytrue_data[i,0] ]
+        print "Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape
+        data_list = [ x_data, ytrue_data ]
         with open(store_file, "wb") as output_file:
             pkl.dump(data_list, output_file)
 

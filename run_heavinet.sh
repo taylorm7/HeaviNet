@@ -114,7 +114,7 @@ elif [ $ACTION = "train" ]; then
 		echo "Training on song $SONG in $MATLABSONG"
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
-			python heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS &
+			python heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS
 		done
 
 		wait

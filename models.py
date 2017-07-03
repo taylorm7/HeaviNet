@@ -351,7 +351,7 @@ class Model(object):
 
 
     def train(self, x, ytrue_class, epochs=1 ):
-        #x = np.reshape(x, (-1, self.clip_size))
+        x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print "Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs
         
