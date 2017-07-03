@@ -35,29 +35,27 @@ def format_level(iterable, receptive_field):
 
 def load_matlab(data_location, receptive_field):
     read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
-    #matlab_input = scipy.io.loadmat(read_file)
-    matlab_input = h5py.File(read_file)
-    print matlab_input.get('receptive_field')[0,0]
-
-    r_field = int(matlab_input.get('receptive_field')[0,0])
-    n_levels = int(matlab_input.get('n_levels')[0,0])
     
-    #x_data = [matlab_input[element[0]][:] for element in matlab_input['inputs_formatted']] 
-    #ytrue_data = [matlab_input[element[0]][:] for element in matlab_input['targets']]
+    try: 
+        os.path.isfile(read_file)
+    except IOError:
+        print "Failed to load:", store_file
 
-    #np.set_printoptions(threshold=np.inf)
-    
-    print "Reading", read_file, " receptive field:", r_field, "levels:", n_levels
-    for i in range(n_levels):
-        x_data = [matlab_input[element[i]][:] for element in matlab_input['inputs_formatted']] 
-        ytrue_data = [matlab_input[element[i]][:] for element in matlab_input['targets']]
-        x_data = x_data[0].transpose()
-        ytrue_data = ytrue_data[0].transpose()
-        store_file = data_location + "/xytrue_" + str(i) + "_r" + str(receptive_field) + ".pkl"
-        print "Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape
-        data_list = [ x_data, ytrue_data ]
-        with open(store_file, "wb") as output_file:
-            pkl.dump(data_list, output_file)
+    with h5py.File(read_file) as matlab_input:
+        r_field = int(matlab_input.get('receptive_field')[0,0])
+        n_levels = int(matlab_input.get('n_levels')[0,0])
+        
+        print "Reading", read_file, " receptive field:", r_field, "levels:", n_levels
+        for i in range(n_levels):
+            x_data = [matlab_input[element[i]][:] for element in matlab_input['inputs_formatted']] 
+            ytrue_data = [matlab_input[element[i]][:] for element in matlab_input['targets']]
+            x_data = x_data[0].transpose()
+            ytrue_data = ytrue_data[0].transpose()
+            store_file = data_location + "/xytrue_" + str(i) + "_r" + str(receptive_field) + ".pkl"
+            print "Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape
+            data_list = [ x_data, ytrue_data ]
+            with open(store_file, "wb") as output_file:
+                pkl.dump(data_list, output_file)
 
 def read_data(data_location, receptive_field, level):
     store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"
@@ -83,6 +81,7 @@ def read_seed(seed_file, receptive_field):
     print "Read seed:", seed_data.shape
     return seed_data
 
+# https://stackoverflow.com/questions/36362831/creating-a-mat-file-of-v7-3-in-python
 def write_song(song, data_location, level, receptive_field):
     song_name = "song_" + str(level+1) + "_r" + str(receptive_field)
     song_file = data_location + "/" + song_name + ".mat"
