@@ -9,23 +9,9 @@ disp(downsample_rate);
 disp("Levels");
 disp(n_levels);
 
-[song, fx] = audioread(song_location);
-song_info = audioinfo(song_location);
-if song_info.NumChannels == 2
-    song = (song(:,1) + song(:,2))/2;
-end
+[song, fx ] = audio_read(song_location, downsample_rate);
 
-if downsample_rate > 0
-    clipped_length =floor(length(song)/downsample_rate)*downsample_rate;
-    song = song(1:clipped_length);
-    song = decimate(song,downsample_rate,'fir');
-    fx = fx/downsample_rate;
-end
-
-syms f positive
-eqn = f.^(n_levels)==16000;
-solf = solve(eqn,f);
-filter_fx = double(solf(1))
+[fx, filter_fx] = set_fx(song_location, data_location, n_levels);
 
 inputs = cell(n_levels,1);
 inputs_signal = cell(n_levels,1);
@@ -40,6 +26,7 @@ for i = 1:n_levels
     passband_fx = filter_fx^i;
     [inputs{i}, inputs_signal{i}] = create_filter(i, song, fx, passband_fx);
     fprintf('Solution:%d\n', i);
+    passband_fx = filter_fx^(i+1);
     [targets{i}, targets_signal{i}] = create_filter(i+1, song, fx, passband_fx);
 end
 
@@ -53,7 +40,6 @@ for i = 1:n_levels
 fprintf('Formatting level:%d\n', i);
 passband_fx = filter_fx^i;
 inputs_formatted{i} = format_level(inputs{i}, receptive_field, fx, passband_fx);
-inputs_formatted{i} = int32(inputs_formatted{i});
 end
 
 fprintf('Song:%d fx:%g\n', length(song), fx);

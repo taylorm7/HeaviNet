@@ -1,4 +1,3 @@
-
 function [format_iterable] = format_level(iterable, receptive_field, fx, passband_fx)
 
 if passband_fx > fx/2
@@ -34,6 +33,7 @@ for i = len_iterable-limit: len_iterable - 1
     format_iterable(i+1,:) = iterable( mod((i+index),len_iterable)+1 );
 end
 
+format_iterable = int32(format_iterable);
 end
 
 function [index] = make_index(receptive_field, factor)

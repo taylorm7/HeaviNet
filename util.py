@@ -2,6 +2,8 @@ import numpy as np
 import os.path
 import scipy.io
 import h5py
+import hdf5storage
+
 import cPickle as pkl
 
 def name_level(n_levels):
@@ -71,21 +73,26 @@ def read_data(data_location, receptive_field, level):
     return x_data, ytrue_data
     
 
-def read_seed(seed_file, receptive_field):
+def read_seed(seed_file):
     try:
-        matlab_input = scipy.io.loadmat(seed_file)
+        os.path.isfile(seed_file)
     except IOError:
         print "Failed to load:", seed_file
     print "Opened:", seed_file
-    seed_data = matlab_input['seed']
-    print "Read seed:", seed_data.shape
+
+    with h5py.File(seed_file) as matlab_seed:
+        seed_data = matlab_seed.get('seed')
+        seed_data = np.array(seed_data)
+        seed_data = seed_data.transpose()
+        print "Read seed:", seed_data.shape
     return seed_data
 
-# https://stackoverflow.com/questions/36362831/creating-a-mat-file-of-v7-3-in-python
 def write_song(song, data_location, level, receptive_field):
     song_name = "song_" + str(level+1) + "_r" + str(receptive_field)
     song_file = data_location + "/" + song_name + ".mat"
-    scipy.io.savemat(song_file, mdict={ song_name: song})
+    song_dict = {}
+    song_dict[unicode(song_name)] = song
+    hdf5storage.savemat(song_file, song_dict)
     print "Saved song:", song_file
     return song_name
 

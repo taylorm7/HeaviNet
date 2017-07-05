@@ -10,32 +10,21 @@ def load(data_location, receptive_field):
     print "Loading", data_location, "for receptive field:", receptive_field
     load_matlab(data_location, receptive_field)
 
-
 def train(data_location, level, receptive_field, epochs):
     print "Trainging on ", data_location, "with receptive_field:" , receptive_field
-    
     x_data, ytrue_data = read_data(data_location, receptive_field, level)
-    
     net = Model( level, receptive_field, data_location )
     net.train( x_data, ytrue_data, epochs=epochs )
     net.save(close=True)
 
-
 def generate(data_location, seed_file, level, receptive_field):
     print "Generating:", level, data_location, seed_file, receptive_field
     print "Seed:", seed_file
-    seed_data = read_seed(seed_file, receptive_field)
+    seed_data = read_seed(seed_file)
     gen_net = Model( level, receptive_field, data_location )
     song_data = gen_net.generate(seed_data)
     gen_net.close()
     song_name = write_song( song_data, data_location, level, receptive_field)
-
-    #net = Model( level, receptive_field, data_location )
-    #net.close()
-    #nets = []
-    #for i in range(7):
-        #nets.append( Model( i,receptive_field, data_location) )
- 
 
 if __name__ == '__main__':
     if len(sys.argv) >= 3:

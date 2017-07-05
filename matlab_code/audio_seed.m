@@ -1,24 +1,23 @@
-function [song, fx, seed, seed_signal] = audio_seed(level, song_location, data_location, downsample_rate, n_levels, receptive_field)
+function [song, fx, seed, seed_signal] = audio_seed(level, song_location, data_file, downsample_rate, n_levels, receptive_field, data_location)
 %song_location = '/home/sable/HeaviNet/data/songs/voice.wav';
 %data_location = '/home/sable/HeaviNet/data/voice.wav.data';
 
-disp(song_location);
-disp(data_location);
+disp(data_file);
 
-[song, fx] = audioread(song_location);
-song_info = audioinfo(song_location);
-if song_info.NumChannels == 2
-    song = (song(:,1) + song(:,2))/2;
+level = level +1;
+disp(song_location);
+
+[song, fx ] = audio_read(song_location, downsample_rate);
+[original_fx, filter_fx] = get_fx(data_location);
+
+if original_fx ~= fx
+    error_msg = 'Error: The frequency rate of the seed value and song value are incompatable'
+    error(error_msg);
 end
 
-bits = level + 1;
-clipped_length =floor(length(song)/2^(n_levels+downsample_rate))*2^(n_levels+downsample_rate);
-song = song(1:clipped_length);
-[song] = down_sample(song, downsample_rate);
-fx = fx/2^downsample_rate;
+passband_fx = filter_fx^level
+[seed, seed_signal] = create_filter(level, song, fx, passband_fx);
+seed = format_level(seed, receptive_field, fx, passband_fx);
 
-[seed, seed_signal] = create_level_decimate(bits, song, fx, n_levels);
-seed = format_level(seed, receptive_field, level, n_levels);
-
-save(data_location, 'level', 'seed', '-v7.3');
+save(data_file, 'seed', '-v7.3');
 end

@@ -135,24 +135,23 @@ elif [ $ACTION = "generate" ]; then
 		GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
 
 
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
+		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
 		
 		for ((I=1 ; I<=LEVELS ; I++)); do
-
-
 			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
 			GENSONGPATH="$DATAPATH/$GENSONGNAME.mat"
 
 			python heavinet.py $ACTION $DATAPATH $GENSEEDPATH $(($I-1)) $RECEPTIVE_FIELD
-		
+			
 			GENSEEDNAME="seed_$I""_r$RECEPTIVE_FIELD"
 			GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
+			
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
-				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, $LEVELS ); quit;"
+				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
 			else
 				echo "finish song"
-				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$SONGPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
+				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
 			fi
 		done
 		
