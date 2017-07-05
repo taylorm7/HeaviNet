@@ -57,7 +57,7 @@ def load_matlab(data_location, receptive_field):
             print "Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape
             data_list = [ x_data, ytrue_data ]
             with open(store_file, "wb") as output_file:
-                pkl.dump(data_list, output_file)
+                pkl.dump(data_list, output_file, protocol=2)
 
 def read_data(data_location, receptive_field, level):
     store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"

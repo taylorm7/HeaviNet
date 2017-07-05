@@ -177,6 +177,7 @@ elif [ $ACTION = "run" ]; then
 	duration=$SECONDS
 	echo "Run: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "train_generate" ]; then
+	$SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
 		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
@@ -185,6 +186,8 @@ elif [ $ACTION = "train_generate" ]; then
 	else
 		echo "Invalid $SONG or $SEED"
 	fi
+	duration=$SECONDS
+	echo "Train/Gen: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 else
 	echo "Please enter an action, 'load song.mp3', 'train song.wav', or 'generate song.mp4 seed.mp3'"
 fi
