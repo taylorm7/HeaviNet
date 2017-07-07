@@ -169,15 +169,15 @@ class Model(object):
         else:
             use_pooling=False
         for i, (s, f) in enumerate(zip(conv_sizes, conv_nodes)):
-            print "  conv Layer", i, "filter size", s, "number of channels", f, "use pooling", use_pooling
+            print("  conv Layer", i, "filter size", s, "number of channels", f, "use pooling", use_pooling)
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, use_pooling)
         
         conv_flat, n_features = flatten_layer(conv_layers[-1])
-        print "  flat layer number of features", n_features
+        print("  flat layer number of features", n_features)
     
         for i, n in enumerate(fc_nodes):
-            print "  fully connected layer", i, "number of nodes", n
-        print "  targets", n_target_classes
+            print("  fully connected layer", i, "number of nodes", n)
+        print("  targets", n_target_classes)
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
 
         return fc_layers[-1]
@@ -313,18 +313,18 @@ class Model(object):
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
         if( os.path.isdir(self.save_dir) ):
-            print "Loading previous:", self.name
+            print("Loading previous:", self.name)
             self.load()
         else:
             os.makedirs( self.save_dir )
-            print "Creating level directory at:", self.save_dir
-        print self.save_file
+            print("Creating level directory at:", self.save_dir)
+        print(self.save_file)
 
     def test_io_onehot(self, x, ytrue_class):
         np.set_printoptions(threshold=np.inf)
         #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
-        print "Testing:",  self.name, x.shape, ytrue_class.shape
+        print("Testing:",  self.name, x.shape, ytrue_class.shape)
         for i in range(len(x)/2, len(x)/2 + 1, 10):
             feed_dict_test = {self.inputs: x[i:i+10,:],
                                self.target_class: ytrue_class[i:i+10] }
@@ -334,26 +334,26 @@ class Model(object):
                      self.target_normalized, self.target_normalized_pos, 
                      self.target_normalized_onehot, self.target, self.normalized_onehot_image],
                     feed_dict=feed_dict_test)
-            print "inputs\n", inp
-            print "middle value of receptive_field\n", mid
-            print "normalized inputs\n", norm
-            print "positive normalized\n", norm_pos
-            print "onehot normalized inputs\n", norm_one
-            print "onehot image\n", image
-            print "regular onehot inputs\n", one
+            print("inputs\n", inp)
+            print("middle value of receptive_field\n", mid)
+            print("normalized inputs\n", norm)
+            print("positive normalized\n", norm_pos)
+            print("onehot normalized inputs\n", norm_one)
+            print("onehot image\n", image)
+            print("regular onehot inputs\n", one)
             
-            print "inputs scaled to next level\n", in_scale
-            print "target classes\n", targ_c
-            print "targets normalized\n", tar_nor
-            print "positive normalized targets\n", tar_nor_pos
-            print "onehot normalized targets\n", tar_nor_pos_one
-            print "regular onehot targets\n", tar
+            print("inputs scaled to next level\n", in_scale)
+            print("target classes\n", targ_c)
+            print("targets normalized\n", tar_nor)
+            print("positive normalized targets\n", tar_nor_pos)
+            print("onehot normalized targets\n", tar_nor_pos_one)
+            print("regular onehot targets\n", tar)
 
 
     def train(self, x, ytrue_class, epochs=1 ):
         x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
-        print "Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs
+        print("Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs)
         
         #for e in range(epochs):
         e = 0
@@ -377,41 +377,41 @@ class Model(object):
                 
                 epoch_loss+= c
 
-            print " epoch", e, "loss", epoch_loss
+            print(" epoch", e, "loss", epoch_loss)
             e = e+1
 
             if (epoch_total != 0):
                 epoch_accuracy = 100.0 * float(epoch_correct) / float(epoch_total)
-                print " accuracy:", epoch_accuracy
+                print(" accuracy:", epoch_accuracy)
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
 
     def generate(self, x_seed):
         x_seed = np.reshape(x_seed, (-1, self.clip_size))
-        print "Generating with seed:", x_seed.shape
+        print("Generating with seed:", x_seed.shape)
         y_generated = []
         for i in range(0, len(x_seed), self.batch_size):
             feed_dict_gen = {self.inputs: x_seed[i:i+self.batch_size,:]}
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated = np.append(y_generated, y_g)
-        print "Generated song:",  len(y_generated)
+        print("Generated song:",  len(y_generated))
         return y_generated
 
     def save(self, close=False):
         self.saver.save(self.sess, self.save_file)
-        print "Saving:", self.name
+        print("Saving:", self.name)
         if close==True:
             self.sess.close()
 
     def load(self):
         if os.path.isdir(self.save_dir):
-            print "Loading:", self.name, self.save_file
+            print("Loading:", self.name, self.save_file)
             self.saver.restore(self.sess, self.save_file)
             return True
         else:
-            print "Failed loading:", self.name
+            print("Failed loading:", self.name)
             return False
 
     def close(self):
-        print "Closing" , self.name
+        print("Closing" , self.name)
         self.sess.close()

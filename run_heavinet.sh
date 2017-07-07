@@ -101,7 +101,7 @@ elif [ $ACTION = "load" ]; then
 	SECONDS=0
 	if [ -f $MATLABSONG ]; then
 		echo "Loading song:$SONG in $MATLABSONG"
-		python heavinet.py $ACTION $DATAPATH $RECEPTIVE_FIELD
+		python3 heavinet.py $ACTION $DATAPATH $RECEPTIVE_FIELD
 	else
 		echo "The file '$SONG' not found at '$MATLABSONG'"
 		echo "Try loading with ./run_heavinet.sh load song_name.mp3"
@@ -114,7 +114,7 @@ elif [ $ACTION = "train" ]; then
 		echo "Training on song $SONG in $MATLABSONG"
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
-			python heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS
+			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS
 		done
 
 		wait
@@ -141,7 +141,7 @@ elif [ $ACTION = "generate" ]; then
 			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
 			GENSONGPATH="$DATAPATH/$GENSONGNAME.mat"
 
-			python heavinet.py $ACTION $DATAPATH $GENSEEDPATH $(($I-1)) $RECEPTIVE_FIELD
+			python3 heavinet.py $ACTION $DATAPATH $GENSEEDPATH $(($I-1)) $RECEPTIVE_FIELD
 			
 			GENSEEDNAME="seed_$I""_r$RECEPTIVE_FIELD"
 			GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
