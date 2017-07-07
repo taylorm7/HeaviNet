@@ -2,9 +2,12 @@
 
 LEVELS=7
 
+
+dot="$(cd "$(dirname "$0")"; pwd)"
+cd $dot
+
 ACTION=$1
 SONG=$2
-dot="$(cd "$(dirname "$0")"; pwd)"
 
 SONGPATH="$dot/data/songs/$SONG"
 DATAPATH="$dot/data/$SONG.data"
@@ -88,8 +91,8 @@ if [ $ACTION = "format" ]; then
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
 		echo "matlab audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD )"
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
-		#~/Matlab/matlab -nojvm -r "audio_formatting(7, '$SONGPATH', '$MATLABSONG'  ); quit;"
+		~/Matlab/matlab -nojvm -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
+		#~/Matlab/matlab -nojvm -sd "$dot" -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
 		echo "The file '$SONG' not found at '$SONGPATH'"
@@ -135,7 +138,7 @@ elif [ $ACTION = "generate" ]; then
 		GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
 
 
-		~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
+		~/Matlab/matlab -nojvm -r "audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
 		
 		for ((I=1 ; I<=LEVELS ; I++)); do
 			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
@@ -148,10 +151,10 @@ elif [ $ACTION = "generate" ]; then
 			
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
-				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
+				~/Matlab/matlab -nojvm -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
 			else
 				echo "finish song"
-				~/Matlab/matlab -nojvm -sd "$MATLABCODE" -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
+				~/Matlab/matlab -nojvm -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
 			fi
 		done
 		
