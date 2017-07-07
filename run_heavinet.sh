@@ -155,7 +155,7 @@ elif [ $ACTION = "generate" ]; then
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
 				~/Matlab/matlab -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
-				~/Matlab/matlab -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit" &
+				~/Matlab/matlab -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit" > /dev/null &
 			else
 				echo "finish song"
 				~/Matlab/matlab -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
