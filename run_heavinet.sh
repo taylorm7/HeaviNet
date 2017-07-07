@@ -90,9 +90,7 @@ if [ $ACTION = "format" ]; then
 	if [ -f $SONGPATH ]; then
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		echo "matlab audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD )"
-		~/Matlab/matlab -nojvm -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
-		#~/Matlab/matlab -nojvm -sd "$dot" -r "audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); quit;"
+		~/Matlab/matlab -nojvm -r "try, audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
 		echo "The file '$SONG' not found at '$SONGPATH'"
@@ -117,11 +115,16 @@ elif [ $ACTION = "train" ]; then
 		echo "Training on song $SONG in $MATLABSONG"
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
-			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS
+			echo " running level $i in background process..."
+			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS >> "$DATAPATH/$i.txt" 2>&1 &
 		done
-
 		wait
 		echo "Training finished"
+		for (( i=0; i<$LEVELS; i++ ))	
+		do
+			cat "$DATAPATH/$i.txt"
+			echo ""
+		done
 	else
 		echo "The file '$SONG' not found at '$MATLABSONG'"
 		echo "Try loading with ./run_heavinet.sh load song_name.mp3"
@@ -137,12 +140,12 @@ elif [ $ACTION = "generate" ]; then
 		GENSEEDNAME="seed_0_r$RECEPTIVE_FIELD"
 		GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
 
-
-		~/Matlab/matlab -nojvm -r "audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
+		~/Matlab/matlab -nojvm -r "try, audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
 		
 		for ((I=1 ; I<=LEVELS ; I++)); do
 			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
 			GENSONGPATH="$DATAPATH/$GENSONGNAME.mat"
+			GENSONGFILE="$DATAPATH/$GENSONGNAME.wav"
 
 			python3 heavinet.py $ACTION $DATAPATH $GENSEEDPATH $(($I-1)) $RECEPTIVE_FIELD
 			
@@ -151,10 +154,11 @@ elif [ $ACTION = "generate" ]; then
 			
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
-				~/Matlab/matlab -nojvm -r "filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); quit;"
+				~/Matlab/matlab -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
+				~/Matlab/matlab -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit" &
 			else
 				echo "finish song"
-				~/Matlab/matlab -nojvm -r "audio_finish('$GENSONGPATH', '$FINISHPATH', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); quit;"
+				~/Matlab/matlab -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
 			fi
 		done
 		
