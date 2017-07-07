@@ -3,12 +3,12 @@
 LEVELS=7
 
 # regular call with matlab script at ~/Matlab/matlab
-dot="$(cd "$(dirname "$0")"; pwd)"
-MATLABCALL=~/Matlab/matlab
+#dot="$(cd "$(dirname "$0")"; pwd)"
+#MATLABCALL=~/Matlab/matlab
 
 # Advanced Research Computing Batch Call
-#dot=$PBS_O_WORKDIR
-#MATLABCALL=matlab
+dot=$PBS_O_WORKDIR
+MATLABCALL=matlab
 
 cd $dot
 
