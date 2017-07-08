@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import os
-
+import sys
 
 def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
@@ -135,7 +135,7 @@ def nn_fc_layers(input, n_input_classes, n_target_classes, n_nodes):
     layers.append(new_fc_layer(layers[-1], n_nodes[-1], n_target_classes, use_relu=False))
     return layers
 
-def nn_conv_layers(data_image,  filter_sizes, filter_nodes, use_pooling ):
+def nn_conv_layers(data_image, filter_sizes, filter_nodes, use_pooling ):
     layers = []
     weights = []
     
@@ -159,7 +159,7 @@ class Model(object):
         output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
         return output_layer
 
-    def neural_network_model(self, data_image, n_target_classes):
+    def neural_network_model(self, data_image, n_input_classes, n_target_classes):
         conv_sizes = [ (self.level + 1) , (self.level+1) ]
         conv_nodes = [ 8 , 16 ]
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
@@ -184,7 +184,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True ):
+                 batch_size=128, normalize_mode=False ):
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
@@ -200,12 +200,12 @@ class Model(object):
 
         #create onehot value for non-normalized inputs
         onehot = tf.one_hot(inputs, n_input_classes)
+        onehot_image = tf.reshape(
+                onehot, [-1, clip_size, n_input_classes,  1])
         onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
-        onehot = tf.cast(onehot, tf.float32)
         # create regular onehot values for target
         target = tf.one_hot(target_class, n_target_classes)
         target = tf.reshape(target, (-1, n_target_classes))
-        target = tf.cast(target, tf.float32)
 
         #normalized inputs and target, along with corresponding onehot
 
@@ -243,20 +243,20 @@ class Model(object):
 
 
         if normalize_mode == True:
-            nn_inputs = normalized_onehot
+            nn_inputs = normalized_onehot_image
             nn_targets = target_normalized_onehot
             nn_target_class = target_normalize_pos_
             nn_n_inputs = input_norm_onehot_range
             nn_n_targets = target_norm_onehot_range
         else:
-            nn_inputs = onehot
+            nn_inputs = onehot_image
             nn_targets = target
             nn_target_class = target_class
             nn_n_inputs = n_input_classes
             nn_n_targets = n_target_classes
 
         #logits = self.perceptron_nn(nn_inputs, nn_n_inputs, nn_n_targets, clip_size, n_nodes)
-        logits = self.neural_network_model(normalized_onehot_image, target_norm_onehot_range)
+        logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets)
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -284,6 +284,7 @@ class Model(object):
 
         self.target_class = target_class
         self.onehot = onehot
+        self.onehot_image = onehot_image
         
         self.middle = middle
         self.normalized = normalized
@@ -322,24 +323,26 @@ class Model(object):
 
     def test_io_onehot(self, x, ytrue_class):
         np.set_printoptions(threshold=np.inf)
-        #x = np.reshape(x, (-1, self.clip_size))
+        x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print("Testing:",  self.name, x.shape, ytrue_class.shape)
-        for i in range(len(x)/2, len(x)/2 + 1, 10):
+        for i in range(int(len(x)/2), int(len(x)/2 + 1), 10):
             feed_dict_test = {self.inputs: x[i:i+10,:],
                                self.target_class: ytrue_class[i:i+10] }
-            inp, mid, norm, norm_pos, norm_one, one, targ_c, in_scale, tar_nor, tar_nor_pos, tar_nor_pos_one, tar, image = self.sess.run(
+            inp, mid, norm, norm_pos, norm_one, one, targ_c, in_scale, tar_nor, tar_nor_pos, tar_nor_pos_one, tar, image, one_image = self.sess.run(
                     [self.inputs, self.middle, self.normalized, self.normalized_pos, 
                      self.normalized_onehot, self.onehot, self.target_class, self.inputs_scaled,
                      self.target_normalized, self.target_normalized_pos, 
-                     self.target_normalized_onehot, self.target, self.normalized_onehot_image],
+                     self.target_normalized_onehot, self.target, self.normalized_onehot_image,
+                     self.onehot_image],
                     feed_dict=feed_dict_test)
             print("inputs\n", inp)
             print("middle value of receptive_field\n", mid)
             print("normalized inputs\n", norm)
             print("positive normalized\n", norm_pos)
             print("onehot normalized inputs\n", norm_one)
-            print("onehot image\n", image)
+            print("onehot normalized image\n", image)
+            print("regular onehot image\n", one_image)
             print("regular onehot inputs\n", one)
             
             print("inputs scaled to next level\n", in_scale)
@@ -406,7 +409,12 @@ class Model(object):
     def load(self):
         if os.path.isdir(self.save_dir):
             print("Loading:", self.name, self.save_file)
-            self.saver.restore(self.sess, self.save_file)
+            try:
+                self.saver.restore(self.sess, self.save_file)
+            except:
+                print("Failed to load previous session")
+                os.rmdir(self.save_dir) 
+                sys.exit()
             return True
         else:
             print("Failed loading:", self.name)
