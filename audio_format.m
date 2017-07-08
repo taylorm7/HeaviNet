@@ -11,7 +11,7 @@ disp(n_levels);
 
 [song, fx ] = audio_read(song_location, downsample_rate);
 
-[fx, filter_fx] = set_fx(song_location, data_location, n_levels);
+[filter_fx] = set_fx(fx, data_location, n_levels);
 
 inputs = cell(n_levels,1);
 inputs_signal = cell(n_levels,1);
