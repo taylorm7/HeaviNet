@@ -25,13 +25,14 @@ def new_biases(length):
 
 def new_conv_layer(input,              # The previous layer.
                    num_input_channels, # Num. channels in prev. layer.
-                   filter_size,        # Width and height of each filter.
+                   filter_width,
+                   filter_height,        # Width and height of each filter.
                    num_filters,        # Number of filters.
                    use_pooling=True):  # Use 2x2 max-pooling.
 
     # Shape of the filter-weights for the convolution.
     # This format is determined by the TensorFlow API.
-    shape = [filter_size, filter_size, num_input_channels, num_filters]
+    shape = [filter_width, filter_height, num_input_channels, num_filters]
 
     # Create new weights aka. filters with the given shape.
     weights = new_weights(shape=shape)
@@ -63,8 +64,8 @@ def new_conv_layer(input,              # The previous layer.
         # consider 2x2 windows and select the largest value
         # in each window. Then we move 2 pixels to the next window.
         layer = tf.nn.max_pool(value=layer,
-                               ksize=[1, 4, 4, 1],
-                               strides=[1, 4, 4, 1],
+                               ksize=[1, 2, 2, 1],
+                               strides=[1, 2, 2, 1],
                                padding='SAME')
 
     # Rectified Linear Unit (ReLU).
@@ -141,9 +142,9 @@ def nn_conv_layers(data_image, filter_sizes, filter_nodes, use_pooling ):
     
     for i, (size, num) in enumerate( zip(filter_sizes, filter_nodes) ):
         if i == 0:
-            l, w = new_conv_layer(data_image, 1, size, num, use_pooling)
+            l, w = new_conv_layer(data_image, 1, size[0], size[1], num, use_pooling)
         else:
-            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size, num, use_pooling)
+            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size[0], size[1], num, use_pooling)
         layers.append(l)
         weights.append(w)
     return layers, weights
@@ -159,41 +160,46 @@ class Model(object):
         output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
         return output_layer
 
-    def neural_network_model(self, data_image, n_input_classes, n_target_classes):
-        conv_sizes = [ (self.level + 1) , (self.level+1) ]
+    def neural_network_model(self, data_image, n_input_classes, n_target_classes, use_pooling):
+        conv_sizes = [ (self.clip_size, n_input_classes) , 
+                       ( int(self.receptive_field), int(n_input_classes/2) ) ]
         conv_nodes = [ 8 , 16 ]
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
-
-        if self.level >= 5:
-            use_pooling=True
-        else:
-            use_pooling=False
-        for i, (s, f) in enumerate(zip(conv_sizes, conv_nodes)):
-            print("  conv Layer", i, "filter size", s, "number of channels", f, "use pooling", use_pooling)
-        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, use_pooling)
         
+        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, use_pooling)
         conv_flat, n_features = flatten_layer(conv_layers[-1])
-        print("  flat layer number of features", n_features)
-    
-        for i, n in enumerate(fc_nodes):
-            print("  fully connected layer", i, "number of nodes", n)
-        print("  targets", n_target_classes)
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
+    
+        if (not os.path.isdir(self.save_dir)):
+            print("  Normalized Mode", self.normalize_mode)
+            for i, (s, f) in enumerate(zip(conv_sizes, conv_nodes)):
+                print("  conv Layer", i, "filter width", s[0], "filter height", s[1],
+                        "number of channels", f, "use pooling", use_pooling)
+            print("  flat layer number of features", n_features)
+            for i, n in enumerate(fc_nodes):
+                print("  fully connected layer", i, "number of nodes", n)
+            print("  targets", n_target_classes)
 
         return fc_layers[-1]
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=False ):
-        self.level = level
-        self.batch_size = batch_size
-        self.receptive_field = receptive_field
-        
+                 batch_size=128, normalize_mode=False, use_pooling=False ):
+
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
         input_classes_max = n_input_classes - 1
         n_target_classes = 2**(level+2)
         target_classes_max = n_target_classes - 1
+
+        self.level = level
+        self.batch_size = batch_size
+        self.receptive_field = receptive_field
+        self.clip_size = clip_size
+
+        self.name = "model_" + str(level) + "_r" + str(receptive_field)
+        self.save_dir = data_location + "/" + self.name
+        self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
         inputs = tf.placeholder(tf.int64, [None,clip_size])
         target_class = tf.placeholder(tf.int64, [None])
@@ -248,15 +254,18 @@ class Model(object):
             nn_target_class = target_normalize_pos_
             nn_n_inputs = input_norm_onehot_range
             nn_n_targets = target_norm_onehot_range
+            self.normalize_mode = True
         else:
             nn_inputs = onehot_image
             nn_targets = target
             nn_target_class = target_class
             nn_n_inputs = n_input_classes
             nn_n_targets = n_target_classes
+            self.normalize_mode = False
 
+        
         #logits = self.perceptron_nn(nn_inputs, nn_n_inputs, nn_n_targets, clip_size, n_nodes)
-        logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets)
+        logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, use_pooling)
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -309,9 +318,6 @@ class Model(object):
         self.sess = sess
         self.saver = saver
         
-        self.name = "model_" + str(level) + "_r" + str(receptive_field)
-        self.save_dir = data_location + "/" + self.name
-        self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
         if( os.path.isdir(self.save_dir) ):
             print("Loading previous:", self.name)
@@ -319,7 +325,6 @@ class Model(object):
         else:
             os.makedirs( self.save_dir )
             print("Creating level directory at:", self.save_dir)
-        print(self.save_file)
 
     def test_io_onehot(self, x, ytrue_class):
         np.set_printoptions(threshold=np.inf)
@@ -408,7 +413,6 @@ class Model(object):
 
     def load(self):
         if os.path.isdir(self.save_dir):
-            print("Loading:", self.name, self.save_file)
             try:
                 self.saver.restore(self.sess, self.save_file)
             except:

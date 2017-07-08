@@ -13,8 +13,12 @@ def load(data_location, receptive_field):
 def train(data_location, level, receptive_field, epochs):
     print("Trainging on ", data_location, "with receptive_field:" , receptive_field)
     x_data, ytrue_data = read_data(data_location, receptive_field, level)
-    net = Model( level, receptive_field, data_location )
-    net.train( x_data, ytrue_data, epochs=epochs )
+    
+    if(level >= 5):
+        net = Model( level, receptive_field, data_location, normalize_mode=True, use_pooling=True )
+    else:
+        net = Model( level, receptive_field, data_location, normalize_mode=False, use_pooling=False)
+    net.train( x_data, ytrue_data, epochs=epochs)
     net.save(close=True)
 
 def generate(data_location, seed_file, level, receptive_field):
