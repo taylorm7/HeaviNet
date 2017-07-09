@@ -31,7 +31,7 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh run bach_10.mp3 bach_10.mp3
+./run_heavinet.sh run bach_10.wav bach_10.wav
 
 echo "Code finished!"
 
