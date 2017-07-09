@@ -2,11 +2,11 @@ function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_forma
 disp(song_location);
 data_file = strcat(data_location, '/matlab_song_r', int2str(receptive_field), '.mat');
 disp(data_file);
-disp("Receptive Field");
+disp('Receptive Field');
 disp(receptive_field);
-disp("Downsample");
+disp('Downsample');
 disp(downsample_rate);
-disp("Levels");
+disp('Levels');
 disp(n_levels);
 
 [song, fx ] = audio_read(song_location, downsample_rate);
