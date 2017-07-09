@@ -5,6 +5,7 @@ LEVELS=3
 if [ -z $dot ]; then
 	# regular call with matlab script at ~/Matlab/matlab
 	dot="$(cd "$(dirname "$0")"; pwd)"
+	echo "Regular call:$dot"
 	MATLABCALL=~/Matlab/matlab
 else
 	# batch call
@@ -102,7 +103,7 @@ if [ $ACTION = "format" ]; then
 	if [ -f $SONGPATH ]; then
 		mkdir $DATAPATH
 		echo "Data directory at '$DATAPATH'"
-		$MATLABCALL -nojvm -r "try, audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
+		$MATLABCALL -nojvm -r "try, audio_format('$SONGPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
 		echo "Matlab formatting stored at $MATLABSONG"
 	else
 		echo "The file '$SONG' not found at '$SONGPATH'"
@@ -153,7 +154,7 @@ elif [ $ACTION = "generate" ]; then
 		GENSEEDNAME="seed_0_r$RECEPTIVE_FIELD"
 		GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
 
-		$MATLABCALL -nojvm -r "try, audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
+		$MATLABCALL -nojvm -r "try, audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
 		
 		for ((I=1 ; I<=LEVELS ; I++)); do
 			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
@@ -167,11 +168,11 @@ elif [ $ACTION = "generate" ]; then
 			
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
-				$MATLABCALL -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
-				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit" > /dev/null &
+				$MATLABCALL -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
+				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit" > /dev/null &
 			else
 				echo "finish song"
-				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); , catch, error_msg = 'Error in matlab'; disp(error_msg), end, exit"
+				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
 			fi
 		done
 		
@@ -183,7 +184,7 @@ elif [ $ACTION = "generate" ]; then
 	duration=$SECONDS
 	echo "Generate: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "run" ]; then
-	$SECONDS=0
+	SECONDS=0
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
 		./$0 "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		./$0 "load" $SONG $RECEPTIVE_FIELD
@@ -197,7 +198,7 @@ elif [ $ACTION = "run" ]; then
 	duration=$SECONDS
 	echo "Run: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "train_generate" ]; then
-	$SECONDS=0
+	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
 		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
