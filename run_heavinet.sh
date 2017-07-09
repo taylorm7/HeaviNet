@@ -1,10 +1,16 @@
 #!/bin/bash
 
-LEVELS=7
+LEVELS=3
 
-# regular call with matlab script at ~/Matlab/matlab
-dot="$(cd "$(dirname "$0")"; pwd)"
-MATLABCALL=~/Matlab/matlab
+if [ -z $dot ]; then
+	# regular call with matlab script at ~/Matlab/matlab
+	dot="$(cd "$(dirname "$0")"; pwd)"
+	MATLABCALL=~/Matlab/matlab
+else
+	# batch call
+	echo "Batch call:$dot"
+	MATLABCALL=matlab
+fi
 
 # Advanced Research Computing Batch Call
 #dot=$PBS_O_WORKDIR

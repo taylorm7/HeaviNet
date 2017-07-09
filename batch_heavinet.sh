@@ -19,17 +19,18 @@
 #PBS -M taylorm7@vt.edu
 #PBS -m bea
 
-module purge
+#module purge
 
-module load gcc/5.2.0 python/3.5.0 cuda/8.0.44 atlas/3.11.36 matlab/R2016b
+#module load gcc/5.2.0 python/3.5.0 cuda/8.0.44 atlas/3.11.36 matlab/R2016b
 
-export PYTHONUSERBASE=/home/taylorm7/newriver/python
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/cuda/lib64/
+#export PYTHONUSERBASE=/home/taylorm7/newriver/python
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/cuda/lib64/
 
 dot=$PBS_O_WORKDIR
 cd $dot
 pwd
 
+export dot=$dot
 ./run_heavinet.sh run bach_10.mp3 bach_10.mp3
 
 echo "Code finished!"

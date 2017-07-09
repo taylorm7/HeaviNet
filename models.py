@@ -184,7 +184,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=False, use_pooling=False ):
+                 batch_size=128, normalize_mode=True, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
