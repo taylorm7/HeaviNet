@@ -130,7 +130,7 @@ elif [ $ACTION = "train" ]; then
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
 			echo " running level $i in background process..."
-			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS >> "$DATAPATH/$i.txt" 2>&1 &
+			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS >> "$DATAPATH/$i.txt" 2>&1 #& #parallel
 		done
 		wait
 		echo "Training finished"
@@ -169,7 +169,7 @@ elif [ $ACTION = "generate" ]; then
 			if [ $I != $LEVELS ]; then
 				echo "filter level"
 				$MATLABCALL -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
-				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit" > /dev/null &
+				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit" #> /dev/null & # parallel
 			else
 				echo "finish song"
 				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
