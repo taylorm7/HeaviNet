@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import sys
+import math
 
 def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
@@ -26,7 +27,9 @@ def new_biases(length):
 def new_conv_layer(input,              # The previous layer.
                    num_input_channels, # Num. channels in prev. layer.
                    filter_width,
-                   filter_height,        # Width and height of each filter.
+                   filter_height, # Width and height of each filter.
+                   pool_width,
+                   pool_height,
                    num_filters,        # Number of filters.
                    use_pooling=True):  # Use 2x2 max-pooling.
 
@@ -52,11 +55,14 @@ def new_conv_layer(input,              # The previous layer.
     layer = tf.nn.conv2d(input=input,
                          filter=weights,
                          strides=[1, 1, 1, 1],
-                         padding='SAME')
+                         padding='VALID')
 
     # Add the biases to the results of the convolution.
     # A bias-value is added to each filter-channel.
     layer += biases
+
+    if pool_height <= 1 and pool_width <= 1:         
+        use_pooling = False
 
     # Use pooling to down-sample the image resolution?
     if use_pooling:
@@ -64,9 +70,9 @@ def new_conv_layer(input,              # The previous layer.
         # consider 2x2 windows and select the largest value
         # in each window. Then we move 2 pixels to the next window.
         layer = tf.nn.max_pool(value=layer,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
-                               padding='SAME')
+                               ksize=[1, pool_width, pool_height, 1],
+                               strides=[1, pool_width, pool_height, 1],
+                               padding='VALID')
 
     # Rectified Linear Unit (ReLU).
     # It calculates max(x, 0) for each input pixel x.
@@ -136,15 +142,15 @@ def nn_fc_layers(input, n_input_classes, n_target_classes, n_nodes):
     layers.append(new_fc_layer(layers[-1], n_nodes[-1], n_target_classes, use_relu=False))
     return layers
 
-def nn_conv_layers(data_image, filter_sizes, filter_nodes, use_pooling ):
+def nn_conv_layers(data_image, filter_sizes, filter_nodes, pooling_sizes, use_pooling ):
     layers = []
     weights = []
     
-    for i, (size, num) in enumerate( zip(filter_sizes, filter_nodes) ):
+    for i, (size, num, pool) in enumerate( zip(filter_sizes, filter_nodes, pooling_sizes) ):
         if i == 0:
-            l, w = new_conv_layer(data_image, 1, size[0], size[1], num, use_pooling)
+            l, w = new_conv_layer(data_image, 1, size[0], size[1], pool[0], pool[1], num, use_pooling)
         else:
-            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size[0], size[1], num, use_pooling)
+            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size[0], size[1], pool[0], pool[1], num, use_pooling)
         layers.append(l)
         weights.append(w)
     return layers, weights
@@ -161,19 +167,33 @@ class Model(object):
         return output_layer
 
     def neural_network_model(self, data_image, n_input_classes, n_target_classes, use_pooling):
-        conv_sizes = [ (self.clip_size, n_input_classes) , 
-                       ( int(self.receptive_field), int(n_input_classes/2) ) ]
-        conv_nodes = [ 8 , 16 ]
-        fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
+        '''
+        conv_nodes = [ 1 , 4 ]
+                    # (clip_size, n_input_classes)
+        conv_sizes =   [ (self.clip_size , (self.level+1) ), 
+                         (1 ,  math.floor( n_input_classes / (self.level+1))) ]
+
+        conv_pooling = [ ( 1 , 1 ), 
+                         ( 1 , 1 ) ]
         
-        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, use_pooling)
+        fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
+        '''
+        
+        conv_nodes = [ 16 ]
+        # input is formated in tensor: (clip_size, n_input_classes)
+        conv_sizes =   [ (self.clip_size , n_input_classes )  ]
+        conv_pooling = [ ( 1 , 1 ) ]
+        fc_nodes =   [ 256 , 128 ]
+
+        
+        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
         conv_flat, n_features = flatten_layer(conv_layers[-1])
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
     
         if (not os.path.isdir(self.save_dir)):
             print("  Normalized Mode", self.normalize_mode)
-            for i, (s, f) in enumerate(zip(conv_sizes, conv_nodes)):
-                print("  conv Layer", i, "filter width", s[0], "filter height", s[1],
+            for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
+                print("  conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
             print("  flat layer number of features", n_features)
             for i, n in enumerate(fc_nodes):

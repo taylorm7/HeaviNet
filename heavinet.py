@@ -14,7 +14,7 @@ def train(data_location, level, receptive_field, epochs):
     print("Trainging on ", data_location, "with receptive_field:" , receptive_field)
     x_data, ytrue_data = read_data(data_location, receptive_field, level)
     
-    net = Model( level, receptive_field, data_location, normalize_mode=True, use_pooling=False)
+    net = Model( level, receptive_field, data_location, normalize_mode=True, use_pooling=True)
     net.train( x_data, ytrue_data, epochs=epochs)
     net.save(close=True)
 

@@ -130,7 +130,10 @@ elif [ $ACTION = "train" ]; then
 		for (( i=0; i<$LEVELS; i++ ))	
 		do
 			echo " running level $i in background process..."
+			level_seconds=$SECONDS
 			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS >> "$DATAPATH/$i.txt" 2>&1 #& #parallel
+			level_duration=$(($SECONDS-level_seconds))
+			echo "Level duration: $(($level_duration / 60)) minutes and $(($level_duration % 60)) seconds elapsed."
 		done
 		wait
 		echo "Training finished"
