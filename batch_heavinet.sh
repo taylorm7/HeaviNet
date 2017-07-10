@@ -4,7 +4,7 @@
 #PBS -l walltime=04:00:00    
 
 # One core on any number of nodes
-#PBS -l procs=1,gpus=1
+#PBS -l procs=1,gpus=2
 
 #newriver cluster
 #PBS -W group_list=newriver  
@@ -33,7 +33,7 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh run bach_10.wav bach_10.wav 7
+./run_heavinet.sh run bach_10.wav bach_10.wav 7 65
 
 echo "Code finished!"
 
