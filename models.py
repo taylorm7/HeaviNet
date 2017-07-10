@@ -179,11 +179,12 @@ class Model(object):
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
         '''
         
-        conv_nodes = [ 16 ]
+        conv_nodes = [ 8 , 16 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ (self.clip_size , n_input_classes )  ]
-        conv_pooling = [ ( 1 , 1 ) ]
-        fc_nodes =   [ 256 , 128 ]
+        conv_sizes =   [ (self.clip_size , self.level + 1),
+                         ( 1, (self.level+1)*2 ) ]
+        conv_pooling = [ ( 1 , 1 ), (1, 1) ]
+        fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
 
         
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)

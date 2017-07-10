@@ -17,7 +17,7 @@
 
 # Email when your job starts, completes, or aborts
 #PBS -M taylorm7@vt.edu
-#PBS -m bea
+#PBS -m ea
 
 module purge
 
