@@ -182,9 +182,12 @@ class Model(object):
         conv_nodes = [ 8 , 16 ]
         # input is formated in tensor: (clip_size, n_input_classes)
         conv_sizes =   [ (self.clip_size , self.level + 1),
-                         ( 1, (self.level+1)*2 ) ]
+                         ( 1, (self.level+1) ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
-        fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
+        if self.level < 4:
+            fc_nodes =   [ 512 , 256 ]
+        else:
+            fc_nodes =   [ 2**(self.level+4) , 2**(self.level+3) ]
 
         
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
@@ -205,7 +208,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True, use_pooling=False ):
+                 batch_size=128, normalize_mode=False, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)

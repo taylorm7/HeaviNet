@@ -14,7 +14,7 @@ def train(data_location, level, receptive_field, epochs):
     print("Trainging on ", data_location, "with receptive_field:" , receptive_field)
     x_data, ytrue_data = read_data(data_location, receptive_field, level)
     
-    net = Model( level, receptive_field, data_location, normalize_mode=True, use_pooling=True)
+    net = Model( level, receptive_field, data_location )
     net.train( x_data, ytrue_data, epochs=epochs)
     net.save(close=True)
 
@@ -22,7 +22,7 @@ def generate(data_location, seed_file, level, receptive_field):
     print("Generating:", level, data_location, seed_file, receptive_field)
     print("Seed:", seed_file)
     seed_data = read_seed(seed_file)
-    gen_net = Model( level, receptive_field, data_location, normalize_mode=True, use_pooling=False )
+    gen_net = Model( level, receptive_field, data_location )
     song_data = gen_net.generate(seed_data)
     gen_net.close()
     song_name = write_song( song_data, data_location, level, receptive_field)
