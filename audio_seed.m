@@ -8,16 +8,19 @@ level = level +1;
 disp(song_location);
 
 [song, fx ] = audio_read(song_location, downsample_rate);
-[original_fx, filter_fx] = get_fx(data_location);
+[passband_fx, original_fx] = get_fx(data_location, level);
 
 if original_fx ~= fx
     error_msg = 'Error: The frequency rate of the seed value and song value are incompatable'
     error(error_msg);
 end
 
-passband_fx = filter_fx^level
 [seed, seed_signal] = create_filter(level, song, fx, passband_fx);
 seed = format_level(seed, receptive_field, fx, passband_fx);
 
 save(data_file, 'seed', '-v7.3');
+
+seed_file = strcat(data_location, '/seed.wav');
+audiowrite(seed_file, seed_signal, fx);
+
 end

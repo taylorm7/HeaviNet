@@ -5,15 +5,13 @@ function [] = filter_level(read_location, save_location, level, receptive_field,
     
     level = level +1
     
-    [fx, filter_fx] = get_fx(data_location);
+    [passband_fx, fx] = get_fx(data_location, level);
     
     N = 2^(level);
     mu = N-1;
     xmax = 1;
     xmin = -1;
     Q=(xmax-xmin)/N;
-    
-    passband_fx = filter_fx^level
     
     input_digital = transpose(importdata(read_location));
     

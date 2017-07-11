@@ -23,10 +23,10 @@ targets_signal = cell(n_levels,1);
 
 for i = 1:n_levels
     fprintf('Level:%d\n', i);
-    passband_fx = filter_fx^i;
+    passband_fx = get_fx(data_location, i);
     [inputs{i}, inputs_signal{i}] = create_filter(i, song, fx, passband_fx);
     fprintf('Solution:%d\n', i);
-    passband_fx = filter_fx^(i+1);
+    passband_fx = get_fx(data_location, i+1);
     [targets{i}, targets_signal{i}] = create_filter(i+1, song, fx, passband_fx);
 end
 
@@ -38,7 +38,7 @@ end
 
 for i = 1:n_levels
 fprintf('Formatting level:%d\n', i);
-passband_fx = filter_fx^i;
+passband_fx = get_fx(data_location, i);
 inputs_formatted{i} = format_level(inputs{i}, receptive_field, fx, passband_fx);
 end
 

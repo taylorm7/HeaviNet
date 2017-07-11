@@ -2,9 +2,9 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     disp(read_location);
     disp(write_location);
     
-    [original_fx, filter_fx] = get_fx(data_location);
-    
     level = level + 1
+    
+    [passband_fx, original_fx] = get_fx(data_location, level);
     
     N = 2^(level);
     mu = N-1;
