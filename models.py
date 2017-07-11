@@ -179,15 +179,11 @@ class Model(object):
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
         '''
         
-        conv_nodes = [ 8 , 16 ]
+        conv_nodes = [ 128 , 128 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ (self.clip_size , self.level + 1),
-                         ( 1, (self.level+1) ) ]
+        conv_sizes =   [ (2 , 1), ( 4, 1) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
-        if self.level < 4:
-            fc_nodes =   [ 512 , 256 ]
-        else:
-            fc_nodes =   [ 2**(self.level+4) , 2**(self.level+3) ]
+        fc_nodes =   [ 1024 , 256 ]
 
         
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
@@ -208,7 +204,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=False, use_pooling=False ):
+                 batch_size=128, normalize_mode=True, onehot_mode=False, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
@@ -229,6 +225,8 @@ class Model(object):
         target_class = tf.placeholder(tf.int64, [None])
 
         #create onehot value for non-normalized inputs
+        image = tf.reshape( inputs, [-1, clip_size, 1, 1] ) 
+        image = tf.cast(image, tf.float32)
         onehot = tf.one_hot(inputs, n_input_classes)
         onehot_image = tf.reshape(
                 onehot, [-1, clip_size, n_input_classes,  1])
@@ -245,6 +243,8 @@ class Model(object):
         middle_ = tf.reshape(middle, [-1] )
         normalized = tf.subtract(inputs, middle)
         normalized_pos = normalized + input_classes_max
+        normalized_image = tf.reshape( normalized_pos, [-1, clip_size, 1, 1] )
+        normalized_image = tf.cast(normalized_image, tf.float32)
          
         input_norm_onehot_range = input_classes_max*2+1
         normalized_onehot = tf.one_hot(normalized_pos, input_norm_onehot_range)
@@ -272,18 +272,32 @@ class Model(object):
         #n_nodes = [ 1024, 512, 256, ]
 
 
-        if normalize_mode == True:
+        if normalize_mode == True and onehot_mode == True:
             nn_inputs = normalized_onehot_image
             nn_targets = target_normalized_onehot
             nn_target_class = target_normalize_pos_
             nn_n_inputs = input_norm_onehot_range
             nn_n_targets = target_norm_onehot_range
             self.normalize_mode = True
-        else:
+        elif normalize_mode == False and onehot_mode == True:
             nn_inputs = onehot_image
             nn_targets = target
             nn_target_class = target_class
             nn_n_inputs = n_input_classes
+            nn_n_targets = n_target_classes
+            self.normalize_mode = False
+        elif normalize_mode == True and onehot_mode == False:
+            nn_inputs = normalized_image
+            nn_targets = target_normalized_onehot
+            nn_target_class = target_normalize_pos_
+            nn_n_inputs = 1
+            nn_n_targets = target_norm_onehot_range
+            self.normalize_mode = True
+        elif normalize_mode == False and onehot_mode == False:
+            nn_inputs = image
+            nn_targets = target
+            nn_target_class = target_class
+            nn_n_inputs = 1
             nn_n_targets = n_target_classes
             self.normalize_mode = False
 
