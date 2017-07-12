@@ -21,10 +21,12 @@ def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
 # Weights, bias, and convolutional layer helper methods referenced and modified from:
 # https://github.com/Hvass-Labs/TensorFlow-Tutorials -> 02_Convolutional_Neural_Network.ipynb
 def new_weights(shape):
-    return tf.Variable(tf.truncated_normal(shape, stddev=0.05))
+    return tf.Variable(tf.truncated_normal(shape, stddev=0.1))
 
 def new_biases(length):
-    return tf.Variable(tf.constant(0.05, shape=[length]))
+    return tf.Variable(tf.truncated_normal(shape=[length], stddev=0.1))
+           #tf.Variable(tf.constant(0.05, shape=[length]))
+
 
 def new_conv_layer(input,              # The previous layer.
                    num_input_channels, # Num. channels in prev. layer.
@@ -80,7 +82,8 @@ def new_conv_layer(input,              # The previous layer.
     # It calculates max(x, 0) for each input pixel x.
     # This adds some non-linearity to the formula and allows us
     # to learn more complicated functions.
-    layer = tf.nn.sigmoid(layer)
+    
+    #layer = tf.nn.tanh(layer)
 
     # Note that ReLU is normally executed before the pooling,
     # but since relu(max_pool(x)) == max_pool(relu(x)) we can
@@ -179,15 +182,15 @@ class Model(object):
                          ( 1 , 1 ) ]
         
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
+        fc_nodes =   [ 1024 , 256 ]
         '''
         
-        conv_nodes = [ 128 , 256 ]
+        conv_nodes = [ 16 , 64 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 1 , 1), 
+        conv_sizes =   [ ( 1 , n_input_classes), 
                          (self.clip_size , 1) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 1024 , 256 ]
-
         
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
         conv_flat, n_features = flatten_layer(conv_layers[-1])
@@ -207,7 +210,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=False, onehot_mode=False, use_pooling=False ):
+                 batch_size=128, normalize_mode=True, onehot_mode=True, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
