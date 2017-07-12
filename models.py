@@ -80,7 +80,7 @@ def new_conv_layer(input,              # The previous layer.
     # It calculates max(x, 0) for each input pixel x.
     # This adds some non-linearity to the formula and allows us
     # to learn more complicated functions.
-    layer = tf.nn.relu(layer)
+    layer = tf.nn.sigmoid(layer)
 
     # Note that ReLU is normally executed before the pooling,
     # but since relu(max_pool(x)) == max_pool(relu(x)) we can
@@ -181,9 +181,10 @@ class Model(object):
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
         '''
         
-        conv_nodes = [ 128 , 128 ]
+        conv_nodes = [ 128 , 256 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ (2 , 1), ( 4, 1) ]
+        conv_sizes =   [ ( 1 , 1), 
+                         (self.clip_size , 1) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 1024 , 256 ]
 
@@ -193,7 +194,7 @@ class Model(object):
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
     
         if (not os.path.isdir(self.save_dir)):
-            print("  Normalized Mode", self.normalize_mode)
+            print("  Normalized Mode", self.normalize_mode, " Onehot Mode", self.onehot_mode)
             for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
                 print("  conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
@@ -206,7 +207,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True, onehot_mode=False, use_pooling=False ):
+                 batch_size=128, normalize_mode=False, onehot_mode=False, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(level+1)
@@ -230,8 +231,7 @@ class Model(object):
         image = tf.reshape( inputs, [-1, clip_size, 1, 1] ) 
         image = tf.cast(image, tf.float32)
         onehot = tf.one_hot(inputs, n_input_classes)
-        onehot_image = tf.reshape(
-                onehot, [-1, clip_size, n_input_classes,  1])
+        onehot_image = tf.reshape( onehot, [-1, clip_size, n_input_classes,  1])
         onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
         # create regular onehot values for target
         target = tf.one_hot(target_class, n_target_classes)
@@ -272,37 +272,33 @@ class Model(object):
         #create list of perceptron levels with the number of corresponding nodes per level
         #n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
         #n_nodes = [ 1024, 512, 256, ]
-
-
+        
+        self.normalize_mode = normalize_mode
+        self.onehot_mode = onehot_mode
         if normalize_mode == True and onehot_mode == True:
             nn_inputs = normalized_onehot_image
             nn_targets = target_normalized_onehot
             nn_target_class = target_normalize_pos_
             nn_n_inputs = input_norm_onehot_range
             nn_n_targets = target_norm_onehot_range
-            self.normalize_mode = True
         elif normalize_mode == False and onehot_mode == True:
             nn_inputs = onehot_image
             nn_targets = target
             nn_target_class = target_class
             nn_n_inputs = n_input_classes
             nn_n_targets = n_target_classes
-            self.normalize_mode = False
         elif normalize_mode == True and onehot_mode == False:
             nn_inputs = normalized_image
             nn_targets = target_normalized_onehot
             nn_target_class = target_normalize_pos_
             nn_n_inputs = 1
             nn_n_targets = target_norm_onehot_range
-            self.normalize_mode = True
         elif normalize_mode == False and onehot_mode == False:
             nn_inputs = image
             nn_targets = target
             nn_target_class = target_class
             nn_n_inputs = 1
             nn_n_targets = n_target_classes
-            self.normalize_mode = False
-
         
         #logits = self.perceptron_nn(nn_inputs, nn_n_inputs, nn_n_targets, clip_size, n_nodes)
         logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, use_pooling)
