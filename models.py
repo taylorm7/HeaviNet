@@ -4,6 +4,8 @@ import os
 import sys
 import math
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
     hl_bias = tf.Variable(tf.random_normal([n_nodes]))
