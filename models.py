@@ -213,9 +213,9 @@ class Model(object):
                  batch_size=128, normalize_mode=True, onehot_mode=True, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
-        n_input_classes = 2**(level+1)
+        n_input_classes = 2**(8)
         input_classes_max = n_input_classes - 1
-        n_target_classes = 2**(level+2)
+        n_target_classes = 2**(8)
         target_classes_max = n_target_classes - 1
 
         self.level = level
