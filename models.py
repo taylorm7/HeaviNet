@@ -21,10 +21,10 @@ def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
 # Weights, bias, and convolutional layer helper methods referenced and modified from:
 # https://github.com/Hvass-Labs/TensorFlow-Tutorials -> 02_Convolutional_Neural_Network.ipynb
 def new_weights(shape):
-    return tf.Variable(tf.truncated_normal(shape, stddev=0.1))
+    return tf.Variable(tf.truncated_normal(shape, mean=1.0, stddev=0.44))
 
 def new_biases(length):
-    return tf.Variable(tf.truncated_normal(shape=[length], stddev=0.1))
+    return tf.Variable(tf.truncated_normal(shape=[length], mean=1.0, stddev=0.44))
            #tf.Variable(tf.constant(0.05, shape=[length]))
 
 
@@ -83,7 +83,7 @@ def new_conv_layer(input,              # The previous layer.
     # This adds some non-linearity to the formula and allows us
     # to learn more complicated functions.
     
-    #layer = tf.nn.tanh(layer)
+    layer = tf.nn.relu(layer)
 
     # Note that ReLU is normally executed before the pooling,
     # but since relu(max_pool(x)) == max_pool(relu(x)) we can
