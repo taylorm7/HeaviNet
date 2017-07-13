@@ -21,11 +21,11 @@ def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
 # Weights, bias, and convolutional layer helper methods referenced and modified from:
 # https://github.com/Hvass-Labs/TensorFlow-Tutorials -> 02_Convolutional_Neural_Network.ipynb
 def new_weights(shape):
-    return tf.Variable(tf.truncated_normal(shape, mean=1.0, stddev=0.44))
+    return tf.Variable(tf.truncated_normal(shape, stddev=0.05))
 
 def new_biases(length):
-    return tf.Variable(tf.truncated_normal(shape=[length], mean=1.0, stddev=0.44))
-           #tf.Variable(tf.constant(0.05, shape=[length]))
+    return tf.Variable(tf.constant(0.05, shape=[length]))
+            #tf.Variable(tf.truncated_normal(shape=[length], stddev=0.44))
 
 
 def new_conv_layer(input,              # The previous layer.
@@ -184,7 +184,7 @@ class Model(object):
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
         fc_nodes =   [ 1024 , 256 ]
         '''
-        
+        '''
         conv_nodes = [ 16 , 64 ]
         # input is formated in tensor: (clip_size, n_input_classes)
         conv_sizes =   [ ( 1 , n_input_classes), 
@@ -195,13 +195,21 @@ class Model(object):
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
         conv_flat, n_features = flatten_layer(conv_layers[-1])
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
+        '''
+
+        fc_nodes =   [ 1024*self.receptive_field, 1024 ]
+        fc_layers = nn_fc_layers(data_image, n_input_classes, n_target_classes, fc_nodes)
+
+
     
         if (not os.path.isdir(self.save_dir)):
-            print("  Normalized Mode", self.normalize_mode, " Onehot Mode", self.onehot_mode)
+            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Perceptron Mode", self.perceptron_mode)
+            '''
             for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
                 print("  conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
             print("  flat layer number of features", n_features)
+            '''
             for i, n in enumerate(fc_nodes):
                 print("  fully connected layer", i, "number of nodes", n)
             print("  targets", n_target_classes)
@@ -210,7 +218,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True, onehot_mode=True, use_pooling=False ):
+                 batch_size=128, normalize_mode=True, onehot_mode=True, perceptron_mode=True, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(8)
@@ -278,7 +286,15 @@ class Model(object):
         
         self.normalize_mode = normalize_mode
         self.onehot_mode = onehot_mode
-        if normalize_mode == True and onehot_mode == True:
+        self.perceptron_mode = perceptron_mode
+
+        if perceptron_mode == True:
+            nn_inputs = normalized_onehot
+            nn_targets = target_normalized_onehot
+            nn_target_class = target_normalize_pos_
+            nn_n_inputs = input_norm_onehot_range*clip_size
+            nn_n_targets = target_norm_onehot_range
+        elif normalize_mode == True and onehot_mode == True:
             nn_inputs = normalized_onehot_image
             nn_targets = target_normalized_onehot
             nn_target_class = target_normalize_pos_
@@ -311,7 +327,7 @@ class Model(object):
 
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=nn_targets)
         cost = tf.reduce_mean(cross_entropy)
-        optimizer = tf.train.AdamOptimizer().minimize(cost)
+        optimizer = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(cost)
         correct_prediction = tf.equal(nn_target_class, prediction_class)
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32) )
 
