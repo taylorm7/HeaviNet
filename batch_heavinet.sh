@@ -35,7 +35,9 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh train_generate bach_10.wav bach_10.wav 15 60
+./run_heavinet.sh format beethoven_7.wav 3
+./run_heavinet.sh load beethoven_7.wav 3
+./run_heavinet.sh train beethoven_7.wav 3 40
 
 echo "Code finished!"
 
