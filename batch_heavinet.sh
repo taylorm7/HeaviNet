@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # At most XX minute of time
-#PBS -l walltime=04:00:00    
+#PBS -l walltime=12:00:00    
 
 # One core on any number of nodes
 #PBS -l procs=1,gpus=2
@@ -10,7 +10,9 @@
 #PBS -W group_list=newriver  
 
 # open queue
-#PBS -q open_q
+#PBS -q p100_normal_q
+
+#PBS -A heavinet
 
 # write output and error to the same file
 #PBS -j oe

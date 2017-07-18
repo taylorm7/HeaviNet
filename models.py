@@ -184,32 +184,30 @@ class Model(object):
         fc_nodes =   [ 2**(self.level+3) , 2**(self.level+2) ]
         fc_nodes =   [ 1024 , 256 ]
         '''
-        '''
-        conv_nodes = [ 16 , 64 ]
+        
+        conv_nodes = [ 512 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 1 , n_input_classes), 
-                         (self.clip_size , 1) ]
+        conv_sizes =   [ ( self.clip_size , n_input_classes ) ] 
+                         #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
-        fc_nodes =   [ 1024 , 256 ]
+        fc_nodes =   [ 512 , 256 ]
         
         conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
         conv_flat, n_features = flatten_layer(conv_layers[-1])
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
-        '''
+        
 
-        fc_nodes =   [ 1024*self.receptive_field, 1024 ]
-        fc_layers = nn_fc_layers(data_image, n_input_classes, n_target_classes, fc_nodes)
+        #fc_nodes =   [ 1024*self.receptive_field, 1024 ]
+        #fc_layers = nn_fc_layers(data_image, n_input_classes, n_target_classes, fc_nodes)
 
 
     
         if (not os.path.isdir(self.save_dir)):
-            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Perceptron Mode", self.perceptron_mode)
-            '''
+            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Flat Input", self.flat_mode)
             for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
                 print("  conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
             print("  flat layer number of features", n_features)
-            '''
             for i, n in enumerate(fc_nodes):
                 print("  fully connected layer", i, "number of nodes", n)
             print("  targets", n_target_classes)
@@ -218,7 +216,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True, onehot_mode=True, perceptron_mode=True, use_pooling=False ):
+                 batch_size=128, normalize_mode=True, onehot_mode=False, flat_mode=False, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(8)
@@ -286,9 +284,9 @@ class Model(object):
         
         self.normalize_mode = normalize_mode
         self.onehot_mode = onehot_mode
-        self.perceptron_mode = perceptron_mode
+        self.flat_mode = flat_mode
 
-        if perceptron_mode == True:
+        if flat_mode == True:
             nn_inputs = normalized_onehot
             nn_targets = target_normalized_onehot
             nn_target_class = target_normalize_pos_
