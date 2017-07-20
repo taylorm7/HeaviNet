@@ -15,7 +15,7 @@ if original_fx ~= fx
     error(error_msg);
 end
 
-[seed, seed_signal] = create_filter(level, song, fx, passband_fx);
+[seed, seed_signal] = create_filter(8, song, fx, passband_fx);
 seed = format_level(seed, receptive_field, fx, passband_fx);
 
 save(data_file, 'seed', '-v7.3');

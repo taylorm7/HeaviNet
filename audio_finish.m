@@ -6,7 +6,7 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     
     [passband_fx, original_fx] = get_fx(data_location, level);
     
-    N = 2^(level);
+    N = 2^(8);
     mu = N-1;
     xmax = 1;
     xmin = -1;
