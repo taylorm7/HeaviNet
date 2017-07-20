@@ -187,7 +187,7 @@ class Model(object):
         
         conv_nodes = [ 32 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 3 , n_input_classes ) ] 
+        conv_sizes =   [ ( 3 , n_input_classes - 20 ) ] 
                          #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]
@@ -216,7 +216,7 @@ class Model(object):
 
 
     def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True, onehot_mode=False, flat_mode=False, use_pooling=False ):
+                 batch_size=128, normalize_mode=True, onehot_mode=True, flat_mode=False, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(8)
