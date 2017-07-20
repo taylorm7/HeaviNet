@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # At most XX minute of time
-#PBS -l walltime=20:00:00    
+#PBS -l walltime=00:15:00    
 
 # One core on any number of nodes
-#PBS -l procs=1,gpus=2
+#PBS -l procs=1
 
 #newriver cluster
 #PBS -W group_list=newriver  
 
-# open queue
-#PBS -q p100_normal_q
+# queue
+#PBS -q normal_q
 
 #PBS -A heavinet
 
@@ -23,21 +23,24 @@
 
 module purge
 
-module load gcc/5.2.0 matlab/R2016b python/3.5.0 cuda/8.0.44 atlas/3.11.36
+module load gcc/5.2.0 cuda/8.0.61 matlab/R2016b
+
+export PATH=$PATH:/home/taylorm7/opt_py35/bin 
+export PYTHONUSERBASE=/home/taylorm7/opt_py35/cpu_tf
 
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/taylorm7/opt/lib/pkgconfig
-export PYTHONUSERBASE=/home/taylorm7/newriver/python
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/cuda/lib64/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/opt/lib/
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/cuda/lib64/
 
 dot=$PBS_O_WORKDIR
 cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh format beethoven_7.wav 3
-./run_heavinet.sh load beethoven_7.wav 3
-./run_heavinet.sh train beethoven_7.wav 3 40
+./run_heavinet.sh format beethoven_7.wav 7
+./run_heavinet.sh load beethoven_7.wav 7
+#./run_heavinet.sh generate beethoven_7.wav 7
 
 echo "Code finished!"
 
