@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LEVELS=16
+LEVELS=32
 
 if [ -z $dot ]; then
 	# regular call with matlab script at ~/Matlab/matlab
