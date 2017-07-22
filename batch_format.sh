@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # At most XX minute of time
-#PBS -l walltime=00:15:00    
+#PBS -l walltime=02:15:00    
 
 # One core on any number of nodes
 #PBS -l procs=1
@@ -38,9 +38,9 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh format beethoven_7.wav 7
-./run_heavinet.sh load beethoven_7.wav 7
-#./run_heavinet.sh generate beethoven_7.wav 7
+#./run_heavinet.sh format beethoven_7.wav 9
+#./run_heavinet.sh load beethoven_7.wav 9
+./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 9
 
 echo "Code finished!"
 
