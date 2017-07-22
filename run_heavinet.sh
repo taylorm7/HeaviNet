@@ -33,7 +33,7 @@ FINISHPATH="$DATAPATH/SONG.wav"
 # "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 # "load" $SONG $RECEPTIVE_FIELD
 # "train" $SONG $RECEPTIVE_FIELD $EPOCHS
-# "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
+# "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE $level_start
 # "run/train_gen" $SONG $SEED $RECEPTIVE_FIELD $EPOCHS $DOWNSAMPLE_RATE
 
 if [ $ACTION = "generate" ] || [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
@@ -50,6 +50,11 @@ if [ $ACTION = "generate" ] || [ $ACTION = "train_generate" ] || [ $ACTION = "ru
 			DOWNSAMPLE_RATE=0
 		else
 			DOWNSAMPLE_RATE=$5
+		fi
+		if [ -z $6 ]; then
+			level_start=0
+		else
+			level_start=$6
 		fi
 	else
 		if [ -z $5 ]; then
@@ -154,12 +159,12 @@ elif [ $ACTION = "generate" ]; then
 		echo "Generating on song $SONG from seed $SEED"
 		echo "Data path:$DATAPATH"
 
-		GENSEEDNAME="seed_0_r$RECEPTIVE_FIELD"
+		GENSEEDNAME="seed_$level_start""_r$RECEPTIVE_FIELD"
 		GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
 
-		$MATLABCALL -nojvm -r "try, audio_seed(0, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
-		
-		for ((I=1 ; I<=LEVELS ; I++)); do
+		$MATLABCALL -nojvm -r "try, audio_seed($level_start, '$SEEDPATH', '$GENSEEDPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
+		level_start=$((level_start+1))
+		for ((I=$level_start ; I<=LEVELS ; I++)); do
 			GENSONGNAME="song_$I""_r$RECEPTIVE_FIELD"
 			GENSONGPATH="$DATAPATH/$GENSONGNAME.mat"
 			GENSONGFILE="$DATAPATH/$GENSONGNAME.wav"

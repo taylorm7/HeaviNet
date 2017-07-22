@@ -28,13 +28,10 @@ for i = 1:n_levels
     fprintf('Solution:%d\n', i);
     passband_fx = get_fx(data_location, i+1);
     [targets{i}, targets_signal{i}] = create_filter(8, song, fx, passband_fx);
+    
+    %signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
+    %audiowrite(signal_location, inputs_signal{i}, fx);
 end
-
-% job = batch('format_level', 1 , {inputs{1}, receptive_field, 1, n_levels}, 'pool', 2);
-% wait(job);
-% diary(job);
-% test_job = fetchOutputs(job);
-% delete(job);
 
 for i = 1:n_levels
 fprintf('Formatting level:%d\n', i);
