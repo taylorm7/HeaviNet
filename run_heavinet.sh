@@ -107,7 +107,9 @@ elif [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
 	fi
 fi
 
-echo "Call: $ACTION [Seed:$SEED] [Receptive field:$RECEPTIVE_FIELD] [Epochs:$EPOCHS] [Downsample rate:$DOWNSAMPLE_RATE] [Train start:$TRAIN_START] [Generate start:$GENERATE_START]"
+echo "Call: $ACTION [Seed:$SEED] [Receptive field:$RECEPTIVE_FIELD] [Epochs:$EPOCHS] [Downsample rate:$DOWNSAMPLE_RATE]"
+echo "[Train start:$TRAIN_START] [Train all levels:$train_all_levels] [Generate start:$GENERATE_START]"
+
 MATLABSONG="$DATAPATH/matlab_song_r$RECEPTIVE_FIELD.mat"
 
 if [ $ACTION = "format" ]; then
