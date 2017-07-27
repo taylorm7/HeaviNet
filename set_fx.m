@@ -1,19 +1,28 @@
 function [filter_fx] = set_fx(fx, data_location, n_levels)
 
 data_file = strcat(data_location, '/fx_info.mat');
-fx_offset = 0;
+fx_offset = 50;
 fx_order = 2;
-fx_target = 7350;
+use_exponential = 0;
+fx_target = 8000;
 syms f positive
-  %exponential function for filter changes
-eqn = f.^(n_levels)+fx_offset==fx_target;
-  %polynomial function of order fx_order,
-%eqn = ((n_levels)*f).^(fx_order)+fx_offset==fx_target;
+  
+if use_exponential
+    %exponential function for filter changes
+    eqn = f.^(n_levels)+fx_offset==fx_target;
+else
+    %polynomial function of order fx_order
+    eqn = ((n_levels)*f).^(fx_order)+fx_offset==fx_target;
+end
 solf = solve(eqn,f);
 filter_fx = double(solf(1));
 
-fprintf('Offset Frequency:%d Target Frequency:%d Filter Function:%g^%d+%d\n', ...
+if use_exponential
+    fprintf('Offset Frequency:%d Target Frequency:%d Exponential Function:%g^level+%d\n', ...
+        fx_offset, fx_target, filter_fx, fx_offset);
+else
+    fprintf('Offset Frequency:%d Target Frequency:%d Polynomial Function:(%g*level)^%d+%d\n', ...
         fx_offset, fx_target, filter_fx, fx_order, fx_offset);
-
-save(data_file, 'fx', 'filter_fx','fx_offset', 'fx_order');
+end
+save(data_file, 'fx', 'filter_fx','fx_offset', 'fx_order', 'use_exponential');
 end

@@ -187,7 +187,7 @@ class Model(object):
         
         conv_nodes = [ 32 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 3 , n_input_classes - 20 ) ] 
+        conv_sizes =   [ ( 3 , n_input_classes - 5 ) ] 
                          #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]
@@ -282,7 +282,7 @@ class Model(object):
         #n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
         #n_nodes = [ 1024, 512, 256, ]
         
-        if level <= 13:
+        if level <= 0:
             nomralize_mode = True
         else:
             normalize_mode = False

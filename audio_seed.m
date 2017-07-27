@@ -7,7 +7,7 @@ disp(data_file);
 level = level +1;
 disp(song_location);
 
-[song, fx ] = audio_read(song_location, downsample_rate);
+[song, fx] = audio_read(song_location, downsample_rate);
 [passband_fx, original_fx] = get_fx(data_location, level);
 
 if original_fx ~= fx
@@ -20,7 +20,7 @@ seed = format_level(seed, receptive_field, fx, passband_fx);
 
 save(data_file, 'seed', '-v7.3');
 
-seed_file = strcat(data_location, '/seed.wav');
+seed_file = strcat(data_location, '/seed_', int2str(level-1), '_r', int2str(receptive_field), '.wav');
 audiowrite(seed_file, seed_signal, fx);
 
 end

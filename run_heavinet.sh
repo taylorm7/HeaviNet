@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LEVELS=32
+LEVELS=8
 
 if [ -z $dot ]; then
 	# regular call with matlab script at ~/Matlab/matlab
@@ -174,14 +174,8 @@ elif [ $ACTION = "generate" ]; then
 			GENSEEDNAME="seed_$I""_r$RECEPTIVE_FIELD"
 			GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
 			
-			if [ $I != $LEVELS ]; then
-				echo "filter level"
-				$MATLABCALL -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
-				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $I, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit" #> /dev/null & # parallel
-			else
-				echo "finish song"
-				$MATLABCALL -nojvm -r "try, audio_finish('$GENSONGPATH', '$GENSONGFILE', '$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
-			fi
+			$MATLABCALL -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $I, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
+			
 		done
 		
 	else

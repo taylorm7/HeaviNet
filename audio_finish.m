@@ -24,6 +24,4 @@ function [finished_song, finished_fx , input_digital] = audio_finish(read_locati
     disp('Song saved at');
     audiowrite(write_location, finished_song, finished_fx);
     final_info = audioinfo(write_location)
-    
-    
 end

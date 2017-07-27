@@ -25,5 +25,5 @@ for i = len_iterable-limit: len_iterable - 1
     format_iterable(i+1,:) = iterable( mod((i+index),len_iterable)+1 );
 end
 
-%format_iterable = int32(format_iterable);
+format_iterable = int32(format_iterable);
 end
