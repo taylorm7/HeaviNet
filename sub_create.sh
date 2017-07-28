@@ -8,7 +8,7 @@ num_levels=$4
 
 
 echo '#!/bin/bash' >> $1
-echo '#PBS -l walltime=40:00:00' >> $1
+echo '#PBS -l walltime=10:00:00' >> $1
 echo '#PBS -l procs=1,gpus=2' >> $1
 echo '#PBS -W group_list=newriver' >> $1
 echo '#PBS -q p100_normal_q' >> $1
@@ -39,7 +39,7 @@ echo 'pwd' >> $1
 echo 'export dot=$dot' >> $1
 
 epochs=100
-receptive_field=9
+receptive_field=10
 song=beethoven_7.wav
 
 for (( i=$level_start; i<$level_stop; i++ ))
