@@ -30,8 +30,8 @@ echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/cuda/lib64/' >> $1
 echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/opt/lib/' >> $1
 
 
-#dot=$PBS_O_WORKDIR
-echo 'dot=/home/sable/HeaviNet' >> $1
+echo 'dot=$PBS_O_WORKDIR' >> $1
+#echo 'dot=/home/sable/HeaviNet' >> $1
 
 echo 'cd $dot' >> $1
 echo 'pwd' >> $1

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 num_levels=8
-batches=4
+batches=8
 
 step_size=$(($num_levels / $batches))
 
@@ -10,6 +10,6 @@ do
 name="job_$i.sh"
 ./sub_create.sh $name $i $(($i+$step_size)) $num_levels
 chmod +x $name
-./$name
+#./$name
 done
 
