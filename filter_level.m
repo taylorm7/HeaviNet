@@ -39,7 +39,10 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     audiowrite(filtered_song, input_moving_average, fx);
     audioinfo(filtered_song)
     
-    seed = format_level(input_moving_average, receptive_field, fx, passband_fx);
+    seed_nonlinear = mu_trasform(input_moving_average, mu, Q);
+    seed_digital = analog_to_digital(seed_nonlinear, Q);
+    
+    seed = format_level(seed_digital, receptive_field, fx, passband_fx);
     save(save_location, 'seed', '-v7.3');
     
 end
