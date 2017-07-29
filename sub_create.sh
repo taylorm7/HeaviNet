@@ -14,7 +14,7 @@ echo '#PBS -W group_list=newriver' >> $1
 echo '#PBS -q p100_normal_q' >> $1
 echo '#PBS -A heavinet' >> $1
 echo '#PBS -j oe' >> $1
-if [ "$level_stop" == "$num_levels" ]; then
+if [ "$level_start" == "0" ]; then
 	echo '#PBS -M taylorm7@vt.edu' >> $1
 	echo '#PBS -m ea' >> $1
 fi
