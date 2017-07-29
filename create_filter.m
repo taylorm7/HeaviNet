@@ -1,4 +1,4 @@
-function [y_digital, y, x] = create_filter(level, song, fx, passband_fx)
+function [y_digital, y, x] = create_filter(level, song, fx, passband_fx, receptive_field)
     
     % set values for mu transform, assuming standard -1,1 audio
     N = 2^(level);
@@ -7,6 +7,8 @@ function [y_digital, y, x] = create_filter(level, song, fx, passband_fx)
     xmin = -1;
     Q=(xmax-xmin)/N;
     
+    [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
+    filter_field = ceil(factor/2);
     passband_ripple = 0.2;
  
     fprintf('bits:%d fx:%d passband:%g passband ripple:%g N:%d mu:%d Q:%g \n', ...
@@ -28,9 +30,18 @@ function [y_digital, y, x] = create_filter(level, song, fx, passband_fx)
     D=x-song;
     MSE=mean(D.^2);
     fprintf('Error between original and filtered = %g\n',MSE )
-
+    
+    x_hampel = hampel( x, filter_field );
+    x_moving_average = movmean(x_hampel, filter_field);
+    
+    D=x-x_moving_average;
+    MSE=mean(D.^2);
+    fprintf('Difference after hampel and moving average filter = %g\n', MSE )
+    
     % perform mu-law transform and digitize compressed data
-    y_nonlinear = mu_trasform(x, mu, Q);
+    %y_nonlinear = mu_trasform(x, mu, Q);
+    y_nonlinear = mu_trasform(x_moving_average, mu, Q);
+    
     y_digital = analog_to_digital(y_nonlinear, Q);
     % compute analog to digital, and perform inverse mu-law transform
     y_analog = digital_to_analog(y_digital, Q);

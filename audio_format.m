@@ -24,10 +24,10 @@ targets_signal = cell(n_levels,1);
 for i = 1:n_levels
     fprintf('Level:%d\n', i);
     passband_fx = get_fx(data_location, i);
-    [inputs{i}, inputs_signal{i}] = create_filter(8, song, fx, passband_fx);
+    [inputs{i}, inputs_signal{i}] = create_filter(8, song, fx, passband_fx, receptive_field);
     fprintf('Solution:%d\n', i);
     passband_fx = get_fx(data_location, i+1);
-    [targets{i}, targets_signal{i}] = create_filter(8, song, fx, passband_fx);
+    [targets{i}, targets_signal{i}] = create_filter(8, song, fx, passband_fx, receptive_field);
     
     %signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
     %audiowrite(signal_location, inputs_signal{i}, fx);
