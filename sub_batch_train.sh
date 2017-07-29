@@ -10,6 +10,6 @@ do
 name="job_$i.sh"
 ./sub_create.sh $name $i $(($i+$step_size)) $num_levels
 chmod +x $name
-#./$name
+qsub ./$name
 done
 
