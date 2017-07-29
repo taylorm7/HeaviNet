@@ -8,7 +8,7 @@ function [y_digital, y, x] = create_filter(level, song, fx, passband_fx, recepti
     Q=(xmax-xmin)/N;
     
     [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
-    filter_field = ceil(factor/2);
+    filter_field = ceil(factor/4);
     passband_ripple = 0.2;
  
     fprintf('bits:%d fx:%d passband:%g passband ripple:%g N:%d mu:%d Q:%g \n', ...

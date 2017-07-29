@@ -2,7 +2,7 @@ function [filter_fx] = set_fx(fx, data_location, n_levels)
 
 data_file = strcat(data_location, '/fx_info.mat');
 fx_offset = 50;
-fx_order = 3;
+fx_order = 4;
 use_exponential = 0;
 fx_target = 8000;
 syms f positive

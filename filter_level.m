@@ -7,7 +7,7 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     
     [passband_fx, fx] = get_fx(data_location, level);
     [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
-    filter_field = ceil(factor/2);
+    filter_field = ceil(factor/4);
     
     N = 2^(8);
     mu = N-1;
