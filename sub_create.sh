@@ -38,8 +38,8 @@ echo 'pwd' >> $1
 
 echo 'export dot=$dot' >> $1
 
-epochs=100
-receptive_field=10
+epochs=200
+receptive_field=14
 song=beethoven_7.wav
 
 for (( i=$level_start; i<$level_stop; i++ ))
