@@ -1,6 +1,6 @@
 #!/bin/bash
 
-num_levels=32
+num_levels=8
 batches=8
 
 step_size=$(($num_levels / $batches))

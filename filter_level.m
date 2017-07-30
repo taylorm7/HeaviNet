@@ -24,7 +24,7 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     
     D=input_signal-input_moving_average;
     MSE=mean(D.^2);
-    fprintf('Level:%d Passband:%g Factor:%g Filter Field:%d\n', level, passband_fx, factor, filter_field);  
+    fprintf('Level:%d Passband:%g Factor:%g Filter Field:%d\n', level, passband_fx, factor, ma_field);  
     fprintf('Difference after hampel and moving average filter = %g\n', MSE )
     
     %figure()
