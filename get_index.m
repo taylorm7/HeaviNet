@@ -1,4 +1,4 @@
-function [index, limit, factor] = get_index(receptive_field, fx, passband_fx)
+function [index, limit, factor, ma_field, ha_field, ha_threshold] = get_index(receptive_field, fx, passband_fx)
 
 if passband_fx > fx/2
     % nofilter
@@ -9,6 +9,9 @@ else
 end
 index = make_index(receptive_field, factor);
 limit = round(receptive_field*factor);
+ma_field = 2.*round((factor+1)/2)-1;
+ha_field = 3;
+ha_threshold = 1;
 end
 
 function [index] = make_index(receptive_field, factor)

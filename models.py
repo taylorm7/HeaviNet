@@ -282,10 +282,10 @@ class Model(object):
         #n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
         #n_nodes = [ 1024, 512, 256, ]
         
-        if level <= 0:
-            nomralize_mode = True
-        else:
-            normalize_mode = False
+        #if level <= 0:
+        #    nomralize_mode = True
+        #else:
+        #    normalize_mode = False
 
         self.normalize_mode = normalize_mode
         self.onehot_mode = onehot_mode

@@ -6,8 +6,7 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     level = level +1
     
     [passband_fx, fx] = get_fx(data_location, level);
-    [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
-    filter_field = ceil(factor/4);
+    [index, limit, factor, ma_field, ha_field, ha_threshold] = get_index(receptive_field, fx, passband_fx);
     
     N = 2^(8);
     mu = N-1;
@@ -19,8 +18,9 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     input_analog = digital_to_analog(input_digital, Q);
     input_signal = mu_inverse(input_analog, mu, Q);
     
-    input_hampel = hampel( input_signal, filter_field );
-    input_moving_average = movmean(input_hampel, filter_field);
+    input_moving_average = movmean(input_signal, ma_field);
+    input_hampel = medfilt1( input_moving_average, ha_field);
+    
     
     D=input_signal-input_moving_average;
     MSE=mean(D.^2);
@@ -39,7 +39,7 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     audiowrite(filtered_song, input_moving_average, fx);
     audioinfo(filtered_song)
     
-    seed_nonlinear = mu_trasform(input_moving_average, mu, Q);
+    seed_nonlinear = mu_trasform(input_hampel, mu, Q);
     seed_digital = analog_to_digital(seed_nonlinear, Q);
     
     seed = format_level(seed_digital, receptive_field, fx, passband_fx);
