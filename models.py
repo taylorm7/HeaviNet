@@ -203,7 +203,7 @@ class Model(object):
 
     
         if (not os.path.isdir(self.save_dir)):
-            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Flat Input", self.flat_mode)
+            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode)
             for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
                 print("  conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
@@ -214,29 +214,81 @@ class Model(object):
 
         return fc_layers[-1]
 
+    def format_inputs(self):
+        self.image = tf.reshape( self.input_level, [-1, self.clip_size, 1, 1] ) 
+        self.image = tf.cast(self.image, tf.float32)
+
+        self.onehot = tf.one_hot(self.input_level, self.n_input_classes)
+        self.onehot_image = tf.reshape( self.onehot, [-1, self.clip_size, self.n_input_classes,  1])
+        self.onehot = tf.reshape(self.onehot, (-1, self.clip_size*self.n_input_classes))
+        # create regular onehot values for target
+        self.target = tf.one_hot(self.target_class, self.n_target_classes)
+        self.target = tf.reshape(self.target, (-1, self.n_target_classes))
+
+    def format_normalized_inputs(self):
+        #normalized inputs and target, along with corresponding onehot
+
+        # slices tensor from middle value -> [0, middle_index] 
+        # to end of None -> [-1(end), 1 (one value only)] 
+        self.middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+        self.middle_ = tf.reshape(self.middle, [-1] )
+        self.normalized = tf.subtract(self.input_level, self.middle)
+        self.normalized_pos = self.normalized + self.input_classes_max
+        self.normalized_image = tf.reshape(self.normalized_pos, [-1, self.clip_size, 1, 1] )
+        self.normalized_image = tf.cast(self.normalized_image, tf.float32)
+         
+        self.input_norm_onehot_range = self.input_classes_max*2+1
+        self.normalized_onehot = tf.one_hot(self.normalized_pos, self.input_norm_onehot_range)
+        
+        self.normalized_onehot_image = tf.reshape(
+                self.normalized_onehot, [-1, self.clip_size, self.input_norm_onehot_range,  1]) 
+        self.normalized_onehot = tf.reshape(self.normalized_onehot, (-1, self.clip_size*self.input_norm_onehot_range))
+        self.normalized_onehot = tf.cast(self.normalized_onehot, tf.float32)
+                
+        # normalize targets based on difference from input values to scaled targets
+        self.target_norm_onehot_range = self.target_classes_max*2+1
+        self.inputs_scaled = tf.multiply(self.middle_ , 2)
+        self.inputs_scaled_class = tf.reshape(self.inputs_scaled, [-1])
+        
+        self.target_normalized = tf.subtract(self.target_class, self.inputs_scaled)
+        self.target_normalized_pos = self.target_normalized + self.target_classes_max
+        self.target_normalized_class = tf.reshape(self.target_normalized_pos, [-1])
+        self.target_normalized_onehot = tf.one_hot(
+                self.target_normalized_pos, self.target_norm_onehot_range)
+        self.target_normalized_onehot = tf.reshape(
+                self.target_normalized_onehot, (-1, self.target_norm_onehot_range) )
 
     def __init__(self, level, receptive_field, data_location, n_levels,
-                 batch_size=128, normalize_mode=False, onehot_mode=True, flat_mode=False, use_pooling=False ):
-
-        clip_size = 2*receptive_field+1
-        n_input_classes = 2**(8)
-        input_classes_max = n_input_classes - 1
-        n_target_classes = 2**(8)
-        target_classes_max = n_target_classes - 1
-
+                 batch_size=128, normalize_mode=True, onehot_mode=True, use_pooling=False ):
+        
         self.level = level
         self.batch_size = batch_size
         self.receptive_field = receptive_field
-        self.clip_size = clip_size
+        self.n_levels = n_levels
 
-        self.name = "model_" + str(level) + "_r" + str(receptive_field)
+
+        self.clip_size = 2*self.receptive_field+1
+        self.n_input_classes = 2**(8)
+        self.input_classes_max = self.n_input_classes - 1
+        self.n_target_classes = 2**(8)
+        self.target_classes_max = self.n_target_classes - 1
+
+        #self.input_norm_onehot_range = self.input_classes_max*2+1
+        #self.target_norm_onehot_range = self.target_classes_max*2+1
+
+        self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
-        input_level = tf.placeholder(tf.int64, [None,clip_size])
-        input_all = tf.placeholder(tf.int64, [None,clip_size, n_levels])
+        input_level = tf.placeholder(tf.int64, [None,self.clip_size])
+        input_all = tf.placeholder(tf.int64, [None,self.clip_size, self.n_levels])
         target_class = tf.placeholder(tf.int64, [None])
 
+        self.input_level = input_level
+        self.input_all = input_all
+        self.target_class = target_class
+
+        '''
         #create onehot value for non-normalized inputs
         image = tf.reshape( input_level, [-1, clip_size, 1, 1] ) 
         image = tf.cast(image, tf.float32)
@@ -274,55 +326,49 @@ class Model(object):
         
         target_normalized = tf.subtract(target_class, inputs_scaled)
         target_normalized_pos = target_normalized + target_classes_max
-        target_normalize_pos_ = tf.reshape(target_normalized_pos, [-1])
+        target_normalized_class = tf.reshape(target_normalized_pos, [-1])
         target_normalized_onehot = tf.one_hot(
                 target_normalized_pos, target_norm_onehot_range)
         target_normalized_onehot = tf.reshape(
                 target_normalized_onehot, (-1, target_norm_onehot_range) )
 
-        #create list of perceptron levels with the number of corresponding nodes per level
-        #n_nodes = [ (level+1)*400, (level+1)*100, (level+1)*50, ]
-        #n_nodes = [ 1024, 512, 256, ]
-        
         #if level <= 0:
         #    nomralize_mode = True
         #else:
         #    normalize_mode = False
-
+        '''
         self.normalize_mode = normalize_mode
         self.onehot_mode = onehot_mode
-        self.flat_mode = flat_mode
 
-        if flat_mode == True:
-            nn_inputs = normalized_onehot
-            nn_targets = target_normalized_onehot
-            nn_target_class = target_normalize_pos_
-            nn_n_inputs = input_norm_onehot_range*clip_size
-            nn_n_targets = target_norm_onehot_range
-        elif normalize_mode == True and onehot_mode == True:
-            nn_inputs = normalized_onehot_image
-            nn_targets = target_normalized_onehot
-            nn_target_class = target_normalize_pos_
-            nn_n_inputs = input_norm_onehot_range
-            nn_n_targets = target_norm_onehot_range
-        elif normalize_mode == False and onehot_mode == True:
-            nn_inputs = onehot_image
-            nn_targets = target
-            nn_target_class = target_class
-            nn_n_inputs = n_input_classes
-            nn_n_targets = n_target_classes
+        self.format_inputs()
+
+        self.format_normalized_inputs()
+
+        
+        if normalize_mode == True and onehot_mode == True:
+            nn_inputs = self.normalized_onehot_image
+            nn_targets = self.target_normalized_onehot
+            nn_target_class = self.target_normalized_class
+            nn_n_inputs = self.input_norm_onehot_range
+            nn_n_targets = self.target_norm_onehot_range
         elif normalize_mode == True and onehot_mode == False:
-            nn_inputs = normalized_image
-            nn_targets = target_normalized_onehot
-            nn_target_class = target_normalize_pos_
+            nn_inputs = self.normalized_image
+            nn_targets = self.target_normalized_onehot
+            nn_target_class = self.target_normalized_class
             nn_n_inputs = 1
-            nn_n_targets = target_norm_onehot_range
+            nn_n_targets = self.target_norm_onehot_range
+        elif normalize_mode == False and onehot_mode == True:
+            nn_inputs = self.onehot_image
+            nn_targets = self.target
+            nn_target_class = self.target_class
+            nn_n_inputs = self.n_input_classes
+            nn_n_targets = self.n_target_classes
         elif normalize_mode == False and onehot_mode == False:
-            nn_inputs = image
-            nn_targets = target
-            nn_target_class = target_class
+            nn_inputs = self.image
+            nn_targets = self.target
+            nn_target_class = self.target_class
             nn_n_inputs = 1
-            nn_n_targets = n_target_classes
+            nn_n_targets = self.n_target_classes
         
         #logits = self.perceptron_nn(nn_inputs, nn_n_inputs, nn_n_targets, clip_size, n_nodes)
         logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, use_pooling)
@@ -337,7 +383,7 @@ class Model(object):
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32) )
 
         if normalize_mode == True:
-            prediction_value = (prediction_class - target_classes_max) + inputs_scaled_
+            prediction_value = (prediction_class - self.target_classes_max) + self.inputs_scaled_class
         else:
             prediction_value = prediction_class
         
@@ -345,27 +391,6 @@ class Model(object):
         saver = tf.train.Saver()
 
         sess.run(tf.global_variables_initializer())
-
-        self.clip_size = clip_size
-
-        self.input_level = input_level
-        self.input_all = input_all
-        self.target = target
-
-        self.target_class = target_class
-        self.onehot = onehot
-        self.onehot_image = onehot_image
-        
-        self.middle = middle
-        self.normalized = normalized
-        self.normalized_pos = normalized_pos
-        self.normalized_onehot = normalized_onehot
-        self.normalized_onehot_image = normalized_onehot_image
-
-        self.inputs_scaled = inputs_scaled
-        self.target_normalized = target_normalized
-        self.target_normalized_pos = target_normalized_pos
-        self.target_normalized_onehot = target_normalized_onehot
 
         self.optimizer = optimizer
         self.cost = cost
@@ -409,8 +434,8 @@ class Model(object):
             print("normalized inputs\n", norm)
             print("positive normalized\n", norm_pos)
             print("onehot normalized inputs\n", norm_one)
-            print("onehot normalized image\n", image)
-            print("regular onehot image\n", one_image)
+            #print("onehot normalized image\n", image)
+            #print("regular onehot image\n", one_image)
             print("regular onehot inputs\n", one)
             
             print("inputs scaled to next level\n", in_scale)

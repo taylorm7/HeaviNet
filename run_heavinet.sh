@@ -5,7 +5,7 @@ LEVELS=2
 #usage
 # "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 # "load" $SONG $RECEPTIVE_FIELD
-# "train" $SONG $RECEPTIVE_FIELD $EPOCHS
+# "train" $SONG $RECEPTIVE_FIELD $EPOCHS $TRAIN_START
 # "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE $GENERATE_START
 # "run/train_gen" $SONG $SEED $RECEPTIVE_FIELD $EPOCHS $DOWNSAMPLE_RATE $GENERATE_START
 
@@ -155,7 +155,7 @@ elif [ $ACTION = "train" ]; then
 		done
 		wait
 		echo "Training finished"
-		for (( i=0; i<$LEVELS; i++ ))	
+		for (( i=$TRAIN_START; i<$LEVELS; i++ ))	
 		do
 			cat "$DATAPATH/$i.txt"
 			echo ""
