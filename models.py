@@ -215,8 +215,8 @@ class Model(object):
         return fc_layers[-1]
 
 
-    def __init__(self, level, receptive_field, data_location, 
-                 batch_size=128, normalize_mode=True, onehot_mode=True, flat_mode=False, use_pooling=False ):
+    def __init__(self, level, receptive_field, data_location, n_levels,
+                 batch_size=128, normalize_mode=False, onehot_mode=True, flat_mode=False, use_pooling=False ):
 
         clip_size = 2*receptive_field+1
         n_input_classes = 2**(8)
@@ -233,13 +233,15 @@ class Model(object):
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
-        inputs = tf.placeholder(tf.int64, [None,clip_size])
+        input_level = tf.placeholder(tf.int64, [None,clip_size])
+        input_all = tf.placeholder(tf.int64, [None,clip_size, n_levels])
         target_class = tf.placeholder(tf.int64, [None])
 
         #create onehot value for non-normalized inputs
-        image = tf.reshape( inputs, [-1, clip_size, 1, 1] ) 
+        image = tf.reshape( input_level, [-1, clip_size, 1, 1] ) 
         image = tf.cast(image, tf.float32)
-        onehot = tf.one_hot(inputs, n_input_classes)
+
+        onehot = tf.one_hot(input_level, n_input_classes)
         onehot_image = tf.reshape( onehot, [-1, clip_size, n_input_classes,  1])
         onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
         # create regular onehot values for target
@@ -250,9 +252,9 @@ class Model(object):
 
         # slices tensor from middle value -> [0, middle_index] 
         # to end of None -> [-1(end), 1 (one value only)] 
-        middle = tf.slice(inputs, [0,  receptive_field] , [-1, 1])
+        middle = tf.slice(input_level, [0,  receptive_field] , [-1, 1])
         middle_ = tf.reshape(middle, [-1] )
-        normalized = tf.subtract(inputs, middle)
+        normalized = tf.subtract(input_level, middle)
         normalized_pos = normalized + input_classes_max
         normalized_image = tf.reshape( normalized_pos, [-1, clip_size, 1, 1] )
         normalized_image = tf.cast(normalized_image, tf.float32)
@@ -346,7 +348,8 @@ class Model(object):
 
         self.clip_size = clip_size
 
-        self.inputs = inputs
+        self.input_level = input_level
+        self.input_all = input_all
         self.target = target
 
         self.target_class = target_class
@@ -384,16 +387,18 @@ class Model(object):
             os.makedirs( self.save_dir )
             print("Creating level directory at:", self.save_dir)
 
-    def test_io_onehot(self, x, ytrue_class):
+    def test_io_onehot(self, x, ytrue_class, x_list):
         np.set_printoptions(threshold=np.inf)
         x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print("Testing:",  self.name, x.shape, ytrue_class.shape)
-        for i in range(int(len(x)/2), int(len(x)/2 + 1), 10):
-            feed_dict_test = {self.inputs: x[i:i+10,:],
-                               self.target_class: ytrue_class[i:i+10] }
+        tests = 1
+        for i in range(int(len(x)/2), int(len(x)/2 + 1), tests):
+            feed_dict_test = {self.input_level: x[i:i+tests,:],
+                              self.target_class: ytrue_class[i:i+tests],
+                              self.input_all: x_list[i:i+tests,:,:] }
             inp, mid, norm, norm_pos, norm_one, one, targ_c, in_scale, tar_nor, tar_nor_pos, tar_nor_pos_one, tar, image, one_image = self.sess.run(
-                    [self.inputs, self.middle, self.normalized, self.normalized_pos, 
+                    [self.input_level, self.middle, self.normalized, self.normalized_pos, 
                      self.normalized_onehot, self.onehot, self.target_class, self.inputs_scaled,
                      self.target_normalized, self.target_normalized_pos, 
                      self.target_normalized_onehot, self.target, self.normalized_onehot_image,
