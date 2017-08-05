@@ -187,7 +187,7 @@ class Model(object):
         
         conv_nodes = [ 32 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 3 , n_input_classes - 20 ) ] 
+        conv_sizes =   [ ( 3 , n_input_classes - 1 ) ] 
                          #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]
@@ -265,6 +265,8 @@ class Model(object):
         self.batch_size = batch_size
         self.receptive_field = receptive_field
         self.n_levels = n_levels
+        self.normalize_mode = normalize_mode
+        self.onehot_mode = onehot_mode
 
 
         self.clip_size = 2*self.receptive_field+1
@@ -272,9 +274,6 @@ class Model(object):
         self.input_classes_max = self.n_input_classes - 1
         self.n_target_classes = 2**(8)
         self.target_classes_max = self.n_target_classes - 1
-
-        #self.input_norm_onehot_range = self.input_classes_max*2+1
-        #self.target_norm_onehot_range = self.target_classes_max*2+1
 
         self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
         self.save_dir = data_location + "/" + self.name
@@ -288,60 +287,8 @@ class Model(object):
         self.input_all = input_all
         self.target_class = target_class
 
-        '''
-        #create onehot value for non-normalized inputs
-        image = tf.reshape( input_level, [-1, clip_size, 1, 1] ) 
-        image = tf.cast(image, tf.float32)
-
-        onehot = tf.one_hot(input_level, n_input_classes)
-        onehot_image = tf.reshape( onehot, [-1, clip_size, n_input_classes,  1])
-        onehot = tf.reshape(onehot, (-1, clip_size*n_input_classes))
-        # create regular onehot values for target
-        target = tf.one_hot(target_class, n_target_classes)
-        target = tf.reshape(target, (-1, n_target_classes))
-
-        #normalized inputs and target, along with corresponding onehot
-
-        # slices tensor from middle value -> [0, middle_index] 
-        # to end of None -> [-1(end), 1 (one value only)] 
-        middle = tf.slice(input_level, [0,  receptive_field] , [-1, 1])
-        middle_ = tf.reshape(middle, [-1] )
-        normalized = tf.subtract(input_level, middle)
-        normalized_pos = normalized + input_classes_max
-        normalized_image = tf.reshape( normalized_pos, [-1, clip_size, 1, 1] )
-        normalized_image = tf.cast(normalized_image, tf.float32)
-         
-        input_norm_onehot_range = input_classes_max*2+1
-        normalized_onehot = tf.one_hot(normalized_pos, input_norm_onehot_range)
-        
-        normalized_onehot_image = tf.reshape(
-                normalized_onehot, [-1, clip_size, input_norm_onehot_range,  1]) 
-        normalized_onehot = tf.reshape(normalized_onehot, (-1, clip_size*input_norm_onehot_range))
-        normalized_onehot = tf.cast(normalized_onehot, tf.float32)
-                
-        # normalize targets based on difference from input values to scaled targets
-        target_norm_onehot_range = target_classes_max*2+1
-        inputs_scaled = tf.multiply(middle_ , 2)
-        inputs_scaled_ = tf.reshape(inputs_scaled, [-1])
-        
-        target_normalized = tf.subtract(target_class, inputs_scaled)
-        target_normalized_pos = target_normalized + target_classes_max
-        target_normalized_class = tf.reshape(target_normalized_pos, [-1])
-        target_normalized_onehot = tf.one_hot(
-                target_normalized_pos, target_norm_onehot_range)
-        target_normalized_onehot = tf.reshape(
-                target_normalized_onehot, (-1, target_norm_onehot_range) )
-
-        #if level <= 0:
-        #    nomralize_mode = True
-        #else:
-        #    normalize_mode = False
-        '''
-        self.normalize_mode = normalize_mode
-        self.onehot_mode = onehot_mode
 
         self.format_inputs()
-
         self.format_normalized_inputs()
 
         
@@ -370,7 +317,6 @@ class Model(object):
             nn_n_inputs = 1
             nn_n_targets = self.n_target_classes
         
-        #logits = self.perceptron_nn(nn_inputs, nn_n_inputs, nn_n_targets, clip_size, n_nodes)
         logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, use_pooling)
 
         prediction = tf.nn.softmax(logits)
@@ -446,7 +392,7 @@ class Model(object):
             print("regular onehot targets\n", tar)
 
 
-    def train(self, x, ytrue_class, epochs=1 ):
+    def train(self, x, ytrue_class, x_list, epochs=1 ):
         x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print("Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs)
@@ -458,8 +404,9 @@ class Model(object):
             epoch_correct = 0
             epoch_total = 0
             for i in range(0, len(x), self.batch_size):
-                feed_dict_train = {self.inputs: x[i:i+self.batch_size,:],
-                                   self.target_class: ytrue_class[i:i+self.batch_size] }
+                feed_dict_train = {self.input_level: x[i:i+self.batch_size,:],
+                                   self.target_class: ytrue_class[i:i+self.batch_size],
+                                   self.input_all: x_list[i:i+self.batch_size,:,:] }
                 
                 # train without calculating accuracy
                 #_, c = self.sess.run([self.optimizer, self.cost],

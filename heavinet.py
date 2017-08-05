@@ -16,9 +16,9 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level)
     
     net = Model( level, receptive_field, data_location , n_levels)
-    net.test_io_onehot(x_data, ytrue_data, x_list)
-    #net.train( x_data, ytrue_data, epochs=epochs)
-    #net.save(close=True)
+    #net.test_io_onehot(x_data, ytrue_data, x_list)
+    net.train( x_data, ytrue_data, x_list, epochs=epochs)
+    net.save(close=True)
 
 def generate(data_location, seed_file, level, receptive_field, n_levels):
     print("Generating:", level, data_location, seed_file, receptive_field, n_levels)
