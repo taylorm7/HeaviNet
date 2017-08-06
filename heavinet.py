@@ -28,7 +28,7 @@ def generate(data_location, seed_file, level, receptive_field, n_levels):
     song_data = gen_net.generate(seed_data)
     gen_net.close()
     song_name = write_song( song_data, data_location, level, receptive_field)
-
+    
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
         if sys.argv[1]=='load': 

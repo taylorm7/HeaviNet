@@ -187,7 +187,7 @@ class Model(object):
         
         conv_nodes = [ 32 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 3 , n_input_classes - 1 ) ] 
+        conv_sizes =   [ ( 3 , n_input_classes ) ] 
                          #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]
@@ -214,6 +214,62 @@ class Model(object):
 
         return fc_layers[-1]
 
+    def format_in_flat(self):
+        image = tf.reshape( self.input_level, [-1, self.clip_size, 1, 1] ) 
+        image = tf.cast(image, tf.float32)
+        return image, 1
+        
+    def format_in_onehot(self):
+        onehot = tf.one_hot(self.input_level, self.n_input_classes)
+        onehot_image = tf.reshape( onehot, [-1, self.clip_size, self.n_input_classes,  1])
+        #onehot = tf.reshape(onehot, (-1, self.clip_size*self.n_input_classes))
+        return onehot_image, self.n_input_classes
+
+    def format_target(self):
+        target = tf.one_hot(self.target_class, self.n_target_classes)
+        target = tf.reshape(target, (-1, self.n_target_classes))
+        return target, self.target_class, self.n_target_classes
+
+    def format_in_norm_flat(self):
+        middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+        middle_ = tf.reshape(middle, [-1] )
+        normalized = tf.subtract(self.input_level, middle)
+        normalized_pos = normalized + self.input_classes_max
+
+        normalized_image = tf.reshape(normalized_pos, [-1, self.clip_size, 1, 1] )
+        normalized_image = tf.cast(normalized_image, tf.float32)
+        return normalized_image, 1
+
+    def format_in_norm_onehot(self):
+        middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+        middle_ = tf.reshape(middle, [-1] )
+        normalized = tf.subtract(self.input_level, middle)
+        normalized_pos = normalized + self.input_classes_max
+        
+        input_norm_onehot_range = self.input_classes_max*2+1
+        normalized_onehot = tf.one_hot(normalized_pos, input_norm_onehot_range)
+        
+        normalized_onehot_image = tf.reshape( normalized_onehot, [-1, self.clip_size, input_norm_onehot_range,  1])
+        #normalized_onehot = tf.reshape(normalized_onehot, (-1, self.clip_size*input_norm_onehot_range))
+        #normalized_onehot = tf.cast(normalized_onehot, tf.float32)
+        return normalized_onehot_image, input_norm_onehot_range
+
+    def format_target_norm(self):
+        middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+        middle_class = tf.reshape(middle, [-1] )
+        
+        target_norm_onehot_range = self.target_classes_max*2+1
+        inputs_scaled = tf.multiply(middle_class , 2)
+        inputs_scaled_class = tf.reshape(inputs_scaled, [-1])
+        
+        target_normalized = tf.subtract(self.target_class, inputs_scaled)
+        target_normalized_pos = target_normalized + self.target_classes_max
+        target_normalized_class = tf.reshape(target_normalized_pos, [-1])
+        target_normalized_onehot = tf.one_hot( target_normalized_pos, target_norm_onehot_range)
+        target_normalized_onehot = tf.reshape( target_normalized_onehot, (-1, target_norm_onehot_range) )
+        
+        return target_normalized_onehot, target_normalized_class, target_norm_onehot_range, inputs_scaled_class
+    
     def format_inputs(self):
         self.image = tf.reshape( self.input_level, [-1, self.clip_size, 1, 1] ) 
         self.image = tf.cast(self.image, tf.float32)
@@ -224,6 +280,7 @@ class Model(object):
         # create regular onehot values for target
         self.target = tf.one_hot(self.target_class, self.n_target_classes)
         self.target = tf.reshape(self.target, (-1, self.n_target_classes))
+
 
     def format_normalized_inputs(self):
         #normalized inputs and target, along with corresponding onehot
@@ -257,9 +314,9 @@ class Model(object):
                 self.target_normalized_pos, self.target_norm_onehot_range)
         self.target_normalized_onehot = tf.reshape(
                 self.target_normalized_onehot, (-1, self.target_norm_onehot_range) )
-
+        
     def __init__(self, level, receptive_field, data_location, n_levels,
-                 batch_size=128, normalize_mode=True, onehot_mode=True, use_pooling=False ):
+                 batch_size=128, normalize_mode=False, onehot_mode=False, use_pooling=False ):
         
         self.level = level
         self.batch_size = batch_size
@@ -287,11 +344,23 @@ class Model(object):
         self.input_all = input_all
         self.target_class = target_class
 
-
-        self.format_inputs()
-        self.format_normalized_inputs()
+        if normalize_mode == False:
+            if onehot_mode == False:
+                nn_inputs, nn_n_inputs = self.format_in_flat()
+            else:
+                nn_inputs, nn_n_inputs = self.format_in_onehot()
+            nn_targets, nn_target_class, nn_n_targets = self.format_target()
+        elif normalize_mode == True:
+            if onehot_mode == False:
+                nn_inputs, nn_n_inputs = self.format_in_norm_flat()
+            else:
+                nn_inputs, nn_n_inputs = self.format_in_norm_onehot()
+            nn_targets, nn_target_class, nn_n_targets, inputs_scaled_class = self.format_target_norm()
 
         
+        '''
+        self.format_inputs()
+        self.format_normalized_inputs()
         if normalize_mode == True and onehot_mode == True:
             nn_inputs = self.normalized_onehot_image
             nn_targets = self.target_normalized_onehot
@@ -316,7 +385,7 @@ class Model(object):
             nn_target_class = self.target_class
             nn_n_inputs = 1
             nn_n_targets = self.n_target_classes
-        
+        ''' 
         logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, use_pooling)
 
         prediction = tf.nn.softmax(logits)
@@ -329,7 +398,8 @@ class Model(object):
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32) )
 
         if normalize_mode == True:
-            prediction_value = (prediction_class - self.target_classes_max) + self.inputs_scaled_class
+            prediction_value = (prediction_class - self.target_classes_max) + inputs_scaled_class
+            #prediction_value = (prediction_class - self.target_classes_max) + self.inputs_scaled_class
         else:
             prediction_value = prediction_class
         
