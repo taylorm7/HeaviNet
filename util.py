@@ -12,7 +12,7 @@ def load_matlab(data_location, receptive_field):
         with h5py.File(read_file) as matlab_input:
             r_field = int(matlab_input.get('receptive_field')[0,0])
             n_levels = int(matlab_input.get('n_levels')[0,0])
-             
+            x_list = []
             print("Reading", read_file, " receptive field:", r_field, "levels:", n_levels)
             for i in range(n_levels):
                 x_data = [matlab_input[element[i]][:] 
@@ -24,12 +24,14 @@ def load_matlab(data_location, receptive_field):
                 store_file = data_location+"/xytrue_"+str(i)+"_r"+str(receptive_field)+".pkl"
                 print("Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape)
                 data_list = [ x_data, ytrue_data ]
-                if i == 0:
-                    x_list = x_data
-                else:
-                    x_list = np.dstack( ( x_list, x_data) )
+                x_list.append(x_data)
+                #if i == 0:
+                #    x_list = x_data
+                #else:
+                #    x_list = np.dstack( ( x_list, x_data) )
                 with open(store_file, "wb") as output_file:
                     pkl.dump(data_list, output_file, protocol=2)
+            x_list = np.asarray(x_list)
             x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
             print(np.shape(x_list))
             with open(x_file, "wb") as output_file:

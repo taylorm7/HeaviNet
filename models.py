@@ -147,13 +147,13 @@ def nn_fc_layers(input, n_input_classes, n_target_classes, n_nodes):
     layers.append(new_fc_layer(layers[-1], n_nodes[-1], n_target_classes, use_relu=False))
     return layers
 
-def nn_conv_layers(data_image, filter_sizes, filter_nodes, pooling_sizes, use_pooling ):
+def nn_conv_layers(data_image, filter_sizes, filter_nodes, pooling_sizes, num_input_channels, use_pooling ):
     layers = []
     weights = []
     
     for i, (size, num, pool) in enumerate( zip(filter_sizes, filter_nodes, pooling_sizes) ):
         if i == 0:
-            l, w = new_conv_layer(data_image, 1, size[0], size[1], pool[0], pool[1], num, use_pooling)
+            l, w = new_conv_layer(data_image, num_input_channels, size[0], size[1], pool[0], pool[1], num, use_pooling)
         else:
             l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size[0], size[1], pool[0], pool[1], num, use_pooling)
         layers.append(l)
@@ -171,7 +171,7 @@ class Model(object):
         output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
         return output_layer
 
-    def neural_network_model(self, data_image, n_input_classes, n_target_classes, use_pooling):
+    def neural_network_model(self, data_image, n_input_classes, n_target_classes, n_channels, use_pooling):
         '''
         conv_nodes = [ 1 , 4 ]
                     # (clip_size, n_input_classes)
@@ -192,7 +192,7 @@ class Model(object):
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]
         
-        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, use_pooling)
+        conv_layers, conv_weights = nn_conv_layers(data_image, conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
         conv_flat, n_features = flatten_layer(conv_layers[-1])
         fc_layers = nn_fc_layers(conv_flat, n_features, n_target_classes, fc_nodes)
         
@@ -214,36 +214,36 @@ class Model(object):
 
         return fc_layers[-1]
 
-    def format_in_flat(self):
-        image = tf.reshape( self.input_level, [-1, self.clip_size, 1, 1] ) 
+    def format_in_flat(self, in_level):
+        image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
         image = tf.cast(image, tf.float32)
         return image, 1
         
-    def format_in_onehot(self):
-        onehot = tf.one_hot(self.input_level, self.n_input_classes)
+    def format_in_onehot(self, in_level):
+        onehot = tf.one_hot(in_level, self.n_input_classes)
         onehot_image = tf.reshape( onehot, [-1, self.clip_size, self.n_input_classes,  1])
         #onehot = tf.reshape(onehot, (-1, self.clip_size*self.n_input_classes))
         return onehot_image, self.n_input_classes
 
-    def format_target(self):
-        target = tf.one_hot(self.target_class, self.n_target_classes)
+    def format_target(self, target_c):
+        target = tf.one_hot(target_c, self.n_target_classes)
         target = tf.reshape(target, (-1, self.n_target_classes))
-        return target, self.target_class, self.n_target_classes
+        return target, target_c, self.n_target_classes
 
-    def format_in_norm_flat(self):
-        middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+    def format_in_norm_flat(self, in_level):
+        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
         middle_ = tf.reshape(middle, [-1] )
-        normalized = tf.subtract(self.input_level, middle)
+        normalized = tf.subtract(in_level, middle)
         normalized_pos = normalized + self.input_classes_max
 
         normalized_image = tf.reshape(normalized_pos, [-1, self.clip_size, 1, 1] )
         normalized_image = tf.cast(normalized_image, tf.float32)
         return normalized_image, 1
 
-    def format_in_norm_onehot(self):
-        middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+    def format_in_norm_onehot(self, in_level):
+        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
         middle_ = tf.reshape(middle, [-1] )
-        normalized = tf.subtract(self.input_level, middle)
+        normalized = tf.subtract(in_level, middle)
         normalized_pos = normalized + self.input_classes_max
         
         input_norm_onehot_range = self.input_classes_max*2+1
@@ -254,15 +254,15 @@ class Model(object):
         #normalized_onehot = tf.cast(normalized_onehot, tf.float32)
         return normalized_onehot_image, input_norm_onehot_range
 
-    def format_target_norm(self):
-        middle = tf.slice(self.input_level, [0,  self.receptive_field] , [-1, 1])
+    def format_target_norm(self, in_level, target_c):
+        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
         middle_class = tf.reshape(middle, [-1] )
         
         target_norm_onehot_range = self.target_classes_max*2+1
         inputs_scaled = tf.multiply(middle_class , 2)
         inputs_scaled_class = tf.reshape(inputs_scaled, [-1])
         
-        target_normalized = tf.subtract(self.target_class, inputs_scaled)
+        target_normalized = tf.subtract(target_c, inputs_scaled)
         target_normalized_pos = target_normalized + self.target_classes_max
         target_normalized_class = tf.reshape(target_normalized_pos, [-1])
         target_normalized_onehot = tf.one_hot( target_normalized_pos, target_norm_onehot_range)
@@ -316,7 +316,7 @@ class Model(object):
                 self.target_normalized_onehot, (-1, self.target_norm_onehot_range) )
         
     def __init__(self, level, receptive_field, data_location, n_levels,
-                 batch_size=128, normalize_mode=False, onehot_mode=False, use_pooling=False ):
+                 batch_size=128, normalize_mode=False, onehot_mode=True, use_pooling=False ):
         
         self.level = level
         self.batch_size = batch_size
@@ -337,7 +337,7 @@ class Model(object):
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
         input_level = tf.placeholder(tf.int64, [None,self.clip_size])
-        input_all = tf.placeholder(tf.int64, [None,self.clip_size, self.n_levels])
+        input_all = tf.placeholder(tf.int64, [self.n_levels, None,self.clip_size])
         target_class = tf.placeholder(tf.int64, [None])
 
         self.input_level = input_level
@@ -346,18 +346,31 @@ class Model(object):
 
         if normalize_mode == False:
             if onehot_mode == False:
-                nn_inputs, nn_n_inputs = self.format_in_flat()
+                nn_inputs, nn_n_inputs = self.format_in_flat(input_level)
             else:
-                nn_inputs, nn_n_inputs = self.format_in_onehot()
-            nn_targets, nn_target_class, nn_n_targets = self.format_target()
+                nn_inputs, nn_n_inputs = self.format_in_onehot(input_level)
+            nn_targets, nn_target_class, nn_n_targets = self.format_target(target_class)
         elif normalize_mode == True:
             if onehot_mode == False:
-                nn_inputs, nn_n_inputs = self.format_in_norm_flat()
+                nn_inputs, nn_n_inputs = self.format_in_norm_flat(input_level)
             else:
-                nn_inputs, nn_n_inputs = self.format_in_norm_onehot()
-            nn_targets, nn_target_class, nn_n_targets, inputs_scaled_class = self.format_target_norm()
-
+                nn_inputs, nn_n_inputs = self.format_in_norm_onehot(input_level)
+            nn_targets, nn_target_class, nn_n_targets, inputs_scaled_class = self.format_target_norm(input_level, target_class)
+       
         
+        nn_inputs = []
+        nn_level = []
+        for i in range(self.n_levels):
+            print("input" , input_all[i].shape)
+            nn_level, _ = self.format_in_onehot(input_all[i])
+            print("level", nn_level.shape)
+            nn_inputs.append(nn_level)
+        nn_inputs = tf.concat( nn_inputs, axis=3)
+
+        print("final", nn_inputs.shape)
+        
+
+
         '''
         self.format_inputs()
         self.format_normalized_inputs()
@@ -386,7 +399,7 @@ class Model(object):
             nn_n_inputs = 1
             nn_n_targets = self.n_target_classes
         ''' 
-        logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, use_pooling)
+        logits = self.neural_network_model(nn_inputs, nn_n_inputs, nn_n_targets, self.n_levels, use_pooling)
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -465,7 +478,7 @@ class Model(object):
     def train(self, x, ytrue_class, x_list, epochs=1 ):
         x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
-        print("Trainging:",  self.name, x.shape, ytrue_class.shape, "epochs:", epochs)
+        print("Trainging:",  self.name, x.shape, ytrue_class.shape, x_list.shape, "epochs:", epochs)
         
         #for e in range(epochs):
         e = 0
@@ -476,7 +489,7 @@ class Model(object):
             for i in range(0, len(x), self.batch_size):
                 feed_dict_train = {self.input_level: x[i:i+self.batch_size,:],
                                    self.target_class: ytrue_class[i:i+self.batch_size],
-                                   self.input_all: x_list[i:i+self.batch_size,:,:] }
+                                   self.input_all: x_list[:,i:i+self.batch_size,:] }
                 
                 # train without calculating accuracy
                 #_, c = self.sess.run([self.optimizer, self.cost],
