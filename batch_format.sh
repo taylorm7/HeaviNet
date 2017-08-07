@@ -40,7 +40,6 @@ pwd
 export dot=$dot
 
 ./run_heavinet.sh format beethoven_7.wav 14
-./run_heavinet.sh load beethoven_7.wav 14
 
 echo "Code finished!"
 
