@@ -187,7 +187,7 @@ class Model(object):
         
         conv_nodes = [ 32 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 3 , n_input_classes - 20 ) ] 
+        conv_sizes =   [ ( 3 , n_input_classes - 1 ) ] 
                          #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]
@@ -516,12 +516,13 @@ class Model(object):
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
 
-    def generate(self, x_seed):
+    def generate(self, x_seed, x_list):
         x_seed = np.reshape(x_seed, (-1, self.clip_size))
-        print("Generating with seed:", x_seed.shape)
+        print("Generating with seed:", x_seed.shape, x_list.shape)
         y_generated = []
         for i in range(0, len(x_seed), self.batch_size):
-            feed_dict_gen = {self.inputs: x_seed[i:i+self.batch_size,:]}
+            feed_dict_gen = {self.input_level: x_seed[i:i+self.batch_size,:],
+                             self.input_all: x_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated = np.append(y_generated, y_g)
         print("Generated song:",  len(y_generated))

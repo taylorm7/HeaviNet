@@ -6,8 +6,15 @@ import h5py
 import hdf5storage
 import pickle as pkl
 
-def load_matlab(data_location, receptive_field):
-    read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
+def load_matlab(data_location, receptive_field, training_data = True):
+    if training_data == True:
+        read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
+        x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
+        store_file = data_location+"/xytrue_"
+    else:
+        read_file = data_location + "/matlab_seed_r" + str(receptive_field) + ".mat"
+        x_file = data_location+"/seed_x_r"+str(receptive_field)+".pkl"
+        store_file = data_location+"/seed_"
     try:
         with h5py.File(read_file) as matlab_input:
             r_field = int(matlab_input.get('receptive_field')[0,0])
@@ -21,7 +28,7 @@ def load_matlab(data_location, receptive_field):
                         for element in matlab_input['targets']]
                 x_data = x_data[0].transpose()
                 ytrue_data = ytrue_data[0].transpose()
-                store_file = data_location+"/xytrue_"+str(i)+"_r"+str(receptive_field)+".pkl"
+                sf = store_file + str(i)+"_r"+str(receptive_field)+".pkl"
                 print("Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape)
                 data_list = [ x_data, ytrue_data ]
                 x_list.append(x_data)
@@ -29,10 +36,9 @@ def load_matlab(data_location, receptive_field):
                 #    x_list = x_data
                 #else:
                 #    x_list = np.dstack( ( x_list, x_data) )
-                with open(store_file, "wb") as output_file:
+                with open(sf, "wb") as output_file:
                     pkl.dump(data_list, output_file, protocol=2)
             x_list = np.asarray(x_list)
-            x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
             print(np.shape(x_list))
             with open(x_file, "wb") as output_file:
                 pkl.dump(x_list, output_file, protocol=2)
@@ -41,9 +47,13 @@ def load_matlab(data_location, receptive_field):
         sys.exit()
 
 
-def read_data(data_location, receptive_field, level):
-    store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"
-    x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
+def read_data(data_location, receptive_field, level, training_data = True):
+    if training_data == True:
+        store_file = data_location + "/xytrue_" + str(level) + "_r" + str(receptive_field) + ".pkl"
+        x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
+    else:
+        store_file = data_location + "/seed_" + str(level) + "_r" + str(receptive_field) + ".pkl"
+        x_file = data_location+"/seed_x_r"+str(receptive_field)+".pkl"
     try: 
         with open(store_file, "rb") as input_file:
             data_list = pkl.load(input_file)
@@ -70,7 +80,7 @@ def read_seed(seed_file):
         sys.exit()
 
 def write_song(song, data_location, level, receptive_field):
-    song_name = "song_" + str(level+1) + "_r" + str(receptive_field)
+    song_name = "song_" + str(level) + "_r" + str(receptive_field)
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song

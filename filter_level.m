@@ -38,11 +38,8 @@ function [input_signal, input_moving_average] = filter_level(read_location, save
     audiowrite(neuralnet_song, input_signal, fx);
     audiowrite(filtered_song, input_moving_average, fx);
     audioinfo(filtered_song)
-    
-    seed_nonlinear = mu_trasform(input_hampel, mu, Q);
-    seed_digital = analog_to_digital(seed_nonlinear, Q);
-    
-    seed = format_level(seed_digital, receptive_field, fx, passband_fx);
-    save(save_location, 'seed', '-v7.3');
-    
+       
+    save_name = strcat('song_', int2str(level-1));
+    song.(save_name) = input_hampel;
+    save(save_location, '-struct', 'song', '-v7.3');
 end

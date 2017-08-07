@@ -1,6 +1,10 @@
-function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_formatted] = audio_format(song_location, data_location, downsample_rate, n_levels, receptive_field)
+function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_formatted] = audio_format(song_location, data_location, downsample_rate, n_levels, receptive_field, training_data)
 disp(song_location);
-data_file = strcat(data_location, '/matlab_song_r', int2str(receptive_field), '.mat');
+if training_data == 1
+    data_file = strcat(data_location, '/matlab_song_r', int2str(receptive_field), '.mat');
+else
+    data_file = strcat(data_location, '/matlab_seed_r', int2str(receptive_field), '.mat');
+end
 disp(data_file);
 disp('Receptive Field');
 disp(receptive_field);
@@ -10,9 +14,15 @@ disp('Levels');
 disp(n_levels);
 
 [song, fx ] = audio_read(song_location, downsample_rate);
-
-[filter_fx] = set_fx(fx, data_location, n_levels);
-
+if training_data == 1
+    [filter_fx] = set_fx(fx, data_location, n_levels);
+else
+    [~, original_fx] = get_fx(data_location, 1);
+    if original_fx ~= fx
+        error_msg = 'Error: The frequency rate of the seed value and song value are incompatable'
+        error(error_msg);
+    end
+end
 inputs = cell(n_levels,1);
 inputs_signal = cell(n_levels,1);
 
@@ -29,7 +39,11 @@ for i = 1:n_levels
     passband_fx = get_fx(data_location, i+1);
     [targets{i}, targets_signal{i}] = create_filter(i+1, song, fx, passband_fx, receptive_field, data_location);
     
-    signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
+    if training_data == 1
+        signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
+    else
+        signal_location = strcat(data_location, '/seed_', int2str(i), '.wav');
+    end
     audiowrite(signal_location, inputs_signal{i}, fx);
 end
 
