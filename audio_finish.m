@@ -10,7 +10,7 @@ for i = 0:(n_levels-1)
 end
 
 moving_average = movmean(song, 30);
-finished_song = smoothdata( song);
+finished_song = movmedian( song, 30);
     
     
 D=song-finished_song;
