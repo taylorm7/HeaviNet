@@ -14,7 +14,7 @@ echo '#PBS -W group_list=newriver' >> $1
 echo '#PBS -q p100_normal_q' >> $1
 echo '#PBS -A heavinet' >> $1
 echo '#PBS -j oe' >> $1
-if [ "$level_start" == "0" ]; then
+if [ "$level_start" == "7" ]; then
 	echo '#PBS -M taylorm7@vt.edu' >> $1
 	echo '#PBS -m ea' >> $1
 fi
@@ -38,9 +38,9 @@ echo 'pwd' >> $1
 
 echo 'export dot=$dot' >> $1
 
-epochs=200
-receptive_field=14
-song=beethoven_7.wav
+epochs=$5
+receptive_field=$6
+song=$7
 
 for (( i=$level_start; i<$level_stop; i++ ))
 do
