@@ -44,15 +44,13 @@ function [y_digital, y, x] = create_filter(level, song, fx, passband_fx, recepti
     
     x_moving_average = movmean(x, ma_field);
     x_hampel = medfilt1( x_moving_average, ha_field);
-    
-    
     D=x-x_moving_average;
     MSE=mean(D.^2);
-    fprintf('Difference after hampel and moving average filter = %g\n', MSE )
+    %fprintf('Difference after hampel and moving average filter = %g\n', MSE )
     
     % perform mu-law transform and digitize compressed data
-    %y_nonlinear = mu_trasform(x, mu, Q);
-    y_nonlinear = mu_trasform(x_hampel, mu, Q);
+    y_nonlinear = mu_trasform(x, mu, Q);
+    %y_nonlinear = mu_trasform(x_hampel, mu, Q);
     
     y_digital = analog_to_digital(y_nonlinear, Q);
     % compute analog to digital, and perform inverse mu-law transform

@@ -1,9 +1,9 @@
-function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_formatted] = audio_format(song_location, data_location, downsample_rate, n_levels, receptive_field, training_data)
+function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_formatted] = audio_format(song_location, data_location, downsample_rate, n_levels, receptive_field, training_data, seed_directory)
 disp(song_location);
 if training_data == 1
     data_file = strcat(data_location, '/matlab_song_r', int2str(receptive_field), '.mat');
 else
-    data_file = strcat(data_location, '/matlab_seed_r', int2str(receptive_field), '.mat');
+    data_file = strcat(seed_directory, '/matlab_seed_r', int2str(receptive_field), '.mat');
 end
 disp(data_file);
 disp('Receptive Field');
@@ -42,7 +42,7 @@ for i = 1:n_levels
     if training_data == 1
         signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
     else
-        signal_location = strcat(data_location, '/seed_', int2str(i), '.wav');
+        signal_location = strcat(seed_directory, '/seed_', int2str(i), '.wav');
     end
     audiowrite(signal_location, inputs_signal{i}, fx);
 end

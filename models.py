@@ -187,7 +187,7 @@ class Model(object):
         
         conv_nodes = [ 32 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 3 , n_input_classes - 5 ) ] 
+        conv_sizes =   [ ( 3 , n_input_classes - 10 ) ] 
                          #(self.clip_size , 1  ) ]
         conv_pooling = [ ( 1 , 1 ), (1, 1) ]
         fc_nodes =   [ 512 , 256 ]

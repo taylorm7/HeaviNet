@@ -56,10 +56,10 @@ elif [ $ACTION = "train" ]; then
 		TRAIN_START=$5
 		train_all_levels=0
 	fi
-
-elif [ $ACTION = "generate" ]; then
+elif [ $ACTION = "load" ]; then
 	SEED=$3
 	SEEDPATH="$dot/data/songs/$SEED"
+	SEEDDIR="$DATAPATH/$SEED.seed"
 	if [ -z $4 ]; then
 		RECEPTIVE_FIELD=1
 	else
@@ -70,14 +70,39 @@ elif [ $ACTION = "generate" ]; then
 	else
 		DOWNSAMPLE_RATE=$5
 	fi
-	if [ -z $6 ]; then
-		GENERATE_START=0
+elif [ $ACTION = "create" ]; then
+	SEED=$3
+	SEEDPATH="$dot/data/songs/$SEED"
+	SEEDDIR="$DATAPATH/$SEED.seed"
+	if [ -z $4 ]; then
+		RECEPTIVE_FIELD=1
 	else
-		GENERATE_START=$6
+		RECEPTIVE_FIELD=$4
+	fi
+	if [ -z $5 ]; then
+		DOWNSAMPLE_RATE=0
+	else
+		DOWNSAMPLE_RATE=$5
+	fi
+
+elif [ $ACTION = "generate" ]; then
+	SEED=$3
+	SEEDPATH="$dot/data/songs/$SEED"
+	SEEDDIR="$DATAPATH/$SEED.seed"
+	if [ -z $4 ]; then
+		RECEPTIVE_FIELD=1
+	else
+		RECEPTIVE_FIELD=$4
+	fi
+	if [ -z $5 ]; then
+		DOWNSAMPLE_RATE=0
+	else
+		DOWNSAMPLE_RATE=$5
 	fi
 elif [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
 	SEED=$3
 	SEEDPATH="$dot/data/songs/$SEED"
+	SEEDDIR="$DATAPATH/$SEED.seed"
 	if [ -z $4 ]; then
 		RECEPTIVE_FIELD=1
 	else
@@ -92,11 +117,6 @@ elif [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
 		DOWNSAMPLE_RATE=0
 	else
 		DOWNSAMPLE_RATE=$6
-	fi
-	if [ -z $7 ]; then
-		GENERATE_START=0
-	else
-		GENERATE_START=$7
 	fi
 fi
 
@@ -156,33 +176,41 @@ elif [ $ACTION = "train" ]; then
 	fi
 	duration=$SECONDS
 	echo "Train: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
-elif [ $ACTION = "generate" ]; then
+elif [ $ACTION = "load" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
-		$MATLABCALL -nojvm -r "try, audio_format('$SEEDPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, 0 ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
+		mkdir $SEEDDIR
+		$MATLABCALL -nojvm -r "try, audio_format('$SEEDPATH', '$DATAPATH', $DOWNSAMPLE_RATE, $LEVELS, $RECEPTIVE_FIELD, 0 , '$SEEDDIR' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
 		if [ -f $MATLABSONG ]; then
-			echo "Loading song:$SONG in $MATLABSONG"
-			python3 heavinet.py 'load' $DATAPATH $RECEPTIVE_FIELD 0
+			echo "Loading seed:$SEED in $SEEDPATH"
+			python3 heavinet.py 'load' $SEEDDIR $RECEPTIVE_FIELD 0
 		else
 			echo "The file '$SEED' not found at '$SEEDPATH'"
 		fi
-
-		
+	else
+		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
+		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
+		echo "Then training with ./run_heavinet.sh train song_name.mp3"
+	fi
+	duration=$SECONDS
+	echo "Load: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+elif [ $ACTION = "generate" ]; then
+	SECONDS=0
+	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		for ((i=0 ; i<LEVELS ; i++)); do
-
-			GENSEEDNAME="seed_$i""_r$RECEPTIVE_FIELD"
-			GENSEEDPATH="$DATAPATH/$GENSEEDNAME.mat"
-			
-			GENSONGNAME="song_$i""_r$RECEPTIVE_FIELD"
-			GENSONGPATH="$DATAPATH/$GENSONGNAME.mat"
-			GENSONGFILE="$DATAPATH/$GENSONGNAME.wav"
-
-			python3 heavinet.py $ACTION $DATAPATH $GENSONGPATH $i $RECEPTIVE_FIELD $LEVELS
-			
-			$MATLABCALL -nojvm -r "try, filter_level('$GENSONGPATH', '$GENSEEDPATH', $i, $RECEPTIVE_FIELD, '$DATAPATH' ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
+			python3 heavinet.py $ACTION $DATAPATH $SEEDDIR $i $RECEPTIVE_FIELD $LEVELS
 		done
-
-		$MATLABCALL -nojvm -r "try, audio_finish('$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE, $RECEPTIVE_FIELD ); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
+	else
+		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
+		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
+		echo "Then training with ./run_heavinet.sh train song_name.mp3"
+	fi
+	duration=$SECONDS
+	echo "Create: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+elif [ $ACTION = "create" ]; then
+	SECONDS=0
+	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
+		$MATLABCALL -nojvm -r "try, audio_finish('$DATAPATH', $LEVELS, $DOWNSAMPLE_RATE, $RECEPTIVE_FIELD, '$SEEDDIR'); , catch ME, error_msg = getReport(ME); disp(error_msg), end, exit"
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
 		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
@@ -195,7 +223,9 @@ elif [ $ACTION = "run" ]; then
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
 		./$0 "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
-		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE $GENERATE_START
+		./$0 "load" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
+		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
+		./$0 "create" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		echo "Compled Run"
 	else
 		echo "Invalid $SONG or $SEED"
@@ -206,14 +236,14 @@ elif [ $ACTION = "train_generate" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		./$0 "train" $SONG $RECEPTIVE_FIELD $EPOCHS
-		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE $GENERATE_START
+		./$0 "generate" $SONG $SEED $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
 		echo "Compled Run"
 
 	else
 		echo "Invalid $SONG or $SEED"
 	fi
 	duration=$SECONDS
-	echo "Train/Gen: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+	echo "Train/Create: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 else
 	echo "Please enter an action, 'format song.mp3', 'train song.wav', or 'generate song.mp4 seed.mp3'"
 fi

@@ -20,15 +20,15 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     net.train( x_data, ytrue_data, x_list, epochs=epochs)
     net.save(close=True)
 
-def generate(data_location, seed_file, level, receptive_field, n_levels):
-    print("Generating:", level, data_location, seed_file, receptive_field, n_levels)
-    print("Seed:", seed_file)
+def generate(data_location, seed_location, level, receptive_field, n_levels):
+    print("Generating:", level, data_location, receptive_field, n_levels)
+    print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
-    seed_data, _, seed_list = read_data(data_location, receptive_field, level, training_data=False)
+    seed_data, _, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
     gen_net = Model( level, receptive_field, data_location, n_levels )
     song_data = gen_net.generate(seed_data, seed_list)
     gen_net.close()
-    song_name = write_song( song_data, data_location, level, receptive_field)
+    song_name = write_song( song_data, seed_location, level, receptive_field)
     
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
