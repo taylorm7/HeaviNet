@@ -1,4 +1,4 @@
-function [song, finished_song, original_fx] = audio_finish(data_location, n_levels, downsample_rate, receptive_field, seed_location)
+function [song, inputs, finished_song, original_fx] = audio_finish(data_location, n_levels, downsample_rate, receptive_field, seed_location)
 disp(data_location);
 bits = 8;
 inputs = cell(n_levels,1);
@@ -53,9 +53,8 @@ fprintf('Difference after filter = %g\n', MSE )
 finish_file = strcat(seed_location, '/song_r', int2str(receptive_field), '.wav');
 [~, original_fx] = get_fx(data_location, 0);
 
-s = (finished_song - (n_levels*128));
-abs_max = max(abs(s));
-finished_song = s/abs_max;
+abs_max = max(abs(finished_song));
+finished_song = finished_song/abs_max;
 
 disp('Song saved at');
 audiowrite(finish_file, finished_song, original_fx);
