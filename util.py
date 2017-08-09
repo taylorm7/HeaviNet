@@ -61,7 +61,7 @@ def read_data(data_location, receptive_field, level, training_data = True):
             ytrue_data = data_list[1]
         with open(x_file, "rb") as input_file:
             x_list = pkl.load(input_file)
-        print(np.shape(x_data), np.shape(ytrue_data), np.shape(x_list))
+        print("Read data:", np.shape(x_data), np.shape(ytrue_data), np.shape(x_list))
         return x_data, ytrue_data, x_list
     except IOError:
         print("Failed to load:", store_file)

@@ -16,7 +16,6 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
     
     net = Model( level, receptive_field, data_location , n_levels)
-    #net.test_io_onehot(x_data, ytrue_data, x_list)
     net.train( x_data, ytrue_data, x_list, epochs=epochs)
     net.save(close=True)
 
