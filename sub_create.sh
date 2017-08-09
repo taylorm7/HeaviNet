@@ -14,7 +14,7 @@ echo '#PBS -W group_list=newriver' >> $1
 echo '#PBS -q p100_normal_q' >> $1
 echo '#PBS -A heavinet' >> $1
 echo '#PBS -j oe' >> $1
-if [ "$level_start" == "7" ]; then
+if [ "$level_stop" == "$num_levels" ]; then
 	echo '#PBS -M taylorm7@vt.edu' >> $1
 	echo '#PBS -m ea' >> $1
 fi
@@ -46,4 +46,11 @@ for (( i=$level_start; i<$level_stop; i++ ))
 do
 	echo "./run_heavinet.sh train $song $receptive_field $epochs $i" >> $1
 done
+
+if [ "$level_stop" == "$num_levels" ]; then
+	echo "sleep 10m" >> $1
+	echo "./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 14" >> $1
+	echo "./run_heavinet.sh generate beethoven_7.wav bach_10.wav 14" >> $1
+fi
+
 
