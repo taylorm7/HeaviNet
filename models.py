@@ -404,7 +404,7 @@ class Model(object):
         
         #for e in range(epochs):
         e = 0
-        while ((e < epochs) and (self.best_accuracy < 100 )):
+        while ((e < epochs) and (self.best_accuracy < 100.1 )):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
