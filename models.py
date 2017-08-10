@@ -264,7 +264,7 @@ class Model(object):
     
     def __init__(self, level, receptive_field, data_location, n_levels ):
         self.batch_size = 128
-        self.normalize_mode = True
+        self.normalize_mode = False
         self.onehot_mode = True
         self.multichannel_mode = True
         self.use_pooling = False
