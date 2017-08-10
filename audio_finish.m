@@ -20,13 +20,13 @@ for level = 1:n_levels
     input_analog = digital_to_analog(input_digital, Q);
     input_signal = mu_inverse(input_analog, mu, Q);
     
-    input_moving_average = movmean(input_signal, ma_field);
-    input_hampel = hampel( input_moving_average, ha_field);
+    input_filtered =  hampel(input_signal, 3, 0.5);
+    input_filtered = sgolayfilt(input_filtered,5,41);
     
     inputs{level} = input_signal;
-    song = song + input_signal;
+    song = song + input_filtered;
     
-    D=input_signal-input_hampel;
+    D=input_signal-input_filtered;
     MSE=mean(D.^2);
     fprintf('Level:%d Passband:%g Factor:%g Filter Field:%d\n', level, passband_fx, factor, ma_field);  
     %fprintf('Difference after hampel and moving average filter = %g\n', MSE )
@@ -44,7 +44,10 @@ for level = 1:n_levels
     %audioinfo(filtered_song)
 end
 
-finished_song = sgolayfilt(song,3,41);
+%finished_song = song;
+%finished_song = movmean(song, 3);
+finished_song = hampel(song, 3, 0.5);
+finished_song = sgolayfilt(finished_song,5,41);
     
 D=song-finished_song;
 MSE=mean(D.^2);
