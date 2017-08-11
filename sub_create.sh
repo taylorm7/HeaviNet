@@ -49,8 +49,8 @@ do
 done
 
 if [ "$level_stop" == "$num_levels" ]; then
-	echo "sleep 10m" >> $1
-	echo "./run_heavinet.sh generate $song $generate 14" >> $1
+	echo "sleep 5m" >> $1
+	echo "./run_heavinet.sh generate $song $generate $receptive_field" >> $1
 	#echo "./run_heavinet.sh generate beethoven_7.wav bach_10.wav 14" >> $1
 fi
 
