@@ -172,16 +172,16 @@ class Model(object):
         return output_layer
 
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
-        conv_offset = 10
+        conv_offset = 20
         if self.onehot_mode == False:
             conv_offset = 0
 
-        conv_nodes = [ 32 ]
+        conv_nodes = [ 64 ]
         # input is formated in tensor: (clip_size, n_input_classes)
         reg_conv_sizes =   [ ( 3 , reg_n_inputs - conv_offset ) ] 
         norm_conv_sizes =   [ ( 3 , norm_n_inputs - conv_offset ) ] 
         conv_pooling = [ ( 1 , 1 ) ]
-        fc_nodes =   [ 512 , 256 ]
+        fc_nodes =   [ 1024 , 512 ]
         
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
         norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
@@ -192,7 +192,8 @@ class Model(object):
         flat = tf.concat( [reg_flat, norm_flat ] , axis=1)
         flat_features = reg_features + norm_features
 
-        fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
+        #fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
+        fc_layers = nn_fc_layers(norm_flat, norm_features, n_target_classes, fc_nodes)
         
         if (not os.path.isdir(self.save_dir)):
             print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
@@ -264,7 +265,7 @@ class Model(object):
     
     def __init__(self, level, receptive_field, data_location, n_levels ):
         self.batch_size = 128
-        self.normalize_mode = False
+        self.normalize_mode = True
         self.onehot_mode = True
         self.multichannel_mode = True
         self.use_pooling = False
