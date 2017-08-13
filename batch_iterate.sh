@@ -4,7 +4,7 @@
 #PBS -l walltime=20:00:00    
 
 # One core on any number of nodes
-#PBS -l procs=1,gpus=1
+#PBS -l procs=1,gpus=2
 
 #newriver cluster
 #PBS -W group_list=newriver  
@@ -23,13 +23,17 @@
 
 module purge
 
-module load gcc/5.2.0 cuda/8.0.61
+module load gcc/5.2.0 cuda/8.0.61 matlab/R2016b
 
 export PATH=$PATH:/home/taylorm7/opt_py35/bin
+# gpu
 export PYTHONUSERBASE=/home/taylorm7/opt_py35/newriver/python
+# cpu
+#export PYTHONUSERBASE=/home/taylorm7/opt_py35/cpu_tf
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/cuda/lib64/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/taylorm7/opt/lib/
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/home/taylorm7/opt/lib/pkgconfig
 
 dot=$PBS_O_WORKDIR
 cd $dot
@@ -56,6 +60,5 @@ for ((i=0 ; i<iterations ; i++)); do
 	cp ./data/$song.data/$seed.seed/song_r$receptive_field.wav ./data/songs/$nextSeed
 	seed=$nextSeed
 done
-
 echo "Code finished!"
 

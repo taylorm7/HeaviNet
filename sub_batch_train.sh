@@ -3,10 +3,10 @@
 num_levels=8
 batches=8
 
-epochs=25
+epochs=50
 receptive_field=32
 song=beethoven_7.wav
-generate=bush.wav
+generate=choir_15.wav
 
 train_time=20:00:00
 

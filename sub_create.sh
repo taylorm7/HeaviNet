@@ -49,9 +49,13 @@ do
 done
 
 if [ "$level_stop" == "$num_levels" ]; then
-	echo "sleep 5m" >> $1
+	echo "sleep 10m" >> $1
 	echo "./run_heavinet.sh generate $song $generate $receptive_field" >> $1
-	#echo "./run_heavinet.sh generate beethoven_7.wav bach_10.wav 14" >> $1
+fi
+
+if [ "$level_start" == "0" ]; then
+	echo "sleep 10m" >> $1
+	echo "./run_heavinet.sh generate $song rand.wav $receptive_field" >> $1
 fi
 
 
