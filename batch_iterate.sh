@@ -41,11 +41,11 @@ pwd
 
 export dot=$dot
 
-iterations=5
+iterations=10
 
 song=beethoven_7.wav
 target=bach_10.wav
-receptive_field=32
+receptive_field=10
 
 seed=$target
 name=$(echo $target | cut -f 1 -d '.')

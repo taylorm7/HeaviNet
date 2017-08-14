@@ -35,7 +35,7 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh generate beethoven_7.wav obama.wav 14
-#./run_heavinet.sh generate beethoven_7.wav bach_10.wav 14
+./run_heavinet.sh generate beethoven_7.wav obama.wav 10
+#./run_heavinet.sh generate beethoven_7.wav bach_10.wav 10
 echo "Code finished!"
 

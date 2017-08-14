@@ -3,8 +3,8 @@
 num_levels=8
 batches=8
 
-epochs=50
-receptive_field=32
+epochs=200
+receptive_field=10
 song=beethoven_7.wav
 generate=choir_15.wav
 

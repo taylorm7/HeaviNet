@@ -39,9 +39,9 @@ pwd
 
 export dot=$dot
 
-#./run_heavinet.sh format beethoven_7.wav 32
-./run_heavinet.sh load beethoven_7.wav choir_15.wav 32
-./run_heavinet.sh load beethoven_7.wav rand.wav 32
+./run_heavinet.sh format beethoven_7.wav 10
+#./run_heavinet.sh load beethoven_7.wav choir_15.wav 32
+#./run_heavinet.sh load beethoven_7.wav rand.wav 32
 #./run_heavinet.sh load bush.wav obama.wav 14
 
 echo "Code finished!"
