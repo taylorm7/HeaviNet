@@ -176,15 +176,16 @@ class Model(object):
         if self.onehot_mode == False:
             conv_offset = 0
 
-        conv_nodes = [ 32 ]
+        conv_nodes = [ 32 , 64]
         # input is formated in tensor: (clip_size, n_input_classes)
-        reg_conv_sizes =   [ ( 3 , reg_n_inputs - conv_offset ) ] 
-        norm_conv_sizes =   [ ( 3 , norm_n_inputs - conv_offset ) ] 
-        conv_pooling = [ ( 1 , 1 ) ]
+        conv_sizes =   [ ( 3 , reg_n_inputs - conv_offset ),
+                         ( 3, conv_offset) ] 
+        
+        conv_pooling = [ (1,1), (1,1) ]
         fc_nodes =   [ 512 , 256 ]
         
-        reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
-        norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
+        reg_layers, reg_weights = nn_conv_layers(reg_image, conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
+        norm_layers, norm_weights = nn_conv_layers(norm_image, conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
 
         reg_flat, reg_features = flatten_layer(reg_layers[-1])
         norm_flat, norm_features = flatten_layer(norm_layers[-1])
@@ -192,16 +193,15 @@ class Model(object):
         flat = tf.concat( [reg_flat, norm_flat ] , axis=1)
         flat_features = reg_features + norm_features
 
-        #fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
-        fc_layers = nn_fc_layers(norm_flat, norm_features, n_target_classes, fc_nodes)
+        fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
+        #fc_layers = nn_fc_layers(norm_flat, norm_features, n_target_classes, fc_nodes)
         
         if (not os.path.isdir(self.save_dir)):
             print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
-            for i, (r_s, n_s, f, p) in enumerate(zip(reg_conv_sizes, norm_conv_sizes, conv_nodes, conv_pooling)):
-                print("  regular conv Layer", i, "filter:", r_s[0], r_s[1], "pooling:", p[0], p[1],
+            for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
+                print("  regular conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
-
-                print("  normalized conv Layer", i, "filter:", n_s[0], n_s[1], "pooling:", p[0], p[1],
+                print("  normalized conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
             print("  flat layer number of features", flat_features)
             for i, n in enumerate(fc_nodes):
