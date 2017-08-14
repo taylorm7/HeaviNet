@@ -44,7 +44,7 @@ export dot=$dot
 iterations=5
 
 song=beethoven_7.wav
-target=rand.wav
+target=bach_10.wav
 receptive_field=32
 
 seed=$target
