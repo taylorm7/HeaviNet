@@ -176,16 +176,15 @@ class Model(object):
         if self.onehot_mode == False:
             conv_offset = 0
 
-        conv_nodes = [ 32 , 64]
+        conv_nodes = [ 64 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        conv_sizes =   [ ( 10, reg_n_inputs - conv_offset ),
-                         ( 3, conv_offset ) ] 
-        
-        conv_pooling = [ (1,1), (1,1) ]
+        reg_conv_sizes =   [ ( 10 , reg_n_inputs - conv_offset ) ] 
+        norm_conv_sizes =   [ ( 10 , norm_n_inputs - conv_offset ) ] 
+        conv_pooling = [ ( 1 , 1 ) ]
         fc_nodes =   [ 512 , 256 ]
         
-        reg_layers, reg_weights = nn_conv_layers(reg_image, conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
-        norm_layers, norm_weights = nn_conv_layers(norm_image, conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
+        reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
+	norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
 
         reg_flat, reg_features = flatten_layer(reg_layers[-1])
         norm_flat, norm_features = flatten_layer(norm_layers[-1])
@@ -198,6 +197,10 @@ class Model(object):
         
         if (not os.path.isdir(self.save_dir)):
             print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
+            for i, (r_s, n_s, f, p) in enumerate(zip(reg_conv_sizes, norm_conv_sizes, conv_nodes, conv_pooling)):
+                print("  regular conv Layer", i, "filter:", r_s[0], r_s[1], "pooling:", p[0], p[1],
+                        "number of channels", f, "use pooling", use_pooling)
+                print("  normalized conv Layer", i, "filter:", n_s[0], n_s[1], "pooling:", p[0], p[1],"number of channels", f, "use pooling", use_pooling)
             for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
                 print("  regular conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
@@ -310,18 +313,19 @@ class Model(object):
         normalized_level = []
         
         for i in range(self.n_levels):
-            regular_level, _ = regular_call(input_all[i])
-            regular_inputs.append(regular_level)
+		if i != self.level:
+        		regular_level, _ = regular_call(input_all[i])
+        		regular_inputs.append(regular_level)
 
-            normalized_level, _ = normalized_call(input_all[i])
-            normalized_inputs.append(normalized_level)
+            		normalized_level, _ = normalized_call(input_all[i])
+            		normalized_inputs.append(normalized_level)
 
         regular_inputs = tf.concat( regular_inputs, axis=3)
         _, reg_n_inputs = regular_call(input_level)
         normalized_inputs = tf.concat( normalized_inputs, axis=3)
         _, norm_n_inputs = normalized_call(input_level)
         nn_targets, nn_target_class, nn_n_targets = out_call(input_level, target_class)
-        n_channels = self.n_levels
+        n_channels = self.n_levels - 1
         
         logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
 
