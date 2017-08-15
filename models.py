@@ -184,7 +184,7 @@ class Model(object):
         fc_nodes =   [ 512 , 256 ]
         
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
-	norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
+        norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
 
         reg_flat, reg_features = flatten_layer(reg_layers[-1])
         norm_flat, norm_features = flatten_layer(norm_layers[-1])
@@ -200,12 +200,8 @@ class Model(object):
             for i, (r_s, n_s, f, p) in enumerate(zip(reg_conv_sizes, norm_conv_sizes, conv_nodes, conv_pooling)):
                 print("  regular conv Layer", i, "filter:", r_s[0], r_s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
-                print("  normalized conv Layer", i, "filter:", n_s[0], n_s[1], "pooling:", p[0], p[1],"number of channels", f, "use pooling", use_pooling)
-            for i, (s, f, p) in enumerate(zip(conv_sizes, conv_nodes, conv_pooling)):
-                print("  regular conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
-                        "number of channels", f, "use pooling", use_pooling)
-                print("  normalized conv Layer", i, "filter:", s[0], s[1], "pooling:", p[0], p[1],
-                        "number of channels", f, "use pooling", use_pooling)
+                print("  normalized conv Layer", i, "filter:", n_s[0], n_s[1], "pooling:", p[0], p[1],"number of channels", 
+                        f, "use pooling", use_pooling)
             print("  flat layer number of features", flat_features)
             for i, n in enumerate(fc_nodes):
                 print("  fully connected layer", i, "number of nodes", n)
@@ -313,12 +309,11 @@ class Model(object):
         normalized_level = []
         
         for i in range(self.n_levels):
-		if i != self.level:
-        		regular_level, _ = regular_call(input_all[i])
-        		regular_inputs.append(regular_level)
-
-            		normalized_level, _ = normalized_call(input_all[i])
-            		normalized_inputs.append(normalized_level)
+            if i != self.level:
+                regular_level, _ = regular_call(input_all[i])
+                regular_inputs.append(regular_level)
+                normalized_level, _ = normalized_call(input_all[i])
+                normalized_inputs.append(normalized_level)
 
         regular_inputs = tf.concat( regular_inputs, axis=3)
         _, reg_n_inputs = regular_call(input_level)
