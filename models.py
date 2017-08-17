@@ -178,10 +178,31 @@ class Model(object):
 
         conv_nodes = [ 8 ]
         # input is formated in tensor: (clip_size, n_input_classes)
-        reg_conv_sizes =   [ ( 10 , reg_n_inputs - conv_offset ) ] 
-        norm_conv_sizes =   [ ( 10 , norm_n_inputs - conv_offset ) ] 
+        reg_conv_sizes =   [ ( 3 , reg_n_inputs - conv_offset ) ] 
+        norm_conv_sizes =   [ ( 3 , norm_n_inputs - conv_offset ) ] 
         conv_pooling = [ ( 1 , 1 ) ]
         fc_nodes =   [ 256 , 128 ]
+
+        h = 8
+        '''
+        new_conv_layer(input,              # The previous layer.
+                   num_input_channels, # Num. channels in prev. layer.
+                   filter_width,
+                   filter_height, # Width and height of each filter.
+                   pool_width,
+                   pool_height,
+                   num_filters,        # Number of filters.
+                   use_pooling=True):  # Use 2x2 max-pooling.
+        '''
+
+        print(reg_image.shape, reg_n_inputs)
+        print(norm_image.shape, norm_n_inputs)
+
+        l1, w1 = new_conv_layer( reg_image, n_channels, self.clip_size, reg_n_inputs, 1, 1, 2*h, False)
+   
+
+        print(l1)
+        print(w1)
         
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
         norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
@@ -265,7 +286,7 @@ class Model(object):
     def __init__(self, level, receptive_field, data_location, n_levels ):
         self.batch_size = 128
         self.normalize_mode = False
-        self.onehot_mode = True
+        self.onehot_mode = False
         self.multichannel_mode = True
         self.use_pooling = False
 
