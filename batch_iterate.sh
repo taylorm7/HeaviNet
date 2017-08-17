@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # At most XX minute of time
-#PBS -l walltime=20:00:00    
+#PBS -l walltime=24:00:00    
 
 # One core on any number of nodes
-#PBS -l procs=1,gpus=2
+#PBS -l procs=1
 
 #newriver cluster
 #PBS -W group_list=newriver  
@@ -41,11 +41,11 @@ pwd
 
 export dot=$dot
 
-iterations=10
+iterations=25
 
 song=beethoven_7.wav
-target=bach_10.wav
-receptive_field=10
+target=rand.wav
+receptive_field=100
 
 seed=$target
 name=$(echo $target | cut -f 1 -d '.')

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 num_levels=8
-batches=8
+batches=4
 
-epochs=200
-receptive_field=10
+epochs=10
+receptive_field=100
 song=beethoven_7.wav
 generate=choir_15.wav
 

@@ -172,16 +172,16 @@ class Model(object):
         return output_layer
 
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
-        conv_offset = 5
+        conv_offset = 0
         if self.onehot_mode == False:
             conv_offset = 0
 
-        conv_nodes = [ 64 ]
+        conv_nodes = [ 8 ]
         # input is formated in tensor: (clip_size, n_input_classes)
         reg_conv_sizes =   [ ( 10 , reg_n_inputs - conv_offset ) ] 
         norm_conv_sizes =   [ ( 10 , norm_n_inputs - conv_offset ) ] 
         conv_pooling = [ ( 1 , 1 ) ]
-        fc_nodes =   [ 512 , 256 ]
+        fc_nodes =   [ 256 , 128 ]
         
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
         norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)

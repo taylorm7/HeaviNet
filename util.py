@@ -37,11 +37,11 @@ def load_matlab(data_location, receptive_field, training_data = True):
                 #else:
                 #    x_list = np.dstack( ( x_list, x_data) )
                 with open(sf, "wb") as output_file:
-                    pkl.dump(data_list, output_file, protocol=2)
+                    pkl.dump(data_list, output_file, protocol=4)
             x_list = np.asarray(x_list)
             print(np.shape(x_list))
             with open(x_file, "wb") as output_file:
-                pkl.dump(x_list, output_file, protocol=2)
+                pkl.dump(x_list, output_file, protocol=4)
     except IOError:
         print("Failed to load:", store_file)
         sys.exit()
