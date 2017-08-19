@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # At most XX minute of time
-#PBS -l walltime=02:15:00
+#PBS -l walltime=08:00:00
 
 # One core on any number of nodes
 #PBS -l procs=1,gpus=1
@@ -35,7 +35,11 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh generate beethoven_7.wav obama.wav 10
+./run_heavinet.sh generate beethoven_7.wav rand.wav 16
+./run_heavinet.sh generate beethoven_7.wav choir_15.wav 16
+
+
+qsub ./batch_create.sh
 #./run_heavinet.sh generate beethoven_7.wav bach_10.wav 10
 echo "Code finished!"
 
