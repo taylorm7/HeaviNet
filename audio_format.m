@@ -1,4 +1,5 @@
-function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_formatted] = audio_format(song_location, data_location, downsample_rate, n_levels, receptive_field, training_data, seed_directory)
+function [song, fx, inputs, inputs_signal, targets, targets_signal, inputs_formatted, levels] = audio_format(song_location, data_location, downsample_rate, n_levels, receptive_field, training_data, seed_directory)
+%[song, fx, i, inputs_signal, targets, targets_signal, inputs_formatted] = audio_format('/home/sable/HeaviNet/data/songs/beethoven_7.wav', '/home/sable/HeaviNet/data/beethoven_7.wav.data', 0, 8, 1, 1);
 disp(song_location);
 if training_data == 1
     data_file = strcat(data_location, '/matlab_song_r', int2str(receptive_field), '.mat');
@@ -26,6 +27,8 @@ end
 inputs = cell(n_levels,1);
 inputs_signal = cell(n_levels,1);
 
+levels = cell(n_levels,1);
+
 inputs_formatted= cell(n_levels,1);
 
 targets = cell(n_levels,1);
@@ -37,7 +40,7 @@ for i = 1:n_levels
     [inputs{i}, inputs_signal{i}] = create_filter(i, song, fx, passband_fx, receptive_field, data_location);
     fprintf('Solution:%d\n', i);
     passband_fx = get_fx(data_location, i+1);
-    [targets{i}, targets_signal{i}] = create_filter(i+1, song, fx, passband_fx, receptive_field, data_location);
+    [targets{i}, targets_signal{i}, levels{i}] = create_filter(i+1, song, fx, passband_fx, receptive_field, data_location);
     
     if training_data == 1
         signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');

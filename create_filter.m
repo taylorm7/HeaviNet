@@ -1,7 +1,7 @@
-function [y_digital, y, x] = create_filter(level, song, fx, passband_fx, receptive_field, data_location)
+function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, receptive_field, data_location)
     
     % set values for mu transform, assuming standard -1,1 audio
-    bits = 8;
+    bits = 10;
     N = 2^(bits);
     mu = N-1;
     xmax = 1;
@@ -21,17 +21,29 @@ function [y_digital, y, x] = create_filter(level, song, fx, passband_fx, recepti
         disp('No filter for this level');
         x = song;
     else
-        %iir_filter = designfilt('lowpassiir','FilterOrder',8, ...
-        %     'PassbandFrequency',passband_fx,'PassbandRipple', passband_ripple, ...
-        %     'SampleRate',fx);
 
-        iir_filter = designfilt('bandpassiir','FilterOrder',20, ...
+
+        bandpass_iir = designfilt('bandpassiir','FilterOrder',10, ...
                'HalfPowerFrequency1',passband_fx,'HalfPowerFrequency2', passband_limit, ...
                'SampleRate',fx);
 
-        x = filter(iir_filter, song);
-
+%         lowpass_iir = designfilt('lowpassiir','FilterOrder',8, ...
+%               'PassbandFrequency',passband_limit,'PassbandRipple', passband_ripple, ...
+%               'SampleRate',fx);
+         
+%         highpass_iir = designfilt('highpassiir','FilterOrder',8, ...
+%              'PassbandFrequency',passband_fx,'PassbandRipple', passband_ripple, ...
+%              'SampleRate',fx);        
+%          
+        %x = filter(highpass_iir, x);
+        %x = filter(lowpass_iir, song);
         
+        x = filter(bandpass_iir, song);
+        x_max = max(abs(x));
+        x = x./x_max;
+        
+        %plot(x);
+        %k=waitforbuttonpress;
         
         %plot fir filter
         %fvtool(lowpass_filter)
@@ -42,15 +54,18 @@ function [y_digital, y, x] = create_filter(level, song, fx, passband_fx, recepti
     MSE=mean(D.^2);
     fprintf('Error between original and filtered = %g\n',MSE )
     
-    x_moving_average = movmean(x, ma_field);
-    x_hampel = medfilt1( x_moving_average, ha_field);
-    D=x-x_moving_average;
+    x_filtered =  hampel(x, 3, 0.5);
+    x_filtered = sgolayfilt(x_filtered,5,41);
+    
+    %x_filtered =  movmean(x, ma_field);
+    
+    D=x-x_filtered;
     MSE=mean(D.^2);
     %fprintf('Difference after hampel and moving average filter = %g\n', MSE )
     
     % perform mu-law transform and digitize compressed data
-    y_nonlinear = mu_trasform(x, mu, Q);
-    %y_nonlinear = mu_trasform(x_hampel, mu, Q);
+    %y_nonlinear = mu_trasform(x, mu, Q);
+    y_nonlinear = mu_trasform(x_filtered, mu, Q);
     
     y_digital = analog_to_digital(y_nonlinear, Q);
     % compute analog to digital, and perform inverse mu-law transform

@@ -1,6 +1,6 @@
 function [song, inputs, finished_song, original_fx] = audio_finish(data_location, n_levels, downsample_rate, receptive_field, seed_location)
 disp(data_location);
-bits = 8;
+bits = 10;
 inputs = cell(n_levels,1);
 song = 0;
 
