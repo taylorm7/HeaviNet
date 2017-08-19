@@ -191,11 +191,11 @@ class Model(object):
 
 
         # hidden layers
-        h = 10
+        h = 32
         # hidden output layers
         d = 32
 
-        n_residual_layers = 10
+        n_residual_layers = 32
 
         '''
         new_conv_layer(input,              # The previous layer.
