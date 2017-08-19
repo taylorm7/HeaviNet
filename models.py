@@ -191,11 +191,11 @@ class Model(object):
 
 
         # hidden layers
-        h = 32
+        h = 10
         # hidden output layers
-        d = 128
+        d = 32
 
-        n_residual_layers = 32
+        n_residual_layers = 10
 
         '''
         new_conv_layer(input,              # The previous layer.
@@ -219,10 +219,11 @@ class Model(object):
         image = tf.concat( [reg_image, norm_image] , axis=3)
         channels = norm_channels + reg_channels
 
-        l1, w1 = new_conv_layer( image, channels, self.clip_size, reg_n_inputs, 1, 1, 2*h, False)
+        #l1, w1 = new_conv_layer( image, channels, self.clip_size, reg_n_inputs, 1, 1, 2*h, False)
+        l1, w1 = new_conv_layer( norm_image, norm_channels, self.clip_size, norm_n_inputs, 1, 1, 2*h, False)
          
-        #print(l1)
-        #print(w1)
+        print("L1", l1.shape)
+        print("W1", w1.shape)
         
         r_layer = tf.nn.relu(l1)
 
@@ -240,17 +241,21 @@ class Model(object):
         l2, w2 = new_conv_layer( r_layer, 2*h, 1, 1, 1, 1, d, False)
         l2 = tf.nn.relu(l2)
 
-        #print("L2", l2)
+        print("L2", l2.shape)
 
         l3, w3 = new_conv_layer( l2 , d, 1, 1, 1, 1, n_target_classes, False)
 
-        #print("L3", l3)
+        print("L3", l3.shape)
 
         flat, flat_features = flatten_layer(l3)
 
-        #print("Flat", flat, flat_features)
+        print("Flat", flat.shape, flat_features)
+        
+        out = new_fc_layer(flat, flat_features, n_target_classes, use_relu=False)
 
-        fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
+        print("Out", out.shape)
+
+        #fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
         
         '''
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
@@ -284,10 +289,13 @@ class Model(object):
                         f, "use pooling", use_pooling)
             '''
             print("  flat layer number of features", flat_features)
-            for i, n in enumerate(fc_nodes):
-                print("  fully connected layer", i, "number of nodes", n)
-            print("  targets", n_target_classes)
-        return fc_layers[-1]
+            print("  output layer", out.shape)
+
+            #for i, n in enumerate(fc_nodes):
+            #    print("  fully connected layer", i, "number of nodes", n)
+            #print("  targets", n_target_classes)
+        return out
+        #return fc_layers[-1]
 
     def format_in_flat(self, in_level):
         image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
@@ -355,9 +363,9 @@ class Model(object):
         self.n_levels = n_levels
 
         self.clip_size = 2*self.receptive_field+1
-        self.n_input_classes = 2**(8)
+        self.n_input_classes = 2**(10)
         self.input_classes_max = self.n_input_classes - 1
-        self.n_target_classes = 2**(8)
+        self.n_target_classes = 2**(10)
         self.target_classes_max = self.n_target_classes - 1
 
         self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
