@@ -191,11 +191,11 @@ class Model(object):
 
 
         # hidden layers
-        h = 16
+        h = 128
         # hidden output layers
         d = 16
 
-        n_residual_layers = 1024
+        n_residual_layers = 15
 
         '''
         new_conv_layer(input,              # The previous layer.
@@ -243,14 +243,25 @@ class Model(object):
 
         print("L2", l2.shape)
 
-        l3, w3 = new_conv_layer( l2 , d, 1, 1, 1, 1, n_target_classes, False)
+        out_val = math.ceil(n_target_classes / self.clip_size)
+        
+        l3, w3 = new_conv_layer( l2 , d, 1, 1, 1, 1, out_val, False)
 
         print("L3", l3.shape)
 
         flat, flat_features = flatten_layer(l3)
 
+
         print("Flat", flat.shape, flat_features)
+
+        out_shift = round(( out_val*self.clip_size - n_target_classes ) / 2 )
+
+        print("Shift Index", out_shift)
         
+        flat_out = tf.slice(flat, [0, out_shift], [-1, n_target_classes])
+
+        print("Flat Out", flat_out.shape)
+
         out = new_fc_layer(flat, flat_features, n_target_classes, use_relu=False)
 
         print("Out", out.shape)
@@ -294,8 +305,8 @@ class Model(object):
             #for i, n in enumerate(fc_nodes):
             #    print("  fully connected layer", i, "number of nodes", n)
             #print("  targets", n_target_classes)
-        #return out
-        return fc_layers[-1]
+        return flat_out
+        #return fc_layers[-1]
 
     def format_in_flat(self, in_level):
         image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
@@ -352,7 +363,7 @@ class Model(object):
         return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
     
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 4
+        self.batch_size = 512
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -361,11 +372,13 @@ class Model(object):
         self.level = level
         self.receptive_field = receptive_field
         self.n_levels = n_levels
+        
+        self.bits = 10
 
         self.clip_size = 2*self.receptive_field+1
-        self.n_input_classes = 2**(10)
+        self.n_input_classes = 2**(self.bits)
         self.input_classes_max = self.n_input_classes - 1
-        self.n_target_classes = 2**(10)
+        self.n_target_classes = 2**(self.bits)
         self.target_classes_max = self.n_target_classes - 1
 
         self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
