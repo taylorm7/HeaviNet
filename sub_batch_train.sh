@@ -1,14 +1,14 @@
 #!/bin/bash
 
-num_levels=4
-batches=4
+num_levels=8
+batches=8
 
-epochs=50
-receptive_field=16
+epochs=20
+receptive_field=100
 song=beethoven_7.wav
 generate=choir_15.wav
 
-train_time=40:00:00
+train_time=144:00:00
 
 step_size=$(($num_levels / $batches))
 

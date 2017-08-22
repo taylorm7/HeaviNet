@@ -191,11 +191,11 @@ class Model(object):
 
 
         # hidden layers
-        h = 32
+        h = 16
         # hidden output layers
-        d = 32
+        d = 16
 
-        n_residual_layers = 32
+        n_residual_layers = 1024
 
         '''
         new_conv_layer(input,              # The previous layer.
@@ -219,8 +219,8 @@ class Model(object):
         image = tf.concat( [reg_image, norm_image] , axis=3)
         channels = norm_channels + reg_channels
 
-        #l1, w1 = new_conv_layer( image, channels, self.clip_size, reg_n_inputs, 1, 1, 2*h, False)
-        l1, w1 = new_conv_layer( norm_image, norm_channels, self.clip_size, norm_n_inputs, 1, 1, 2*h, False)
+        l1, w1 = new_conv_layer( image, channels, self.clip_size, reg_n_inputs, 1, 1, 2*h, False)
+        #l1, w1 = new_conv_layer( norm_image, norm_channels, self.clip_size, norm_n_inputs, 1, 1, 2*h, False)
          
         print("L1", l1.shape)
         print("W1", w1.shape)
@@ -231,7 +231,7 @@ class Model(object):
             l_a, w_a = new_conv_layer( r_layer , 2*h, 1, 1, 1, 1, h, False)
             l_a = tf.nn.relu(l_a)
 
-            l_b, w_b = new_conv_layer( l_a, h, self.receptive_field, 1, 1, 1, h, False)
+            l_b, w_b = new_conv_layer( l_a, h, 3, 1, 1, 1, h, False)
             l_b = tf.nn.relu(l_b)
 
             l_c, w_c = new_conv_layer( l_b, h, 1, 1, 1, 1, 2*h, False)
@@ -255,7 +255,7 @@ class Model(object):
 
         print("Out", out.shape)
 
-        #fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
+        fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
         
         '''
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
@@ -294,8 +294,8 @@ class Model(object):
             #for i, n in enumerate(fc_nodes):
             #    print("  fully connected layer", i, "number of nodes", n)
             #print("  targets", n_target_classes)
-        return out
-        #return fc_layers[-1]
+        #return out
+        return fc_layers[-1]
 
     def format_in_flat(self, in_level):
         image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
@@ -352,7 +352,7 @@ class Model(object):
         return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
     
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 128
+        self.batch_size = 4
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True

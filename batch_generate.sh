@@ -35,11 +35,9 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh generate beethoven_7.wav rand.wav 16
-./run_heavinet.sh generate beethoven_7.wav choir_15.wav 16
+./run_heavinet.sh generate beethoven_7.wav rand.wav 100
+./run_heavinet.sh generate beethoven_7.wav choir_15.wav 100
 
-
-qsub ./batch_create.sh
 #./run_heavinet.sh generate beethoven_7.wav bach_10.wav 10
 echo "Code finished!"
 
