@@ -305,8 +305,8 @@ class Model(object):
             #for i, n in enumerate(fc_nodes):
             #    print("  fully connected layer", i, "number of nodes", n)
             #print("  targets", n_target_classes)
-        return flat_out
-        #return fc_layers[-1]
+        #return flat_out
+        return fc_layers[-1]
 
     def format_in_flat(self, in_level):
         image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
