@@ -1,7 +1,7 @@
-function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, receptive_field, data_location)
+function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, receptive_field, data_location, bits)
     
     % set values for mu transform, assuming standard -1,1 audio
-    bits = 10;
+    %bits = 10;
     N = 2^(bits);
     mu = N-1;
     xmax = 1;

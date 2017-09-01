@@ -32,10 +32,10 @@ def new_conv_layer(input,              # The previous layer.
                    num_input_channels, # Num. channels in prev. layer.
                    filter_width,
                    filter_height, # Width and height of each filter.
-                   pool_width,
-                   pool_height,
                    num_filters,        # Number of filters.
-                   use_pooling=True):  # Use 2x2 max-pooling.
+                   pool_width=0,
+                   pool_height=0,
+                   use_pooling=False):  # Use 2x2 max-pooling.
 
     # Shape of the filter-weights for the convolution.
     # This format is determined by the TensorFlow API.
@@ -59,7 +59,7 @@ def new_conv_layer(input,              # The previous layer.
     layer = tf.nn.conv2d(input=input,
                          filter=weights,
                          strides=[1, 1, 1, 1],
-                         padding='SAME')
+                         padding='VALID')
 
     # Add the biases to the results of the convolution.
     # A bias-value is added to each filter-channel.
@@ -153,9 +153,9 @@ def nn_conv_layers(data_image, filter_sizes, filter_nodes, pooling_sizes, num_in
     
     for i, (size, num, pool) in enumerate( zip(filter_sizes, filter_nodes, pooling_sizes) ):
         if i == 0:
-            l, w = new_conv_layer(data_image, num_input_channels, size[0], size[1], pool[0], pool[1], num, use_pooling)
+            l, w = new_conv_layer(data_image, num_input_channels, size[0], size[1], num, pool[0], pool[1], use_pooling)
         else:
-            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size[0], size[1], pool[0], pool[1], num, use_pooling)
+            l, w = new_conv_layer(layers[i-1], filter_nodes[i-1], size[0], size[1], num, pool[0], pool[1], use_pooling)
         layers.append(l)
         weights.append(w)
     return layers, weights
@@ -171,10 +171,64 @@ class Model(object):
         output_layer = nn_layer(layers[-1], n_nodes[-1], n_target_classes, output_layer=True)
         return output_layer
 
+    def format_in_flat(self, in_level):
+        image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
+        image = tf.cast(image, tf.float32)
+        return image, 1
+        
+    def format_in_onehot(self, in_level):
+        onehot = tf.one_hot(in_level, self.n_input_classes)
+        onehot_image = tf.reshape( onehot, [-1, self.clip_size, self.n_input_classes,  1])
+        return onehot_image, self.n_input_classes
+
+    def format_target(self, in_level, target_c):
+        target = tf.one_hot(target_c, self.n_target_classes)
+        target = tf.reshape(target, (-1, self.n_target_classes))
+        return target, target_c, self.n_target_classes
+
+    def format_in_norm_flat(self, in_level):
+        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
+        middle_ = tf.reshape(middle, [-1] )
+        normalized = tf.subtract(in_level, middle)
+        normalized_pos = normalized + self.input_classes_max
+
+        normalized_image = tf.reshape(normalized_pos, [-1, self.clip_size, 1, 1] )
+        normalized_image = tf.cast(normalized_image, tf.float32)
+        return normalized_image, 1
+
+    def format_in_norm_onehot(self, in_level):
+        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
+        middle_ = tf.reshape(middle, [-1] )
+        normalized = tf.subtract(in_level, middle)
+        normalized_pos = normalized + self.input_classes_max
+        
+        input_norm_onehot_range = self.input_classes_max*2+1
+        normalized_onehot = tf.one_hot(normalized_pos, input_norm_onehot_range)
+        
+        normalized_onehot_image = tf.reshape( normalized_onehot, [-1, self.clip_size, input_norm_onehot_range,  1])
+        return normalized_onehot_image, input_norm_onehot_range
+
+    def format_target_norm(self, in_level, target_c):
+        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
+        middle_class = tf.reshape(middle, [-1] )
+        
+        target_norm_onehot_range = self.target_classes_max*2+1
+        inputs_scaled = tf.multiply(middle_class , 2)
+        inputs_scaled_class = tf.reshape(inputs_scaled, [-1])
+        
+        target_normalized = tf.subtract(target_c, inputs_scaled)
+        target_normalized_pos = target_normalized + self.target_classes_max
+        target_normalized_class = tf.reshape(target_normalized_pos, [-1])
+        target_normalized_onehot = tf.one_hot( target_normalized_pos, target_norm_onehot_range)
+        target_normalized_onehot = tf.reshape( target_normalized_onehot, (-1, target_norm_onehot_range) )
+        
+        self.inputs_scaled_class = inputs_scaled_class
+        return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
+ 
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
-        conv_offset = 0
-        if self.onehot_mode == False:
-            conv_offset = 0
+        conv_offset = 5
+        #if self.onehot_mode == False:
+            #conv_offset = 0
         
         # hidden layers
         h = 10
@@ -185,17 +239,20 @@ class Model(object):
 
         reg_channels = self.level + 1
         norm_channels = self.level + 1
-        #print("Regular Image", reg_image.shape, reg_channels)
-        #print("Normal Channels", norm_image.shape, norm_channels)
+        print("Regular Image", reg_image.shape, reg_channels)
+        print("Normal Channels", norm_image.shape, norm_channels)
 
         image = tf.concat( [reg_image, norm_image] , axis=2)
         channels = norm_channels + reg_channels
-        #print("Image", image.shape, channels)
+        print("Image", image.shape, channels)
         
-        print(self.reg_list[0].shape)
-        
-        #new_conv_layer(input, num_input_channels, filter_width, filter_height,pool_width, pool_height, output num_filters, use_pooling=True)
-        
+        r1, rw1 = new_conv_layer(reg_image, reg_channels, 3, reg_n_inputs - conv_offset, h)
+        print("R1:", r1.shape, rw1.shape)
+
+        n1, nw1 = new_conv_layer(norm_image, norm_channels, 3, norm_n_inputs - conv_offset, h)
+        print("N1:", n1.shape, nw1.shape)
+        #new_conv_layer(input, num_input_channels, filter_width, filter_height, output_channels, pool_width, pool_height, use_pooling=False)
+        ''' 
         out_norm = []
         out_reg = []
         for i in range(reg_channels):
@@ -207,27 +264,29 @@ class Model(object):
 
             input_image = tf.concat( [input_norm, input_reg], axis=2)
             
-            l1, w1 = new_conv_layer( input_image, 1 , self.clip_size, 2 , 1, 1, 2*h, False)
+            l1, w1 = new_conv_layer( input_image, 1 , 3, conv_offset , 1, 1, 2*h, False)
              
-            #print("L1", l1.shape)
-            #print("W1", w1.shape)
+            print("L1", l1.shape)
+            print("W1", w1.shape)
             
             r_layer = tf.nn.relu(l1)
 
             for _ in range(n_residual_layers):
                 l_a, w_a = new_conv_layer( r_layer , 2*h, 1, 1, 1, 1, h, False)
                 l_a = tf.nn.relu(l_a)
-
-                l_b, w_b = new_conv_layer( l_a, h, 3, 3, 1, 1, h, False)
+                #print("a", l_a.shape)
+                l_b, w_b = new_conv_layer( l_a, h, 1, 1, 1, 1, h, False)
                 l_b = tf.nn.relu(l_b)
+                #print("b", l_b.shape)
 
                 l_c, w_c = new_conv_layer( l_b, h, 1, 1, 1, 1, 2*h, False)
                 l_c = tf.nn.relu(l_c)
+                #print("c", l_c.shape)
                 
                 r_layer = tf.add(l_c, r_layer)
             l2, w2 = new_conv_layer( r_layer, 2*h, 1, 1, 1, 1, d, False)
             l2 = tf.nn.relu(l2)
-            #print("L2", l2.shape)
+            print("L2", l2.shape)
             
             flat, flat_features = flatten_layer(l2)
             #print("Flat", flat.shape, flat_features)
@@ -242,7 +301,7 @@ class Model(object):
         
         fc_layers = nn_fc_layers(out, features, n_target_classes, [256])
         #print("Fully Connected", fc_layers[-1].shape)
-
+        '''
 
         '''
         #if self.level == 0:
@@ -400,64 +459,11 @@ class Model(object):
         #return flat_out
         return fc_layers[-1]
 
-    def format_in_flat(self, in_level):
-        image = tf.reshape( in_level, [-1, self.clip_size, 1, 1] ) 
-        image = tf.cast(image, tf.float32)
-        return image, 1
-        
-    def format_in_onehot(self, in_level):
-        onehot = tf.one_hot(in_level, self.n_input_classes)
-        onehot_image = tf.reshape( onehot, [-1, self.clip_size, self.n_input_classes,  1])
-        return onehot_image, self.n_input_classes
-
-    def format_target(self, in_level, target_c):
-        target = tf.one_hot(target_c, self.n_target_classes)
-        target = tf.reshape(target, (-1, self.n_target_classes))
-        return target, target_c, self.n_target_classes
-
-    def format_in_norm_flat(self, in_level):
-        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
-        middle_ = tf.reshape(middle, [-1] )
-        normalized = tf.subtract(in_level, middle)
-        normalized_pos = normalized + self.input_classes_max
-
-        normalized_image = tf.reshape(normalized_pos, [-1, self.clip_size, 1, 1] )
-        normalized_image = tf.cast(normalized_image, tf.float32)
-        return normalized_image, 1
-
-    def format_in_norm_onehot(self, in_level):
-        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
-        middle_ = tf.reshape(middle, [-1] )
-        normalized = tf.subtract(in_level, middle)
-        normalized_pos = normalized + self.input_classes_max
-        
-        input_norm_onehot_range = self.input_classes_max*2+1
-        normalized_onehot = tf.one_hot(normalized_pos, input_norm_onehot_range)
-        
-        normalized_onehot_image = tf.reshape( normalized_onehot, [-1, self.clip_size, input_norm_onehot_range,  1])
-        return normalized_onehot_image, input_norm_onehot_range
-
-    def format_target_norm(self, in_level, target_c):
-        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
-        middle_class = tf.reshape(middle, [-1] )
-        
-        target_norm_onehot_range = self.target_classes_max*2+1
-        inputs_scaled = tf.multiply(middle_class , 2)
-        inputs_scaled_class = tf.reshape(inputs_scaled, [-1])
-        
-        target_normalized = tf.subtract(target_c, inputs_scaled)
-        target_normalized_pos = target_normalized + self.target_classes_max
-        target_normalized_class = tf.reshape(target_normalized_pos, [-1])
-        target_normalized_onehot = tf.one_hot( target_normalized_pos, target_norm_onehot_range)
-        target_normalized_onehot = tf.reshape( target_normalized_onehot, (-1, target_norm_onehot_range) )
-        
-        self.inputs_scaled_class = inputs_scaled_class
-        return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
-    
+   
     def __init__(self, level, receptive_field, data_location, n_levels ):
         self.batch_size = 512
         self.normalize_mode = False
-        self.onehot_mode = False
+        self.onehot_mode = True
         self.multichannel_mode = True
         self.use_pooling = False
 
@@ -465,12 +471,13 @@ class Model(object):
         self.receptive_field = receptive_field
         self.n_levels = n_levels
         
-        self.bits = 10
+        self.in_bits = 6
+        self.out_bits = 10
 
         self.clip_size = 2*self.receptive_field+1
-        self.n_input_classes = 2**(self.bits)
+        self.n_input_classes = 2**(self.in_bits)
         self.input_classes_max = self.n_input_classes - 1
-        self.n_target_classes = 2**(self.bits)
+        self.n_target_classes = 2**(self.out_bits)
         self.target_classes_max = self.n_target_classes - 1
 
         self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
