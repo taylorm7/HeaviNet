@@ -226,14 +226,14 @@ class Model(object):
         return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
  
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
-        conv_offset = 5
+        conv_offset = 20
         #if self.onehot_mode == False:
             #conv_offset = 0
         
         # hidden layers
         h = 10
         # hidden output layers
-        d = 10
+        d = 32
         n_residual_layers = 15
 
 
@@ -251,7 +251,20 @@ class Model(object):
 
         n1, nw1 = new_conv_layer(norm_image, norm_channels, 3, norm_n_inputs - conv_offset, h)
         print("N1:", n1.shape, nw1.shape)
+
+        l1 = tf.concat( [r1, n1], axis=2)
+        print("L1:", l1.shape)
+
+        #l2, w2 = new_conv_layer(l1, h, 3, (conv_offset+1)*2, d)
+        #print("L2:", l2.shape)
+
+        flat, features = flatten_layer(l1)
+        print("Flat", flat.shape, features)
+
+        fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
+         
         #new_conv_layer(input, num_input_channels, filter_width, filter_height, output_channels, pool_width, pool_height, use_pooling=False)
+
         ''' 
         out_norm = []
         out_reg = []
@@ -301,121 +314,6 @@ class Model(object):
         
         fc_layers = nn_fc_layers(out, features, n_target_classes, [256])
         #print("Fully Connected", fc_layers[-1].shape)
-        '''
-
-        '''
-        #if self.level == 0:
-        #    reg_channels = 1
-        #    norm_channels = 1
-        #else:
-        
-        reg_channels = self.level + 1
-        norm_channels = self.level + 1
-
-        conv_nodes = [ 8 ]
-        # input is formated in tensor: (clip_size, n_input_classes)
-        reg_conv_sizes =   [ ( 3 , 1) ] 
-        norm_conv_sizes =   [ ( 3 , 1) ] 
-        conv_pooling = [ ( 1 , 1 ) ]
-        fc_nodes =   [ 256 , 128 ]
-
-        reg_0, _ = new_conv_layer( reg_image, reg_channels, 3, 1, 1, 1, 8, False)
-        norm_0, _ = new_conv_layer( norm_image, norm_channels, 3, 1, 1, 1, 8, False)
-
-        print("Reg 0",reg_0.shape)
-        print("Norm 0",norm_0.shape)
-
-        reg_flat, reg_features = flatten_layer(reg_0)
-        norm_flat, norm_features = flatten_layer(norm_0)
-        
-        flat_both = tf.concat( [reg_flat, norm_flat ] , axis=1)
-        flat_features_both = reg_features + norm_features
-
-        print("First Conv", flat_both.shape)
-
-        # hidden layers
-        h = 10
-        # hidden output layers
-        d = 10
-
-        n_residual_layers = 15
-
-        
-        #new_conv_layer(input, num_input_channels, filter_width, filter_height,pool_width, pool_height, output num_filters, use_pooling=True)
-
-        #print("Regular Image", reg_image.shape, reg_channels)
-        #print("Normal Channels", norm_image.shape, norm_channels)
-
-        #reg_image = tf.squeeze(reg_image, [2])
-        #reg_image = tf.reshape(reg_image, [-1, self.clip_size, reg_channels, 1] )
-
-        #norm_image = tf.squeeze(norm_image, [2])
-        #norm_image = tf.reshape(norm_image, [-1, self.clip_size, norm_channels, 1] )
-
-        #print("Reg Image", reg_image.shape, reg_channels)
-        #print("Norm Image", norm_image.shape, norm_channels)
-
-        if(self.onehot_mode):
-            norm_conv, norm_weights = new_conv_layer( norm_image, norm_channels, self.clip_size, norm_n_inputs, 1, 1, norm_channels, True)
-            print("Norm conv", norm_conv)
-            print("Norm weights", norm_weights)
-
-
-        image = tf.concat( [reg_image, norm_image] , axis=2)
-        channels = norm_channels + reg_channels
-
-        print("Image", image.shape, channels)
-
-        #l1, w1 = new_conv_layer( image, 1, 1, 1, 1, 1, 2*h, False)
-        
-        #l1, w1 = new_conv_layer( image, channels, self.clip_size, reg_n_inputs, 1, 1, 2*h, False)
-        l1, w1 = new_conv_layer( norm_image, norm_channels, self.clip_size, norm_n_inputs, 1, 1, 2*h, False)
-         
-        print("L1", l1.shape)
-        print("W1", w1.shape)
-        
-        r_layer = tf.nn.relu(l1)
-
-        for i in range(n_residual_layers):
-            l_a, w_a = new_conv_layer( r_layer , 2*h, 1, 1, 1, 1, h, False)
-            l_a = tf.nn.relu(l_a)
-
-            l_b, w_b = new_conv_layer( l_a, h, 3, 3, 1, 1, h, False)
-            l_b = tf.nn.relu(l_b)
-
-            l_c, w_c = new_conv_layer( l_b, h, 1, 1, 1, 1, 2*h, False)
-            l_c = tf.nn.relu(l_c)
-            
-            r_layer = tf.add(l_c, r_layer)
-        l2, w2 = new_conv_layer( r_layer, 2*h, 1, 1, 1, 1, d, False)
-        l2 = tf.nn.relu(l2)
-
-        print("L2", l2.shape)
-
-        out_val = math.ceil(n_target_classes / self.clip_size)
-        
-        l3, w3 = new_conv_layer( l2 , d, 1, 1, 1, 1, out_val, False)
-
-        print("L3", l3.shape)
-
-        flat, flat_features = flatten_layer(l3)
-
-
-        print("Flat", flat.shape, flat_features)
-
-        out_shift = round(( out_val*self.clip_size - n_target_classes ) / 2 )
-
-        print("Shift Index", out_shift)
-        
-        flat_out = tf.slice(flat, [0, out_shift], [-1, n_target_classes])
-
-        print("Flat Out", flat_out.shape)
-
-        out = new_fc_layer(flat, flat_features, n_target_classes, use_relu=False)
-
-        print("Out", out.shape)
-
-        fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
         '''
 
         '''
@@ -471,8 +369,8 @@ class Model(object):
         self.receptive_field = receptive_field
         self.n_levels = n_levels
         
-        self.in_bits = 6
-        self.out_bits = 10
+        self.in_bits = 8
+        self.out_bits = 8
 
         self.clip_size = 2*self.receptive_field+1
         self.n_input_classes = 2**(self.in_bits)
