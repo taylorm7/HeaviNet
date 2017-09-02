@@ -255,10 +255,10 @@ class Model(object):
         l1 = tf.concat( [r1, n1], axis=2)
         print("L1:", l1.shape)
 
-        #l2, w2 = new_conv_layer(l1, h, 3, (conv_offset+1)*2, d)
-        #print("L2:", l2.shape)
+        l2, w2 = new_conv_layer(l1, h, 3, conv_offset, d)
+        print("L2:", l2.shape)
 
-        flat, features = flatten_layer(l1)
+        flat, features = flatten_layer(l2)
         print("Flat", flat.shape, features)
 
         fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
