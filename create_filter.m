@@ -51,24 +51,24 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
         
     end
     % compute error for filtering
-    D=x-song;
-    MSE=mean(D.^2);
-    fprintf('Error between original and filtered = %g\n',MSE )
+    %D=x-song;
+    %MSE=mean(D.^2);
+    %fprintf('Error between original and filtered = %g\n',MSE )
     
     %x_filtered =  movmean(x, ma_field);
-    
-    x_filtered =  hampel(x, 3, 0.5);
-    x_filtered = sgolayfilt(x_filtered,5,41);
-    
-    
-    
-    D=x-x_filtered;
-    MSE=mean(D.^2);
+%     
+%     x_filtered =  hampel(x, 3, 0.5);
+%     x_filtered = sgolayfilt(x_filtered,5,41);
+%     
+%     
+%     
+%     D=x-x_filtered;
+%     MSE=mean(D.^2);
     %fprintf('Difference after hampel and moving average filter = %g\n', MSE )
     
     % perform mu-law transform and digitize compressed data
     %y_nonlinear = mu_trasform(x, mu, Q);
-    y_nonlinear = mu_trasform(x_filtered, mu, Q);
+    y_nonlinear = mu_trasform(song, mu, Q);
     
     y_digital = analog_to_digital(y_nonlinear, Q);
     % compute analog to digital, and perform inverse mu-law transform
