@@ -23,13 +23,13 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
     else
 
 
-        bandpass_iir = designfilt('bandpassiir','FilterOrder',10, ...
-               'HalfPowerFrequency1',passband_fx,'HalfPowerFrequency2', passband_limit, ...
-               'SampleRate',fx);
+%         bandpass_iir = designfilt('bandpassiir','FilterOrder',10, ...
+%                'HalfPowerFrequency1',passband_fx,'HalfPowerFrequency2', passband_limit, ...
+%                'SampleRate',fx);
 
-%         lowpass_iir = designfilt('lowpassiir','FilterOrder',8, ...
-%               'PassbandFrequency',passband_limit,'PassbandRipple', passband_ripple, ...
-%               'SampleRate',fx);
+%          lowpass_iir = designfilt('lowpassiir','FilterOrder',8, ...
+%                'PassbandFrequency',passband_limit,'PassbandRipple', passband_ripple, ...
+%                'SampleRate',fx);
          
 %         highpass_iir = designfilt('highpassiir','FilterOrder',8, ...
 %              'PassbandFrequency',passband_fx,'PassbandRipple', passband_ripple, ...
@@ -38,9 +38,10 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
         %x = filter(highpass_iir, x);
         %x = filter(lowpass_iir, song);
         
-        x = filter(bandpass_iir, song);
-        x_max = max(abs(x));
-        x = x./x_max;
+        %x = filter(lowpass_iir, song);
+        x_max = max(abs(song));
+        x = song;
+        %x = x./x_max;
         
         %plot(x);
         %k=waitforbuttonpress;
@@ -54,10 +55,12 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
     MSE=mean(D.^2);
     fprintf('Error between original and filtered = %g\n',MSE )
     
+    %x_filtered =  movmean(x, ma_field);
+    
     x_filtered =  hampel(x, 3, 0.5);
     x_filtered = sgolayfilt(x_filtered,5,41);
     
-    %x_filtered =  movmean(x, ma_field);
+    
     
     D=x-x_filtered;
     MSE=mean(D.^2);

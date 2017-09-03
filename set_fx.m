@@ -1,9 +1,9 @@
 function [filter_fx] = set_fx(fx, data_location, n_levels)
 
 data_file = strcat(data_location, '/fx_info.mat');
-fx_offset = 50;
-fx_order = 1;
-use_exponential = 1;
+fx_offset = 2;
+fx_order = 3;
+use_exponential = 0;
 fx_target = 16000;
 syms f positive
   
