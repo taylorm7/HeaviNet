@@ -2,6 +2,8 @@ function [format_iterable] = format_level(iterable, receptive_field, fx, passban
 
 [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
 disp(index);
+[index] = reorder(receptive_field, index);
+disp(index);
 
 len_iterable = length(iterable);
 len_index = length(index);

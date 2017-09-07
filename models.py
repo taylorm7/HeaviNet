@@ -187,7 +187,7 @@ class Model(object):
         return target, target_c, self.n_target_classes
 
     def format_in_norm_flat(self, in_level):
-        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
+        middle = tf.slice(in_level, [0,  self.middle_index] , [-1, 1])
         middle_ = tf.reshape(middle, [-1] )
         normalized = tf.subtract(in_level, middle)
         normalized_pos = normalized + self.input_classes_max
@@ -197,7 +197,7 @@ class Model(object):
         return normalized_image, 1
 
     def format_in_norm_onehot(self, in_level):
-        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
+        middle = tf.slice(in_level, [0,  self.middle_index] , [-1, 1])
         middle_ = tf.reshape(middle, [-1] )
         normalized = tf.subtract(in_level, middle)
         normalized_pos = normalized + self.input_classes_max
@@ -209,7 +209,7 @@ class Model(object):
         return normalized_onehot_image, input_norm_onehot_range
 
     def format_target_norm(self, in_level, target_c):
-        middle = tf.slice(in_level, [0,  self.receptive_field] , [-1, 1])
+        middle = tf.slice(in_level, [0,  self.middle_index] , [-1, 1])
         middle_class = tf.reshape(middle, [-1] )
         
         target_norm_onehot_range = self.target_classes_max*2+1
@@ -372,7 +372,9 @@ class Model(object):
         self.in_bits = 8
         self.out_bits = 8
 
-        self.clip_size = 2*self.receptive_field+1
+        #self.clip_size = 2*self.receptive_field+1
+        self.clip_size = self.receptive_field+1
+        self.middle_index = math.ceil( float(self.receptive_field) / 2.0)
         self.n_input_classes = 2**(self.in_bits)
         self.input_classes_max = self.n_input_classes - 1
         self.n_target_classes = 2**(self.out_bits)

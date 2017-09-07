@@ -56,6 +56,8 @@ elif [ $ACTION = "train" ]; then
 		TRAIN_START=$5
 		train_all_levels=0
 	fi
+	train_all_levels=0
+	TRAIN_START=$(($LEVELS-1))
 elif [ $ACTION = "load" ]; then
 	SEED=$3
 	SEEDPATH="$dot/data/songs/$SEED"

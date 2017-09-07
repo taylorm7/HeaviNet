@@ -58,7 +58,7 @@ for i = 1:n_levels
 fprintf('Formatting level:%d\n', i);
 passband_fx = get_fx(data_location, i);
 inputs_formatted{i} = format_level(inputs{i}, receptive_field, fx, passband_fx);
-inputs_formatted{i} = reorder(receptive_field, inputs_formatted{i});
+%inputs_formatted{i} = reorder(receptive_field, inputs_formatted{i});
 end
 
 fprintf('Song:%d fx:%g\n', length(song), fx);
