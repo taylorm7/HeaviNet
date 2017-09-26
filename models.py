@@ -16,8 +16,6 @@ def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
         layer = tf.nn.relu(layer)
     return layer
 
-
-
 # Weights, bias, and convolutional layer helper methods referenced and modified from:
 # https://github.com/Hvass-Labs/TensorFlow-Tutorials -> 02_Convolutional_Neural_Network.ipynb
 def new_weights(shape):
