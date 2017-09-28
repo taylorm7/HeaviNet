@@ -201,6 +201,7 @@ elif [ $ACTION = "generate" ]; then
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		for ((i=0 ; i<LEVELS ; i++)); do
 			python3 heavinet.py $ACTION $DATAPATH $SEEDDIR $i $RECEPTIVE_FIELD $LEVELS
+			break
 		done
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"

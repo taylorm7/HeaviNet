@@ -34,6 +34,8 @@ inputs_formatted= cell(n_levels,1);
 targets = cell(n_levels,1);
 targets_signal = cell(n_levels,1);
 
+indicies = cell(n_levels,1);
+
 song =  hampel(song, 3, 0.5);
 song = sgolayfilt(song,5,41);
 
@@ -57,11 +59,11 @@ end
 for i = 1:n_levels
 fprintf('Formatting level:%d\n', i);
 passband_fx = get_fx(data_location, i);
-inputs_formatted{i} = format_level(inputs{i}, receptive_field, fx, passband_fx);
+[inputs_formatted{i}, indicies{i}] = format_level(inputs{i}, receptive_field, fx, passband_fx);
 %inputs_formatted{i} = re_order(receptive_field, inputs_formatted{i});
 end
 
 fprintf('Song:%d fx:%g\n', length(song), fx);
 
-save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', '-v7.3');
+save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', 'indicies', '-v7.3');
 end

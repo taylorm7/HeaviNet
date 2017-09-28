@@ -20,18 +20,24 @@ def load_matlab(data_location, receptive_field, training_data = True):
             r_field = int(matlab_input.get('receptive_field')[0,0])
             n_levels = int(matlab_input.get('n_levels')[0,0])
             x_list = []
+            index_list = []
             print("Reading", read_file, " receptive field:", r_field, "levels:", n_levels)
             for i in range(n_levels):
                 x_data = [matlab_input[element[i]][:] 
                         for element in matlab_input['inputs_formatted']] 
                 ytrue_data = [matlab_input[element[i]][:] 
                         for element in matlab_input['targets']]
+                level_index = [matlab_input[element[i]][:] 
+                        for element in matlab_input['indicies']]
                 x_data = x_data[0].transpose()
                 ytrue_data = ytrue_data[0].transpose()
+                level_index = level_index[0].flatten()
+                print(level_index) 
                 sf = store_file + str(i)+"_r"+str(receptive_field)+".pkl"
                 print("Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape)
                 data_list = [ x_data, ytrue_data ]
                 x_list.append(x_data)
+                index_list.append(level_index)
                 #if i == 0:
                 #    x_list = x_data
                 #else:
@@ -39,13 +45,27 @@ def load_matlab(data_location, receptive_field, training_data = True):
                 with open(sf, "wb") as output_file:
                     pkl.dump(data_list, output_file, protocol=4)
             x_list = np.asarray(x_list)
+            index_list = np.asarray(index_list)
+            index_list = index_list.astype(int)
             print(np.shape(x_list))
+            print(np.shape(index_list))
             with open(x_file, "wb") as output_file:
-                pkl.dump(x_list, output_file, protocol=4)
+                pkl.dump([x_list, index_list] , output_file, protocol=4)
     except IOError:
         print("Failed to load:", store_file)
         sys.exit()
 
+def read_index(data_location, receptive_field):
+    x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
+    try:
+        with open(x_file, "rb") as input_file:
+            _list = pkl.load(input_file)
+            index_list = _list[1]
+        print("Read index:", np.shape(index_list))
+        return index_list
+    except IOError:
+        print("Failed to load:", store_file)
+        sys.exit() 
 
 def read_data(data_location, receptive_field, level, training_data = True):
     if training_data == True:
@@ -60,7 +80,8 @@ def read_data(data_location, receptive_field, level, training_data = True):
             x_data = data_list[0]
             ytrue_data = data_list[1]
         with open(x_file, "rb") as input_file:
-            x_list = pkl.load(input_file)
+            _list = pkl.load(input_file)
+            x_list = _list[0]
         print("Read data:", np.shape(x_data), np.shape(ytrue_data), np.shape(x_list))
         return x_data, ytrue_data, x_list
     except IOError:

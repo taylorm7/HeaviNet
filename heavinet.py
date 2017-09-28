@@ -3,7 +3,7 @@ import numpy as np
 import scipy.io as sio
 import sys
 
-from util import read_data, read_seed, load_matlab, write_song
+from util import read_data, read_seed, load_matlab, write_song, read_index
 from models import Model
 
 def load(data_location, receptive_field, training_data):
@@ -14,6 +14,7 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     print("Trainging on", data_location, "levels:", n_levels, 
           "with receptive_field:" , receptive_field)
     x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
+    index_list = read_index(data_location, receptive_field)
     
     net = Model( level, receptive_field, data_location , n_levels)
     net.train( x_data, ytrue_data, x_list, epochs=epochs)
@@ -24,8 +25,12 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
     seed_data, _, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
+    index_list = read_index(data_location, receptive_field)
+
     gen_net = Model( level, receptive_field, data_location, n_levels )
-    song_data = gen_net.generate(seed_data, seed_list)
+    
+    sample_length = 1000
+    song_data = gen_net.generate(seed_data, seed_list,index_list, sample_length)
     gen_net.close()
     song_name = write_song( song_data, seed_location, level, receptive_field)
     

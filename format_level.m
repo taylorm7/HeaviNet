@@ -1,4 +1,4 @@
-function [format_iterable] = format_level(iterable, receptive_field, fx, passband_fx)
+function [format_iterable, index] = format_level(iterable, receptive_field, fx, passband_fx)
 
 [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
 disp(index);

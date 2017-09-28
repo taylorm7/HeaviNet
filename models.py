@@ -544,10 +544,12 @@ class Model(object):
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
 
-    def generate(self, x_seed, x_list):
+    def generate(self, x_seed, x_list, index_list, sample_length):
         x_seed = np.reshape(x_seed, (-1, self.clip_size))
         print("Generating with seed:", x_seed.shape, x_list.shape)
-        y_generated = []
+        field_size = np.amin(index_list)
+        print("Sample size:", sample_length, "Field Size", field_size)
+        y_generated = np.zeros(sample_length+field_size)
         for i in range(0, len(x_seed), self.batch_size):
             feed_dict_gen = {self.input_level: x_seed[i:i+self.batch_size,:],
                              self.input_all: x_list[:,i:i+self.batch_size,:] }
