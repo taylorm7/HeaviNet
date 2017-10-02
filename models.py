@@ -371,8 +371,9 @@ class Model(object):
         self.out_bits = 8
 
         #self.clip_size = 2*self.receptive_field+1
-        self.clip_size = self.receptive_field+1
-        self.middle_index = math.ceil( float(self.receptive_field) / 2.0)
+        self.clip_size = self.receptive_field
+        self.middle_index = math.floor( float(self.receptive_field) / 2.0)
+        print("Middle Index", self.middle_index)
         self.n_input_classes = 2**(self.in_bits)
         self.input_classes_max = self.n_input_classes - 1
         self.n_target_classes = 2**(self.out_bits)
