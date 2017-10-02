@@ -41,7 +41,7 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
         %x = filter(lowpass_iir, song);
         x_max = max(abs(song));
         x = song;
-        %x = x./x_max;
+        x = x./x_max;
         
         %plot(x);
         %k=waitforbuttonpress;

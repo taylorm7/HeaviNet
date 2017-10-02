@@ -1,12 +1,13 @@
 function [iterable, indicies] = re_order(receptive_field, iterable)
-clip_size = receptive_field + 1;
+clip_size = receptive_field;
+
 index = 1;
 indicies = [];
 while( index <= clip_size)
     indicies = [indicies index ];
     index = index + 2;
 end
-if mod(receptive_field,2) == 0
+if mod(receptive_field,2) == 1
     index = index -3;
 else
     index = index -1;
