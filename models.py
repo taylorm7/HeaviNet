@@ -548,6 +548,7 @@ class Model(object):
     def generate(self, x_seed, x_list, index_list, sample_length):
         x_seed = np.reshape(x_seed, (-1, self.clip_size))
         print("Generating with seed:", x_seed.shape, x_list.shape)
+        print("Index list:", index_list.shape)
         field_size = abs(np.amin(index_list))
         if(sample_length <= field_size):
             raise ValueError('Sample Length too small for receptive field')
@@ -555,11 +556,13 @@ class Model(object):
 
         print("Sample size:", sample_length, "Field Size", field_size)
         y_generated = np.zeros(sample_length)
-        for i in range(0, len(x_seed), self.batch_size):
-            feed_dict_gen = {self.input_level: x_seed[i:i+self.batch_size,:],
-                             self.input_all: x_list[:,i:i+self.batch_size,:] }
+        feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
+        index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
+        for i in range(sample_length):
+            feed_val = y_generated[i+index]
+            feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated = np.append(y_generated, y_g)
+            y_generated[i] = y_g[0]
         print("Generated song:",  len(y_generated))
         return y_generated
 

@@ -29,7 +29,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
 
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
-    sample_length = 110251
+    sample_length = 304128
     song_data = gen_net.generate(seed_data, seed_list,index_list, sample_length)
     gen_net.close()
     song_name = write_song( song_data, seed_location, level, receptive_field)
