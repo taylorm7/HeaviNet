@@ -373,7 +373,7 @@ class Model(object):
         #self.clip_size = 2*self.receptive_field+1
         self.clip_size = self.receptive_field
         self.middle_index = math.floor( float(self.receptive_field) / 2.0)
-        print("Middle Index", self.middle_index)
+        #print("Middle Index", self.middle_index)
         self.n_input_classes = 2**(self.in_bits)
         self.input_classes_max = self.n_input_classes - 1
         self.n_target_classes = 2**(self.out_bits)
@@ -548,9 +548,13 @@ class Model(object):
     def generate(self, x_seed, x_list, index_list, sample_length):
         x_seed = np.reshape(x_seed, (-1, self.clip_size))
         print("Generating with seed:", x_seed.shape, x_list.shape)
-        field_size = np.amin(index_list)
+        field_size = abs(np.amin(index_list))
+        if(sample_length <= field_size):
+            raise ValueError('Sample Length too small for receptive field')
+            sys.exit()
+
         print("Sample size:", sample_length, "Field Size", field_size)
-        y_generated = np.zeros(sample_length+field_size)
+        y_generated = np.zeros(sample_length)
         for i in range(0, len(x_seed), self.batch_size):
             feed_dict_gen = {self.input_level: x_seed[i:i+self.batch_size,:],
                              self.input_all: x_list[:,i:i+self.batch_size,:] }
