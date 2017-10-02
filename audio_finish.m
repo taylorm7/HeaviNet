@@ -1,10 +1,10 @@
 function [song, inputs, finished_song, original_fx] = audio_finish(data_location, n_levels, downsample_rate, receptive_field, seed_location)
 disp(data_location);
-bits = 10;
+bits = 8;
 inputs = cell(n_levels,1);
 song = 0;
 
-for level = 1:n_levels
+for level = 1:1
     read_location = strcat(seed_location, '/song_', int2str(level-1), '_r', int2str(receptive_field), '.mat' );
     disp(read_location);
     [passband_fx, fx] = get_fx(data_location, level);
