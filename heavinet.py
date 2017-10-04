@@ -24,13 +24,14 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Generating:", level, data_location, receptive_field, n_levels)
     print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
-    seed_data, _, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
+    seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
     index_list = read_index(data_location, receptive_field)
 
+    print(seed.shape)
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
     sample_length = 304128
-    song_data = gen_net.generate(seed_data, seed_list,index_list, sample_length)
+    song_data = gen_net.generate(seed, seed_list, index_list, sample_length)
     gen_net.close()
     song_name = write_song( song_data, seed_location, level, receptive_field)
     
