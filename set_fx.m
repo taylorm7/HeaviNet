@@ -3,13 +3,13 @@ function [filter_fx] = set_fx(fx, data_location, n_levels)
 data_file = strcat(data_location, '/fx_info.mat');
 fx_offset = 2;
 fx_order = 3;
-use_exponential = 0;
+use_exponential = 1;
 fx_target = 16000;
 syms f positive
   
 if use_exponential
     %exponential function for filter changes
-    eqn = f.^(n_levels+1)+fx_offset==fx_target;
+    eqn = f.^(n_levels-1)+fx_offset==fx_target;
 else
     %polynomial function of order fx_order
     eqn = ((n_levels)*f).^(fx_order)+fx_offset==fx_target;

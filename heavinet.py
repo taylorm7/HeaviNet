@@ -14,7 +14,7 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     print("Trainging on", data_location, "levels:", n_levels, 
           "with receptive_field:" , receptive_field)
     x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
-    index_list = read_index(data_location, receptive_field)
+    index_list, frequency_list, song = read_index(data_location, receptive_field)
     
     net = Model( level, receptive_field, data_location , n_levels)
     net.train( x_data, ytrue_data, x_list, epochs=epochs)
@@ -25,7 +25,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
     seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
-    index_list = read_index(data_location, receptive_field)
+    index_list, frequency_list, song = read_index(data_location, receptive_field)
 
     print(seed.shape)
     gen_net = Model( level, receptive_field, data_location, n_levels )

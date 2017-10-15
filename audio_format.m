@@ -35,6 +35,7 @@ targets = cell(n_levels,1);
 targets_signal = cell(n_levels,1);
 
 indicies = cell(n_levels,1);
+frequencies = cell(n_levels,1);
 
 song =  hampel(song, 3, 0.5);
 song = sgolayfilt(song,5,41);
@@ -42,6 +43,7 @@ song = sgolayfilt(song,5,41);
 for i = 1:n_levels
     fprintf('Level:%d\n', i);
     passband_fx = get_fx(data_location, i);
+    
     [inputs{i}, inputs_signal{i}] = create_filter(i, song, fx, passband_fx, receptive_field, data_location, 8);
     targets{i} = inputs{i};
     %fprintf('Solution:%d\n', i);
@@ -62,10 +64,12 @@ fprintf('Formatting level:%d\n', i);
 passband_fx = get_fx(data_location, i);
 [inputs_formatted{i}, indicies{i}] = format_level(inputs{i}, receptive_field, fx, passband_fx);
 indicies{i} = int32(indicies{i});
+frequencies{i} = passband_fx;
 %inputs_formatted{i} = re_order(receptive_field, inputs_formatted{i});
 end
 
 fprintf('Song:%d fx:%g\n', length(song), fx);
 
-save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', 'indicies', '-v7.3');
+save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', ...
+    'indicies', 'frequencies', 'song', '-v7.3');
 end

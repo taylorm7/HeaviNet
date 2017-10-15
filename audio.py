@@ -52,14 +52,12 @@ y_d = analog_to_digital(y_nonlinear, Q)
 y_a = digital_to_analog(y_d, Q)
 y = mu_inverse(y_a, mu, Q)
 
-print( y_nonlinear == y_a)
-
 wav.write('s_out.wav', fx, y)
 
 s_1 = butter_lowpass_filter(s, 500, fx)
 out_1 = np.int16(s_1/np.max(np.abs(s_1)) * 32767 )
 wav.write('s_1.wav', fx, s_1)
 
-plt.plot(s)
-plt.plot(s_1)
-plt.show()
+#plt.plot(s)
+#plt.plot(s_1)
+#plt.show()
