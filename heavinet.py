@@ -36,7 +36,7 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     filtered_song = np.empty([song_length])
     print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
     for i in range(n_levels):
-        filtered_song = butter_lowpass_filter(song, frequency_list[i], fx)
+        filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
         filtered_song = mu_trasform(filtered_song, mu, Q)
         filtered_song = analog_to_digital(filtered_song, Q)        
         #print("Filtered song", filtered_song.shape)
