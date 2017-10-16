@@ -1,7 +1,5 @@
 import numpy as np
 from scipy.signal import butter, lfilter, freqz
-import matplotlib.pyplot as plt
-
 
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs

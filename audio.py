@@ -1,5 +1,4 @@
 import scipy.io.wavfile as wav
-import matplotlib.pyplot as plt
 import numpy as np
 
 from filter import butter_lowpass_filter
