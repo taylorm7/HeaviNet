@@ -508,10 +508,10 @@ class Model(object):
             print("regular onehot targets\n", tar)
     '''
 
-    def train(self, x, ytrue_class, x_list, epochs=1 ):
-        x = np.reshape(x, (-1, self.clip_size))
+    def train(self, x_list, ytrue_class, epochs=1 ):
+        #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
-        print("Trainging:",  self.name, x.shape, ytrue_class.shape, x_list.shape, "epochs:", epochs)
+        print("Trainging:",  self.name, x_list.shape, ytrue_class.shape, "epochs:", epochs)
         
         #for e in range(epochs):
         e = 0
@@ -519,9 +519,8 @@ class Model(object):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
-            for i in range(0, len(x), self.batch_size):
-                feed_dict_train = {self.input_level: x[i:i+self.batch_size,:],
-                                   self.target_class: ytrue_class[i:i+self.batch_size],
+            for i in range(0, len(ytrue_class), self.batch_size):
+                feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] }
                 
                 # train without calculating accuracy

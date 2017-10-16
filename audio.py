@@ -4,12 +4,12 @@ import numpy as np
 
 from filter import butter_lowpass_filter
 
-bits = 8
-N = 2**bits
-mu = float(N-1)
-xmax = 1.0
-xmin = -1.0
-Q=(xmax-xmin)/N
+#bits = 8
+#N = 2**bits
+#mu = float(N-1)
+#xmax = 1.0
+#xmin = -1.0
+#Q=(xmax-xmin)/N
 
 def analog_to_digital(y_nonlinear, Q):
     analog = y_nonlinear + 1
@@ -35,7 +35,7 @@ def mu_inverse(y_nonlinear, mu, Q):
     y_quantized_nonlinear = np.floor((y_nonlinear-xmin)/Q)*Q+Q/2+xmin;
     y = np.sign(y_quantized_nonlinear)*(1/mu)*( np.power((1+mu),(abs(y_quantized_nonlinear)))-1 );
     return y
-
+'''
 print(bits, N, mu, Q)
 
 fx, song = wav.read('/home/sable/HeaviNet/data/songs/bach_10.wav')
@@ -61,3 +61,4 @@ wav.write('s_1.wav', fx, s_1)
 #plt.plot(s)
 #plt.plot(s_1)
 #plt.show()
+'''
