@@ -50,7 +50,6 @@ def train(data_location, level, receptive_field, epochs, n_levels):
 
     print("Song List", song_list.shape)
     '''
-    print(song_list[7,10000:10010,:])
 
     net.train( song_list, ytrue_data, epochs=epochs)
     net.save(close=True)
@@ -66,7 +65,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
     sample_length = 304128
-    song_data = gen_net.generate(seed, seed_list, index_list, sample_length)
+    song_data = gen_net.generate(seed, seed_list, index_list, frequency_list, sample_length)
     gen_net.close()
     song_name = write_song( song_data, seed_location, level, receptive_field)
     
