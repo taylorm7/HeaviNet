@@ -559,8 +559,10 @@ class Model(object):
         print("Y generate", y_generated.shape, y_size)
         feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
         index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
+        print(index.shape, index)
         for i in range(x_size, y_size):
             feed_val = y_generated[i+index]
+            print("Feed val", feed_val.shape)
             feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i] = y_g[0]

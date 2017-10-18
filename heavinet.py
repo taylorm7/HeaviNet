@@ -6,14 +6,7 @@ import sys
 from util import read_data, read_seed, load_matlab, write_song, read_index
 from models import Model
 from filter import butter_lowpass_filter
-from audio import mu_trasform, analog_to_digital, digital_to_analog, mu_inverse
-
-bits = 8
-N = 2**bits
-mu = float(N-1)
-xmax = 1.0
-xmin = -1.0
-Q=(xmax-xmin)/N
+from audio import mu_trasform, analog_to_digital, digital_to_analog, mu_inverse, format_song
 
 def load(data_location, receptive_field, training_data):
     print("Loading", data_location, "for receptive field:", receptive_field)
@@ -25,11 +18,15 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
     index_list, frequency_list, song = read_index(data_location, receptive_field)
    
-    fx = 44100
 
     net = Model( level, receptive_field, data_location , n_levels)
     
+    fx = 44100
+    bits = 8
     song_length = len(ytrue_data)
+    song_list = format_song(song, frequency_list, index_list, song_length, n_levels, bits, fx)
+
+    '''
     index_length = len(index_list[0])
 
     song_list = np.empty([n_levels, song_length, index_length], dtype=int)
@@ -52,6 +49,9 @@ def train(data_location, level, receptive_field, epochs, n_levels):
         song_list[i] = filtered_song[indicies]
 
     print("Song List", song_list.shape)
+    '''
+    print(song_list[7,10000:10010,:])
+
     net.train( song_list, ytrue_data, epochs=epochs)
     net.save(close=True)
 
