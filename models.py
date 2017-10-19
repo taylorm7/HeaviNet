@@ -552,12 +552,13 @@ class Model(object):
         print("Generating with seed:", song.shape, x_size)
         print("Index list:", index_list.shape)
         field_size = abs(np.amin(index_list))
-        if(sample_length <= field_size):
-            raise ValueError('Sample Length too small for receptive field')
-            sys.exit()
+        
         print("Sample size:", sample_length, "Field Size", field_size)
         y_generated = np.append(song, np.zeros(sample_length))
         y_size = y_generated.size
+	if(y_size <= field_size):
+		raise ValueError('Sample Length too small for receptive field')
+		sys.exit()
         print("Y generate", y_generated.shape, y_size)
         #feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
