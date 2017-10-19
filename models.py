@@ -546,14 +546,17 @@ class Model(object):
                     self.best_accuracy = epoch_accuracy
 
     def generate(self, song, index_list, frequency_list, sample_length):
-        #x_seed = np.reshape(x_seed, (-1) )
-        x_size = song.size
-        print("Generating with seed:", song.shape, x_size)
-        print("Index list:", index_list.shape)
         field_size = abs(np.amin(index_list))
         
         print("Sample size:", sample_length, "Field Size", field_size)
-        y_generated = np.append(song, np.zeros(sample_length))
+        
+        #y_generated = np.append(song, np.zeros(sample_length))
+        #x_size = song.size
+        y_generated = np.append(np.zeros(field_size), np.zeros(sample_length))
+        x_size = field_size
+        
+        print("Generating with seed:", song.shape, x_size)
+        print("Index list:", index_list.shape)
         y_size = y_generated.size
         if(y_size <= field_size):
             raise ValueError('Sample Length too small for receptive field')
