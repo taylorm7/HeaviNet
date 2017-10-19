@@ -4,7 +4,7 @@ import os
 import sys
 import math
 
-from audio import format_feedval 
+from audio import format_feedval, raw
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -546,17 +546,17 @@ class Model(object):
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
 
-    def generate(self, x_seed, x_list, index_list, frequency_list, sample_length):
-        x_seed = np.reshape(x_seed, (-1) )
-        x_size = x_seed.size
-        print("Generating with seed:", x_seed.shape, x_size, x_list.shape)
+    def generate(self, song, index_list, frequency_list, sample_length):
+        #x_seed = np.reshape(x_seed, (-1) )
+        x_size = song.size
+        print("Generating with seed:", song.shape, x_size)
         print("Index list:", index_list.shape)
         field_size = abs(np.amin(index_list))
         if(sample_length <= field_size):
             raise ValueError('Sample Length too small for receptive field')
             sys.exit()
         print("Sample size:", sample_length, "Field Size", field_size)
-        y_generated = np.append(x_seed, np.zeros(sample_length))
+        y_generated = np.append(song, np.zeros(sample_length))
         y_size = y_generated.size
         print("Y generate", y_generated.shape, y_size)
         #feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
@@ -566,11 +566,11 @@ class Model(object):
             feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
                     1, self.n_levels)
 
-            print("Feed val", feed_val.shape)
+            #print("Feed val", feed_val.shape)
             feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i] = y_g[0]
-            #print("y[", i, "] = ", y_g)
+            y_generated[i] = raw(y_g[0])
+            #print("y[", i, "] = ", y_g, y_generated[i])
         print("Generated song:",  len(y_generated))
         return y_generated
 

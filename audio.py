@@ -34,6 +34,16 @@ def mu_inverse(y_nonlinear, mu, Q):
     y_quantized_nonlinear = np.floor((y_nonlinear-xmin)/Q)*Q+Q/2+xmin;
     y = np.sign(y_quantized_nonlinear)*(1/mu)*( np.power((1+mu),(abs(y_quantized_nonlinear)))-1 );
     return y
+def raw(digital, bits=8):
+    N = 2**bits
+    mu = float(N-1)
+    xmax = 1.0
+    xmin = -1.0
+    Q=(xmax-xmin)/N
+    y_nonlinear = digital_to_analog(digital, Q)
+    y = mu_inverse(y_nonlinear, mu, Q)
+    return y
+
 
 def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8, fx=44100):   
     N = 2**bits
@@ -41,7 +51,7 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
     xmax = 1.0
     xmin = -1.0
     Q=(xmax-xmin)/N
-
+    
     index_length = len(index_list[0])
 
     song_list = np.empty([n_levels, song_length, index_length], dtype=int)
@@ -76,7 +86,8 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
 
     song_list = np.empty([n_levels, song_length, index_length], dtype=int)
     filtered_song = np.empty([song_length])
-    print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
+    #print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
+    #print(song[ len(song)-1], song[len(song)-2] )
     for i in range(n_levels):
         filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
         filtered_song = mu_trasform(filtered_song, mu, Q)
@@ -89,12 +100,12 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
         #indicies = np.reshape(indicies, (-1,index_length))
         indicies = len(song)-1 + index_list[i]
         
-        print("indicies", indicies.shape)
-        print(indicies)
+        #print("indicies", indicies.shape)
+        #print(indicies)
 
         song_list[i] = filtered_song[indicies]
 
-    print("Song List", song_list.shape)
+    #print("Song List", song_list.shape)
     return song_list
 
 '''

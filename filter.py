@@ -8,7 +8,7 @@ def butter_lowpass(cutoff, fs, order=5):
     return b, a
 
 def butter_lowpass_filter(data, cutoff, fx, order=5):
-    print("Filter:", cutoff, "fx:", fx, "order:", order, "size", len(data))
+    #print("Filter:", cutoff, "fx:", fx, "order:", order, "size", len(data))
     b, a = butter_lowpass(cutoff, fx, order=order)
     y = lfilter(b, a, data)
     return y
