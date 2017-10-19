@@ -342,7 +342,6 @@ class Model(object):
             print("  Residual Layers", n_residual_layers, "Hidden Layers", h, "hidden output layers", d)
             print("  Layer Shape" , l3.shape)
             print("  Layer Weights" , w3.shape)
-            
             for i, (r_s, n_s, f, p) in enumerate(zip(reg_conv_sizes, norm_conv_sizes, conv_nodes, conv_pooling)):
                 print("  regular conv Layer", i, "filter:", r_s[0], r_s[1], "pooling:", p[0], p[1],
                         "number of channels", f, "use pooling", use_pooling)
