@@ -227,6 +227,7 @@ class Model(object):
  
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
         conv_offset = 20
+        block = 7
         #if self.onehot_mode == False:
             #conv_offset = 0
         
@@ -246,16 +247,16 @@ class Model(object):
         channels = norm_channels + reg_channels
         print("Image", image.shape, channels)
         
-        r1, rw1 = new_conv_layer(reg_image, reg_channels, 3, reg_n_inputs - conv_offset, h)
+        r1, rw1 = new_conv_layer(reg_image, reg_channels, block, reg_n_inputs - conv_offset, h)
         print("R1:", r1.shape, rw1.shape)
 
-        n1, nw1 = new_conv_layer(norm_image, norm_channels, 3, norm_n_inputs - conv_offset, h)
+        n1, nw1 = new_conv_layer(norm_image, norm_channels, block, norm_n_inputs - conv_offset, h)
         print("N1:", n1.shape, nw1.shape)
 
         l1 = tf.concat( [r1, n1], axis=2)
         print("L1:", l1.shape)
 
-        l2, w2 = new_conv_layer(l1, h, 3, conv_offset, d)
+        l2, w2 = new_conv_layer(l1, h, block, conv_offset, d)
         print("L2:", l2.shape)
 
         flat, features = flatten_layer(l2)
