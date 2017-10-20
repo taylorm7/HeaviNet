@@ -5,6 +5,7 @@ import sys
 import math
 
 from audio import format_feedval, raw
+from filter import savitzky_golay
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -567,9 +568,12 @@ class Model(object):
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
         #print(index.shape, index)
         for i in range(x_size, y_size):
+            print( y_generated[i-field_size:i+1])
+            y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
             feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
                     1, self.n_levels)
-
+            print( y_generated[i-field_size:i+1])
+            print()
             #print("Feed val", feed_val.shape)
             feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)

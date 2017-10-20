@@ -1,7 +1,7 @@
 import scipy.io.wavfile as wav
 import numpy as np
 
-from filter import butter_lowpass_filter
+from filter import butter_lowpass_filter, savitzky_golay
 
 #bits = 8
 #N = 2**bits
@@ -86,6 +86,7 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
 
     song_list = np.empty([n_levels, song_length, index_length], dtype=int)
     filtered_song = np.empty([song_length])
+    #song = savitzky_golay(song, 41, 5)
     #print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
     #print(song[ len(song)-1], song[len(song)-2] )
     for i in range(n_levels):
