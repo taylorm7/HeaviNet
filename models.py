@@ -6,6 +6,7 @@ import math
 
 from audio import format_feedval, raw
 from filter import savitzky_golay
+from layers import conv1d, dilated_conv1d
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -228,7 +229,7 @@ class Model(object):
  
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
         conv_offset = 20
-        block = 7
+        block = 1
         #if self.onehot_mode == False:
             #conv_offset = 0
         
@@ -238,15 +239,20 @@ class Model(object):
         d = 32
         n_residual_layers = 15
 
+        num_blocks = 2
+        num_layers = 14
+        num_hidden = 128
 
-        reg_channels = self.level + 1
-        norm_channels = self.level + 1
+        reg_channels = self.n_levels
+        norm_channels = self.n_levels
         print("Regular Image", reg_image.shape, reg_channels)
         print("Normal Channels", norm_image.shape, norm_channels)
 
         image = tf.concat( [reg_image, norm_image] , axis=2)
         channels = norm_channels + reg_channels
         print("Image", image.shape, channels)
+        
+        
         
         r1, rw1 = new_conv_layer(reg_image, reg_channels, block, reg_n_inputs - conv_offset, h)
         print("R1:", r1.shape, rw1.shape)
@@ -264,8 +270,26 @@ class Model(object):
         print("Flat", flat.shape, features)
 
         fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
-         
-        #new_conv_layer(input, num_input_channels, filter_width, filter_height, output_channels, pool_width, pool_height, use_pooling=False)
+        
+
+        '''
+        hl = image
+        hs = []
+        for b in range(num_blocks):
+            for i in range(num_layers):
+                rate = 2**i
+                name = 'b{}-l{}'.format(b, i)
+                hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
+                hs.append(hl)
+
+        outputs = conv1d(hl,
+                         num_classes,
+                         filter_width=1,
+                         gain=1.0,
+                         activation=None,
+                         bias=True)
+        print("Final Out:", outputs.shape)
+        '''
 
         ''' 
         out_norm = []
@@ -317,7 +341,7 @@ class Model(object):
         fc_layers = nn_fc_layers(out, features, n_target_classes, [256])
         #print("Fully Connected", fc_layers[-1].shape)
         '''
-
+        
         '''
         reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
         norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
@@ -333,13 +357,15 @@ class Model(object):
         
         print(fc_layers)
         '''
+
         if (not os.path.isdir(self.save_dir)):
             print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
 
             print("  Image" , image.shape, "channels", channels)
             print("  Regular Image", reg_image.shape, "channels", reg_channels)
             print("  Normal Image", norm_image.shape, "channels", norm_channels)
-            print("  flat layer number of features", features)
+            #print("  flat layer number of features", features)
+
             '''
             print("  Residual Layers", n_residual_layers, "Hidden Layers", h, "hidden output layers", d)
             print("  Layer Shape" , l3.shape)
@@ -352,11 +378,8 @@ class Model(object):
             
             print("  output layer", out.shape)
             '''
-            #for i, n in enumerate(fc_nodes):
-            #    print("  fully connected layer", i, "number of nodes", n)
-            #print("  targets", n_target_classes)
-        #return flat_out
         return fc_layers[-1]
+        #return output
 
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
@@ -411,7 +434,7 @@ class Model(object):
         normalized_inputs = []
         normalized_level = []
 
-        for i in range(self.level+1):
+        for i in range(self.n_levels):
             #if i != self.level:
             regular_level, _ = regular_call(input_all[i])
             regular_inputs.append(regular_level)
@@ -568,12 +591,12 @@ class Model(object):
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
         #print(index.shape, index)
         for i in range(x_size, y_size):
-            print( y_generated[i-field_size:i+1])
-            y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
+            #print( y_generated[i-field_size:i+1])
+            #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
             feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
                     1, self.n_levels)
-            print( y_generated[i-field_size:i+1])
-            print()
+            #print( y_generated[i-field_size:i+1])
+            #print()
             #print("Feed val", feed_val.shape)
             feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)

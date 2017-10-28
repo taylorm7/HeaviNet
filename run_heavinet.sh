@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LEVELS=32
+LEVELS=8
 
 #usage
 # "format" $SONG $RECEPTIVE_FIELD $DOWNSAMPLE_RATE
