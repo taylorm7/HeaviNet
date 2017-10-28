@@ -229,7 +229,7 @@ class Model(object):
  
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
         conv_offset = 20
-        block = 1
+        block = 3
         #if self.onehot_mode == False:
             #conv_offset = 0
         
