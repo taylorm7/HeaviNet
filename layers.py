@@ -23,7 +23,6 @@ def time_to_batch(inputs, rate):
 
     perm = (1, 0, 2)
     shape = ( int(width_pad / rate), -1, num_channels) # missing dim: batch_size * rate
-    print(shape)
     padded = tf.pad(inputs, [[0, 0], [pad_left, 0], [0, 0]])
     transposed = tf.transpose(padded, perm)
     reshaped = tf.reshape(transposed, shape)
@@ -157,12 +156,12 @@ def dilated_conv1d(inputs,
                         tf.Dimension(out_channels)]
         outputs.set_shape(tf.TensorShape(tensor_shape))
 
-        print(name, rate, filter_width, gain)
-        print("In Shape:", inputs.shape)
-        print(inputs_.shape)
-        print("Out Shape:", outputs_.shape)
-        print(outputs.shape)
-        print
+        #print(name, rate, filter_width, gain)
+        #print("In Shape:", inputs.shape)
+        #print(inputs_.shape)
+        #print("Out Shape:", outputs_.shape)
+        #print(outputs.shape)
+        #print
     return outputs
 
 def _causal_linear(inputs, state, name=None, activation=None):

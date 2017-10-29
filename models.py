@@ -240,9 +240,9 @@ class Model(object):
         d = 32
         n_residual_layers = 15
 
-        num_blocks = 2
-        num_layers = 14
-        num_hidden = 128
+        num_blocks = 1
+        num_layers = 7
+        num_hidden = 32
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -273,7 +273,8 @@ class Model(object):
         fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
         '''
 
-        print(image)
+        image = tf.transpose(image, perm=[0, 2, 1] )
+        print(image.shape)
         hl = image
         hs = []
         for b in range(num_blocks):
@@ -284,15 +285,18 @@ class Model(object):
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
         
-        outputs = conv1d(hl,
-                         n_target_classes,
+        outputs = dilated_conv1d(hl, n_target_classes, rate=1, name='out')
+        print("Out:", outputs.shape)
+        outputs = tf.transpose(outputs, perm=[0, 2, 1] )
+        print("Out Transpose:", outputs.shape)
+        outputs = conv1d(outputs,
+                         1,
                          filter_width=1,
                          gain=1.0,
                          activation=None,
                          bias=True)
+        outputs = tf.squeeze(outputs, axis=[2])
         print("Final Out:", outputs.shape)
-        
-
         ''' 
         out_norm = []
         out_reg = []
@@ -550,7 +554,6 @@ class Model(object):
             for i in range(0, len(ytrue_class), self.batch_size):
                 feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] }
-                
                 # train without calculating accuracy
                 #_, c = self.sess.run([self.optimizer, self.cost],
                 #                        feed_dict = feed_dict_train)
@@ -593,6 +596,7 @@ class Model(object):
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
         #print(index.shape, index)
         for i in range(x_size, y_size):
+            print(i)
             #print( y_generated[i-field_size:i+1])
             #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
             feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
