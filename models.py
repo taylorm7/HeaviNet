@@ -230,8 +230,9 @@ class Model(object):
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
         conv_offset = 20
         block = 3
-        #if self.onehot_mode == False:
-            #conv_offset = 0
+        if self.onehot_mode == False:
+            reg_image = tf.squeeze(reg_image, axis=[2])
+            norm_image = tf.squeeze(norm_image, axis=[2])
         
         # hidden layers
         h = 10
@@ -252,7 +253,7 @@ class Model(object):
         channels = norm_channels + reg_channels
         print("Image", image.shape, channels)
         
-        
+        '''    
         
         r1, rw1 = new_conv_layer(reg_image, reg_channels, block, reg_n_inputs - conv_offset, h)
         print("R1:", r1.shape, rw1.shape)
@@ -270,26 +271,27 @@ class Model(object):
         print("Flat", flat.shape, features)
 
         fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
-        
-
         '''
+
+        print(image)
         hl = image
         hs = []
         for b in range(num_blocks):
             for i in range(num_layers):
-                rate = 2**i
+                #rate = 2**i
+                rate = i+1
                 name = 'b{}-l{}'.format(b, i)
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
-
+        
         outputs = conv1d(hl,
-                         num_classes,
+                         n_target_classes,
                          filter_width=1,
                          gain=1.0,
                          activation=None,
                          bias=True)
         print("Final Out:", outputs.shape)
-        '''
+        
 
         ''' 
         out_norm = []
@@ -378,14 +380,14 @@ class Model(object):
             
             print("  output layer", out.shape)
             '''
-        return fc_layers[-1]
-        #return output
+        #return fc_layers[-1]
+        return outputs
 
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
         self.batch_size = 512
         self.normalize_mode = False
-        self.onehot_mode = True
+        self.onehot_mode = False
         self.multichannel_mode = True
         self.use_pooling = False
 
