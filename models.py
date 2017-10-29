@@ -596,7 +596,6 @@ class Model(object):
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
         #print(index.shape, index)
         for i in range(x_size, y_size):
-            print(i)
             #print( y_generated[i-field_size:i+1])
             #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
             feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
