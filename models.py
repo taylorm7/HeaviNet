@@ -242,7 +242,7 @@ class Model(object):
 
         num_blocks = 1
         num_layers = 7
-        num_hidden = 32
+        num_hidden = 128
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -580,10 +580,10 @@ class Model(object):
         
         print("Sample size:", sample_length, "Field Size", field_size)
         
-        #y_generated = np.append(song, np.zeros(sample_length))
-        #x_size = song.size
-        y_generated = np.append(np.zeros(field_size), np.zeros(sample_length))
-        x_size = field_size
+        y_generated = np.append(song, np.zeros(sample_length))
+        x_size = song.size
+        #y_generated = np.append(np.zeros(field_size), np.zeros(sample_length))
+        #x_size = field_size
         
         print("Generating with seed:", song.shape, x_size)
         print("Index list:", index_list.shape)
