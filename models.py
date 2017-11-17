@@ -241,11 +241,13 @@ class Model(object):
         n_residual_layers = 15
 
         num_blocks = 1
-        num_layers = 7
+        num_layers = 16
         num_hidden = 128
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
+        print("Blocks", num_blocks, "Layers", num_layers, "Hidden", num_hidden);
+
         print("Regular Image", reg_image.shape, reg_channels)
         print("Normal Channels", norm_image.shape, norm_channels)
 
@@ -273,9 +275,8 @@ class Model(object):
         fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
         '''
 
-        image = tf.transpose(image, perm=[0, 2, 1] )
-        print(image.shape)
-        hl = image
+        hl = tf.transpose(image, perm=[0, 2, 1] )
+        print("Input image", hl.shape)
         hs = []
         for b in range(num_blocks):
             for i in range(num_layers):
