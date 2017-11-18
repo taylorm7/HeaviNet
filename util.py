@@ -112,8 +112,8 @@ def read_seed(seed_file):
         print("Failed to load:", seed_file)
         sys.exit()
 
-def write_song(song, data_location, level, receptive_field):
-    song_name = "song_" + str(level) + "_r" + str(receptive_field)
+def write_song(song, data_location, level, receptive_field, epochs):
+    song_name = "song_" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs)
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song

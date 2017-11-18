@@ -241,8 +241,8 @@ class Model(object):
         n_residual_layers = 15
 
         num_blocks = 1
-        num_layers = 16
-        num_hidden = 128
+        num_layers = 8
+        num_hidden = 32
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -281,7 +281,7 @@ class Model(object):
         for b in range(num_blocks):
             for i in range(num_layers):
                 #rate = 2**i
-                rate = i+1
+                rate = (i+1)*2
                 name = 'b{}-l{}'.format(b, i)
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
@@ -399,6 +399,7 @@ class Model(object):
         self.level = level
         self.receptive_field = receptive_field
         self.n_levels = n_levels
+        self.n_epochs = tf.get_variable("n_epochs", shape=[], dtype=tf.int32, initializer = tf.zeros_initializer)
         
         self.in_bits = 8
         self.out_bits = 8
@@ -493,6 +494,7 @@ class Model(object):
         self.correct_prediction = correct_prediction
         self.best_accuracy = 0
         self.loss_change = 0
+        
 
         self.prediction_value = prediction_value
 
@@ -506,40 +508,6 @@ class Model(object):
         else:
             os.makedirs( self.save_dir )
             print("Creating level directory at:", self.save_dir)
-    '''
-    def test_io_onehot(self, x, ytrue_class, x_list):
-        np.set_printoptions(threshold=np.inf)
-        x = np.reshape(x, (-1, self.clip_size))
-        ytrue_class = np.reshape(ytrue_class, (-1))
-        print("Testing:",  self.name, x.shape, ytrue_class.shape)
-        tests = 1
-        for i in range(int(len(x)/2), int(len(x)/2 + 1), tests):
-            feed_dict_test = {self.input_level: x[i:i+tests,:],
-                              self.target_class: ytrue_class[i:i+tests],
-                              self.input_all: x_list[i:i+tests,:,:] }
-            inp, mid, norm, norm_pos, norm_one, one, targ_c, in_scale, tar_nor, tar_nor_pos, tar_nor_pos_one, tar, image, one_image = self.sess.run(
-                    [self.input_level, self.middle, self.normalized, self.normalized_pos, 
-                     self.normalized_onehot, self.onehot, self.target_class, self.inputs_scaled,
-                     self.target_normalized, self.target_normalized_pos, 
-                     self.target_normalized_onehot, self.target, self.normalized_onehot_image,
-                     self.onehot_image],
-                    feed_dict=feed_dict_test)
-            print("inputs\n", inp)
-            print("middle value of receptive_field\n", mid)
-            print("normalized inputs\n", norm)
-            print("positive normalized\n", norm_pos)
-            print("onehot normalized inputs\n", norm_one)
-            print("onehot normalized image\n", image)
-            print("regular onehot image\n", one_image)
-            print("regular onehot inputs\n", one)
-            
-            print("inputs scaled to next level\n", in_scale)
-            print("target classes\n", targ_c)
-            print("targets normalized\n", tar_nor)
-            print("positive normalized targets\n", tar_nor_pos)
-            print("onehot normalized targets\n", tar_nor_pos_one)
-            print("regular onehot targets\n", tar)
-    '''
 
     def train(self, x_list, ytrue_class, epochs=1 ):
         #x = np.reshape(x, (-1, self.clip_size))
@@ -548,6 +516,9 @@ class Model(object):
         
         #for e in range(epochs):
         e = 0
+        print("Previos Epochs", self.n_epochs.eval(session=self.sess) )
+        inc_epochs = self.n_epochs.assign(self.n_epochs + epochs)
+        inc_epochs.op.run(session=self.sess)
         while ((e < epochs) and (self.best_accuracy < 100.1 )):
             epoch_loss = 0
             epoch_correct = 0
@@ -608,8 +579,9 @@ class Model(object):
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i] = raw(y_g[0])
             #print("y[", i, "] = ", y_g, y_generated[i])
-        print("Generated song:",  len(y_generated))
-        return y_generated
+        prev_epochs = self.n_epochs.eval(session=self.sess)
+        print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
+        return y_generated, prev_epochs
 
     def save(self, close=False):
         self.saver.save(self.sess, self.save_file)
