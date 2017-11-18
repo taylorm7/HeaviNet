@@ -9,6 +9,7 @@ len_iterable = length(iterable);
 len_index = length(index);
 
 format_iterable = zeros(len_iterable, len_index);
+return;
 
 if limit >= len_iterable
     error_msg = 'Error: The length of the receptive field was too large for the song'

@@ -58,7 +58,7 @@ def batch_to_time(inputs, rate, crop_left=0):
 
 def conv1d(inputs,
            out_channels,
-           filter_width=3,
+           filter_width=2,
            stride=1,
            padding='VALID',
            data_format='NHWC',

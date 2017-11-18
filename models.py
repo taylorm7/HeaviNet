@@ -241,8 +241,8 @@ class Model(object):
         n_residual_layers = 15
 
         num_blocks = 1
-        num_layers = 8
-        num_hidden = 32
+        num_layers = int(self.n_levels/2)
+        num_hidden = 128
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -251,37 +251,17 @@ class Model(object):
         print("Regular Image", reg_image.shape, reg_channels)
         print("Normal Channels", norm_image.shape, norm_channels)
 
-        image = tf.concat( [reg_image, norm_image] , axis=2)
+        image = tf.concat( [reg_image, norm_image ] , axis=2)
         channels = norm_channels + reg_channels
         print("Image", image.shape, channels)
         
-        '''    
-        
-        r1, rw1 = new_conv_layer(reg_image, reg_channels, block, reg_n_inputs - conv_offset, h)
-        print("R1:", r1.shape, rw1.shape)
-
-        n1, nw1 = new_conv_layer(norm_image, norm_channels, block, norm_n_inputs - conv_offset, h)
-        print("N1:", n1.shape, nw1.shape)
-
-        l1 = tf.concat( [r1, n1], axis=2)
-        print("L1:", l1.shape)
-
-        l2, w2 = new_conv_layer(l1, h, block, conv_offset, d)
-        print("L2:", l2.shape)
-
-        flat, features = flatten_layer(l2)
-        print("Flat", flat.shape, features)
-
-        fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
-        '''
-
-        hl = tf.transpose(image, perm=[0, 2, 1] )
+        hl = tf.transpose(reg_image, perm=[0, 2, 1] )
         print("Input image", hl.shape)
         hs = []
         for b in range(num_blocks):
             for i in range(num_layers):
-                #rate = 2**i
-                rate = (i+1)*2
+                rate = 2**i
+                #rate = (i+1)
                 name = 'b{}-l{}'.format(b, i)
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
@@ -298,72 +278,12 @@ class Model(object):
                          bias=True)
         outputs = tf.squeeze(outputs, axis=[2])
         print("Final Out:", outputs.shape)
-        ''' 
-        out_norm = []
-        out_reg = []
-        for i in range(reg_channels):
-            input_norm = self.norm_list[i]
-            input_reg = self.reg_list[i]
 
-            #print("Norm", i,  input_norm.shape)
-            #print("Reg", i, input_norm.shape)
+        #flat, features = flatten_layer(l2)
+        #print("Flat", flat.shape, features)
 
-            input_image = tf.concat( [input_norm, input_reg], axis=2)
-            
-            l1, w1 = new_conv_layer( input_image, 1 , 3, conv_offset , 1, 1, 2*h, False)
-             
-            print("L1", l1.shape)
-            print("W1", w1.shape)
-            
-            r_layer = tf.nn.relu(l1)
-
-            for _ in range(n_residual_layers):
-                l_a, w_a = new_conv_layer( r_layer , 2*h, 1, 1, 1, 1, h, False)
-                l_a = tf.nn.relu(l_a)
-                #print("a", l_a.shape)
-                l_b, w_b = new_conv_layer( l_a, h, 1, 1, 1, 1, h, False)
-                l_b = tf.nn.relu(l_b)
-                #print("b", l_b.shape)
-
-                l_c, w_c = new_conv_layer( l_b, h, 1, 1, 1, 1, 2*h, False)
-                l_c = tf.nn.relu(l_c)
-                #print("c", l_c.shape)
-                
-                r_layer = tf.add(l_c, r_layer)
-            l2, w2 = new_conv_layer( r_layer, 2*h, 1, 1, 1, 1, d, False)
-            l2 = tf.nn.relu(l2)
-            print("L2", l2.shape)
-            
-            flat, flat_features = flatten_layer(l2)
-            #print("Flat", flat.shape, flat_features)
-
-            if i == 0:
-                out = flat
-                features = flat_features
-            else:
-                out = tf.concat( [out, flat] , axis=1)
-                features += flat_features
-            #print("Out", out.shape, features)
-        
-        fc_layers = nn_fc_layers(out, features, n_target_classes, [256])
-        #print("Fully Connected", fc_layers[-1].shape)
-        '''
-        
-        '''
-        reg_layers, reg_weights = nn_conv_layers(reg_image, reg_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
-        norm_layers, norm_weights = nn_conv_layers(norm_image, norm_conv_sizes, conv_nodes, conv_pooling, n_channels, use_pooling)
-
-        reg_flat, reg_features = flatten_layer(reg_layers[-1])
-        norm_flat, norm_features = flatten_layer(norm_layers[-1])
-        
-        flat = tf.concat( [reg_flat, norm_flat ] , axis=1)
-        flat_features = reg_features + norm_features
-
-        fc_layers = nn_fc_layers(flat, flat_features, n_target_classes, fc_nodes)
-        #fc_layers = nn_fc_layers(norm_flat, norm_features, n_target_classes, fc_nodes)
-        
-        print(fc_layers)
-        '''
+        #fc_layers = nn_fc_layers(flat, features, n_target_classes, [512, 256])
+ 
 
         if (not os.path.isdir(self.save_dir)):
             print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
@@ -373,18 +293,6 @@ class Model(object):
             print("  Normal Image", norm_image.shape, "channels", norm_channels)
             #print("  flat layer number of features", features)
 
-            '''
-            print("  Residual Layers", n_residual_layers, "Hidden Layers", h, "hidden output layers", d)
-            print("  Layer Shape" , l3.shape)
-            print("  Layer Weights" , w3.shape)
-            for i, (r_s, n_s, f, p) in enumerate(zip(reg_conv_sizes, norm_conv_sizes, conv_nodes, conv_pooling)):
-                print("  regular conv Layer", i, "filter:", r_s[0], r_s[1], "pooling:", p[0], p[1],
-                        "number of channels", f, "use pooling", use_pooling)
-                print("  normalized conv Layer", i, "filter:", n_s[0], n_s[1], "pooling:", p[0], p[1],"number of channels", 
-                        f, "use pooling", use_pooling)
-            
-            print("  output layer", out.shape)
-            '''
         #return fc_layers[-1]
         return outputs
 

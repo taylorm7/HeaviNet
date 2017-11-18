@@ -17,7 +17,6 @@ def train(data_location, level, receptive_field, epochs, n_levels):
           "with receptive_field:" , receptive_field)
     x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
     index_list, frequency_list, song = read_index(data_location, receptive_field)
-   
 
     net = Model( level, receptive_field, data_location , n_levels)
     
@@ -25,31 +24,6 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     bits = 8
     song_length = len(ytrue_data)
     song_list = format_song(song, frequency_list, index_list, song_length, n_levels, bits, fx)
-
-    '''
-    index_length = len(index_list[0])
-
-    song_list = np.empty([n_levels, song_length, index_length], dtype=int)
-    filtered_song = np.empty([song_length])
-    print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
-    for i in range(n_levels):
-        filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
-        filtered_song = mu_trasform(filtered_song, mu, Q)
-        filtered_song = analog_to_digital(filtered_song, Q)        
-        #print("Filtered song", filtered_song.shape)
-        #print(filtered_song)
-        
-        indicies = np.arange(song_length)
-        indicies = np.repeat(indicies, index_length)
-        indicies = np.reshape(indicies, (-1,index_length))
-        indicies = indicies + index_list[i]
-        #print("indicies", indicies.shape)
-        #print(indicies)
-
-        song_list[i] = filtered_song[indicies]
-
-    print("Song List", song_list.shape)
-    '''
 
     net.train( song_list, ytrue_data, epochs=epochs)
     net.save(close=True)
@@ -65,7 +39,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
     sample_length = 104128
-    sample_length = 128
+    #sample_length = 128
     song_data, epochs = gen_net.generate(song, index_list, frequency_list, sample_length)
 
     gen_net.close()
