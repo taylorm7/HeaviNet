@@ -24,29 +24,31 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     bits = 8
     song_length = len(song)
     song_list = format_song(song, frequency_list, index_list, song_length, n_levels, bits, fx)
-    yt = quantize(song, bits=bits)
-
+    ytrue = quantize(song, bits=bits)
+    
+    '''
     t_start = 2500
     t_end = 2510
     print("Song", song[t_start:t_end].flatten() )
-    #print("Ytrue", ytrue_data.shape, ytrue_data[t_start:t_end].flatten() )
-    print("yt",yt.shape, yt[t_start:t_end].flatten() )
-
-    net.train( song_list, yt, epochs=epochs)
+    print("Ytrue",ytrue.shape, ytrue[t_start:t_end].flatten() )
+    print("Song List", song_list.shape )
+    for i in range(n_levels):
+        print("Level",i,song_list[i,t_start:t_end,:] )
+    '''
+    net.train( song_list, ytrue, epochs=epochs)
     net.save(close=True)
 
 def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Generating:", level, data_location, receptive_field, n_levels)
     print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
-    seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
+    #seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
     index_list, frequency_list, song = read_index(data_location, receptive_field)
 
-    print(seed.shape)
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
     sample_length = 104128
-    #sample_length = 128
+    #sample_length = 10000
     song_data, epochs = gen_net.generate(song, index_list, frequency_list, sample_length)
 
     gen_net.close()

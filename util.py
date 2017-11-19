@@ -27,40 +27,41 @@ def load_matlab(data_location, receptive_field, training_data = True):
             print("Reading", read_file, "song", song.shape, "receptive field:", r_field, "levels:", n_levels)
 
             for i in range(n_levels):
+                '''
                 x_data = [matlab_input[element[i]][:] 
                         for element in matlab_input['inputs_formatted']] 
                 ytrue_data = [matlab_input[element[i]][:] 
                         for element in matlab_input['targets']]
+
+                x_data = x_data[0].transpose()
+                ytrue_data = ytrue_data[0].transpose()
+                
+                data_list = [ x_data, ytrue_data ]
+                x_list.append(x_data)
+                '''
+
                 level_index = [matlab_input[element[i]][:] 
                         for element in matlab_input['indicies']]
                 fx = [matlab_input[element[i]][:] 
                         for element in matlab_input['frequencies']]
-                x_data = x_data[0].transpose()
-                ytrue_data = ytrue_data[0].transpose()
+                
                 level_index = level_index[0].flatten()
                 fx = fx[0][0,0]
-                print(level_index) 
                 sf = store_file + str(i)+"_r"+str(receptive_field)+".pkl"
-                print("Read level", i, "x:", x_data.shape, "ytrue:", ytrue_data.shape, 
-                        "Frequency", fx)
-                data_list = [ x_data, ytrue_data ]
-                x_list.append(x_data)
                 index_list.append(level_index)
                 frequency_list[i] = fx
-                #if i == 0:
-                #    x_list = x_data
-                #else:
-                #    x_list = np.dstack( ( x_list, x_data) )
-                with open(sf, "wb") as output_file:
-                    pkl.dump(data_list, output_file, protocol=4)
-            x_list = np.asarray(x_list)
+                print("Read level", i, "Frequency", fx, "Index", level_index)
+                #with open(sf, "wb") as output_file:
+                #    pkl.dump(data_list, output_file, protocol=4)
+            
+            #x_list = np.asarray(x_list)
             index_list = np.asarray(index_list)
             index_list = index_list.astype(int)
-            print(np.shape(x_list))
-            print(np.shape(index_list))
-            print(frequency_list)
+            #print(np.shape(x_list))
+            print("Index List", np.shape(index_list))
+            print("Frequencies", frequency_list)
             with open(x_file, "wb") as output_file:
-                pkl.dump([x_list, index_list, frequency_list, song] , output_file, protocol=4)
+                pkl.dump([index_list, frequency_list, song] , output_file, protocol=4)
     except IOError:
         print("Failed to load:", store_file)
         sys.exit()
@@ -70,9 +71,9 @@ def read_index(data_location, receptive_field):
     try:
         with open(x_file, "rb") as input_file:
             _list = pkl.load(input_file)
-            index_list = _list[1]
-            frequency_list = _list[2]
-            song = _list[3]
+            index_list = _list[0]
+            frequency_list = _list[1]
+            song = _list[2]
         print("Read index:", np.shape(index_list), np.shape(frequency_list), np.shape(song))
         return index_list, frequency_list, song
     except IOError:

@@ -41,35 +41,36 @@ song =  hampel(song, 3, 0.5);
 song = sgolayfilt(song,5,41);
 
 for i = 1:n_levels
-    fprintf('Level:%d\n', i);
-    passband_fx = get_fx(data_location, i);
     
-    [inputs{i}, inputs_signal{i}] = create_filter(i, song, fx, passband_fx, receptive_field, data_location, 8);
-    targets{i} = inputs{i};
+    passband_fx = get_fx(data_location, i);
+    indicies{i} = format_indicies(receptive_field, fx, passband_fx);
+    frequencies{i} = passband_fx;
+    
+    fprintf('Level:%d fx:%f\n', i, passband_fx);
+    
+    %[inputs{i}, inputs_signal{i}] = create_filter(i, song, fx, passband_fx, receptive_field, data_location, 8);
+    %targets{i} = inputs{i};
     %fprintf('Solution:%d\n', i);
     %passband_fx = get_fx(data_location, i+1);
     %song_target = circshift(song, -1);
     %[targets{i}, targets_signal{i}, levels{i}] = create_filter(i+1, song_target, fx, passband_fx, 0, data_location, 8);
     
-    if training_data == 1
-        signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
-    else
-        signal_location = strcat(seed_directory, '/seed_', int2str(i), '.wav');
-    end
-    audiowrite(signal_location, inputs_signal{i}, fx);
+    %if training_data == 1
+    %    signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');
+    %else
+    %    signal_location = strcat(seed_directory, '/seed_', int2str(i), '.wav');
+    %end
+    %audiowrite(signal_location, inputs_signal{i}, fx);
 end
 
-for i = 1:n_levels
-fprintf('Formatting level:%d\n', i);
-passband_fx = get_fx(data_location, i);
-[inputs_formatted{i}, indicies{i}] = format_level(inputs{i}, receptive_field, fx, passband_fx);
-indicies{i} = int32(indicies{i});
-frequencies{i} = passband_fx;
-%inputs_formatted{i} = re_order(receptive_field, inputs_formatted{i});
-end
+%for i = 1:n_levels
+%fprintf('Formatting level:%d\n', i);
+%passband_fx = get_fx(data_location, i);
+%[inputs_formatted{i}] = format_level(inputs{i}, receptive_field, fx, passband_fx);
+%end
 
 fprintf('Song:%d fx:%g\n', length(song), fx);
 
-save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', ...
-    'indicies', 'frequencies', 'song', '-v7.3');
+%save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', 'indicies', 'frequencies', 'song', '-v7.3');
+save(data_file, 'receptive_field', 'n_levels', 'indicies', 'frequencies', 'song', '-v7.3');
 end

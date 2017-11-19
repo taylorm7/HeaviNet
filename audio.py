@@ -68,9 +68,11 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
     filtered_song = np.empty([song_length])
     print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
     for i in range(n_levels):
-        filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
+        level_fx = frequency_list[i]/2.0;
+        filtered_song = butter_lowpass_filter(song, level_fx, fx)
         filtered_song = mu_trasform(filtered_song, mu, Q)
         filtered_song = analog_to_digital(filtered_song, Q)        
+        #print("Level FX", level_fx)
         #print("Filtered song", filtered_song.shape)
         #print(filtered_song)
         
