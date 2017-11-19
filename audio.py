@@ -44,6 +44,16 @@ def raw(digital, bits=8):
     y = mu_inverse(y_nonlinear, mu, Q)
     return y
 
+def quantize(analog, bits=8):
+    N = 2**bits
+    mu = float(N-1)
+    xmax = 1.0
+    xmin = -1.0
+    Q=(xmax-xmin)/N
+    y_nonlinear = mu_trasform(analog, mu, Q)
+    y_d = analog_to_digital(y_nonlinear, Q)
+    return y_d
+
 
 def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8, fx=44100):   
     N = 2**bits
@@ -75,6 +85,7 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
 
     print("Song List", song_list.shape)
     return song_list
+
 def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits=8, fx=44100):   
     N = 2**bits
     mu = float(N-1)

@@ -73,7 +73,7 @@ def read_index(data_location, receptive_field):
             index_list = _list[1]
             frequency_list = _list[2]
             song = _list[3]
-        print("Read index:", np.shape(index_list), frequency_list, song)
+        print("Read index:", np.shape(index_list), np.shape(frequency_list), np.shape(song))
         return index_list, frequency_list, song
     except IOError:
         print("Failed to load:", store_file)

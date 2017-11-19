@@ -6,7 +6,7 @@ import sys
 from util import read_data, read_seed, load_matlab, write_song, read_index
 from models import Model
 from filter import butter_lowpass_filter
-from audio import mu_trasform, analog_to_digital, digital_to_analog, mu_inverse, format_song
+from audio import mu_trasform, analog_to_digital, digital_to_analog, mu_inverse, format_song, quantize
 
 def load(data_location, receptive_field, training_data):
     print("Loading", data_location, "for receptive field:", receptive_field)
@@ -15,17 +15,24 @@ def load(data_location, receptive_field, training_data):
 def train(data_location, level, receptive_field, epochs, n_levels):
     print("Trainging on", data_location, "levels:", n_levels, 
           "with receptive_field:" , receptive_field)
-    x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
+    #x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
     index_list, frequency_list, song = read_index(data_location, receptive_field)
 
     net = Model( level, receptive_field, data_location , n_levels)
     
     fx = 44100
     bits = 8
-    song_length = len(ytrue_data)
+    song_length = len(song)
     song_list = format_song(song, frequency_list, index_list, song_length, n_levels, bits, fx)
+    yt = quantize(song, bits=bits)
 
-    net.train( song_list, ytrue_data, epochs=epochs)
+    t_start = 2500
+    t_end = 2510
+    print("Song", song[t_start:t_end].flatten() )
+    #print("Ytrue", ytrue_data.shape, ytrue_data[t_start:t_end].flatten() )
+    print("yt",yt.shape, yt[t_start:t_end].flatten() )
+
+    net.train( song_list, yt, epochs=epochs)
     net.save(close=True)
 
 def generate(data_location, seed_location, level, receptive_field, n_levels):
