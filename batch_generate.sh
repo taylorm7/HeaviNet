@@ -35,6 +35,12 @@ cd $dot
 pwd
 
 export dot=$dot
+./run_heavinet.sh train beethoven_7.wav 64 1000
+./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 64
+./run_heavinet.sh train beethoven_7.wav 64 1000
+./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 64
+
+
 ./run_heavinet.sh train beethoven_7.wav 128 1000
 ./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
 ./run_heavinet.sh train beethoven_7.wav 128 1000
