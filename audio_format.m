@@ -27,12 +27,10 @@ end
 inputs = cell(n_levels,1);
 inputs_signal = cell(n_levels,1);
 
+% inputs_formatted= cell(n_levels,1);
 levels = cell(n_levels,1);
-
-inputs_formatted= cell(n_levels,1);
-
-targets = cell(n_levels,1);
-targets_signal = cell(n_levels,1);
+%targets = cell(n_levels,1);
+%targets_signal = cell(n_levels,1);
 
 indicies = cell(n_levels,1);
 frequencies = cell(n_levels,1);
@@ -53,7 +51,7 @@ for i = 1:n_levels
     %fprintf('Solution:%d\n', i);
     %passband_fx = get_fx(data_location, i+1);
     %song_target = circshift(song, -1);
-    %[targets{i}, targets_signal{i}, levels{i}] = create_filter(i+1, song_target, fx, passband_fx, 0, data_location, 8);
+    %[targets{i}, targets_signal{i}, levels{i}] = create_filter(i+1, song, fx, passband_fx, 0, data_location, 8);
     
     %if training_data == 1
     %    signal_location = strcat(data_location, '/signal_', int2str(i), '.wav');

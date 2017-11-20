@@ -27,9 +27,9 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
 %                'HalfPowerFrequency1',passband_fx,'HalfPowerFrequency2', passband_limit, ...
 %                'SampleRate',fx);
 
-%          lowpass_iir = designfilt('lowpassiir','FilterOrder',8, ...
-%                'PassbandFrequency',passband_limit,'PassbandRipple', passband_ripple, ...
-%                'SampleRate',fx);
+          lowpass_iir = designfilt('lowpassiir','FilterOrder',8, ...
+                'PassbandFrequency',passband_fx,'PassbandRipple', passband_ripple, ...
+                'SampleRate',fx);
          
 %         highpass_iir = designfilt('highpassiir','FilterOrder',8, ...
 %              'PassbandFrequency',passband_fx,'PassbandRipple', passband_ripple, ...
@@ -38,10 +38,12 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
         %x = filter(highpass_iir, x);
         %x = filter(lowpass_iir, song);
         
-        %x = filter(lowpass_iir, song);
-        x_max = max(abs(song));
-        x = song;
-        x = x./x_max;
+        x = filter(lowpass_iir, song);
+        x =  hampel(x, 3, 0.5);
+        x = sgolayfilt(x,5,41);
+        %x_max = max(abs(song));
+        %x = song;
+        %x = x./x_max;
         
         %plot(x);
         %k=waitforbuttonpress;
@@ -67,8 +69,8 @@ function [y_digital, y, x_max, x] = create_filter(level, song, fx, passband_fx, 
     %fprintf('Difference after hampel and moving average filter = %g\n', MSE )
     
     % perform mu-law transform and digitize compressed data
-    %y_nonlinear = mu_trasform(x, mu, Q);
-    y_nonlinear = mu_trasform(song, mu, Q);
+    y_nonlinear = mu_trasform(x, mu, Q);
+    %y_nonlinear = mu_trasform(song, mu, Q);
     
     y_digital = analog_to_digital(y_nonlinear, Q);
     % compute analog to digital, and perform inverse mu-law transform

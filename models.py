@@ -260,8 +260,8 @@ class Model(object):
         hs = []
         for b in range(num_blocks):
             for i in range(num_layers):
-                rate = 2**i
-                #rate = (i+1)
+                #rate = 2**i
+                rate = (i+1)*2
                 name = 'b{}-l{}'.format(b, i)
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
