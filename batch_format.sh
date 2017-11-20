@@ -39,8 +39,8 @@ pwd
 
 export dot=$dot
 
-#./run_heavinet.sh format beethoven_7.wav 64
-#./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 64
+./run_heavinet.sh format beethoven_7.wav 64
+./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 64
 ./run_heavinet.sh format beethoven_7.wav 128
 ./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 128
 #./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 16
