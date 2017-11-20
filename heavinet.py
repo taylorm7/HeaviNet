@@ -6,7 +6,7 @@ import sys
 from util import read_data, read_seed, load_matlab, write_song, read_index
 from models import Model
 from filter import butter_lowpass_filter
-from audio import mu_trasform, analog_to_digital, digital_to_analog, mu_inverse, format_song, quantize
+from audio import filter_song, format_song, quantize, test_songs
 
 def load(data_location, receptive_field, training_data):
     print("Loading", data_location, "for receptive field:", receptive_field)
@@ -20,11 +20,14 @@ def train(data_location, level, receptive_field, epochs, n_levels):
 
     net = Model( level, receptive_field, data_location , n_levels)
     
+    test_songs(song, frequency_list, n_levels, data_location)
+
     fx = 44100
     bits = 8
     song_length = len(song)
-    song_list = format_song(song, frequency_list, index_list, song_length, n_levels, bits, fx)
-    ytrue = quantize(song, bits=bits)
+    level_song = filter_song(song, frequency_list, level)
+    song_list = format_song(level_song, frequency_list, index_list, song_length, n_levels, bits, fx)
+    ytrue = quantize(level_song, bits=bits)
     
     '''
     t_start = 2500
@@ -47,8 +50,8 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
 
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
-    sample_length = 104128
-    #sample_length = 10000
+    #sample_length = 104128
+    sample_length = 10000
     song_data, epochs = gen_net.generate(song, index_list, frequency_list, sample_length)
 
     gen_net.close()

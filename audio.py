@@ -1,5 +1,7 @@
 import scipy.io.wavfile as wav
 import numpy as np
+import h5py
+import hdf5storage
 
 from filter import butter_lowpass_filter, savitzky_golay
 
@@ -54,6 +56,50 @@ def quantize(analog, bits=8):
     y_d = analog_to_digital(y_nonlinear, Q)
     return y_d
 
+def filter_song(song, frequency_list, level, fx=44100):
+    level_fx = frequency_list[level]
+    filtered_song = butter_lowpass_filter(song, level_fx, fx)
+    print("Level:", level, "Fx", level_fx)
+    #wav.write(str('s'+str(level)+'.wav'), fx, filtered_song)
+    return filtered_song
+
+def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
+    for i in range(8):
+        l_fx = frequency_list[i]
+        print("L:", i, "Fx", l_fx)
+        filtered = butter_lowpass_filter(song, l_fx, fx)
+        #wav.write(str('s'+str(i)+'.wav'), fx, filtered)
+
+        digital = quantize(filtered)
+        out = raw(digital)
+        #wav.write(str('o'+str(i)+'.wav'), fx, out)
+
+        #filter with moving mean at half the fx
+        # f1 = movmean(t1, 1489/2);
+
+        song_name = "s" + str(i)
+        song_file = data_location + "/" + song_name + ".mat"
+        song_dict = {}
+        song_dict[str(song_name)] = filtered
+        hdf5storage.savemat(song_file, song_dict)
+        print("Saved song:", song_file)
+
+        song_name = "d" + str(i)
+        song_file = data_location + "/" + song_name + ".mat"
+        song_dict = {}
+        song_dict[str(song_name)] = digital
+        hdf5storage.savemat(song_file, song_dict)
+        print("Saved song:", song_file)
+
+        target_name = "t" + str(i)
+        target_file = data_location + "/" + target_name + ".mat"
+        target_dict = {}
+        target_dict[str(target_name)] = out
+        hdf5storage.savemat(target_file, target_dict)
+        print("Saved target:", target_file)
+
+
+
 
 def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8, fx=44100):   
     N = 2**bits
@@ -70,8 +116,12 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
     for i in range(n_levels):
         level_fx = frequency_list[i]/2.0;
         filtered_song = butter_lowpass_filter(song, level_fx, fx)
-        filtered_song = mu_trasform(filtered_song, mu, Q)
-        filtered_song = analog_to_digital(filtered_song, Q)        
+
+        #filtered_song = mu_trasform(filtered_song, mu, Q)
+        #filtered_song = analog_to_digital(filtered_song, Q)        
+        
+        filtered_song = filtered_song + 1
+
         #print("Level FX", level_fx)
         #print("Filtered song", filtered_song.shape)
         #print(filtered_song)
@@ -104,8 +154,12 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
     #print(song[ len(song)-1], song[len(song)-2] )
     for i in range(n_levels):
         filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
+        # quantizing the inputs
         filtered_song = mu_trasform(filtered_song, mu, Q)
-        filtered_song = analog_to_digital(filtered_song, Q)        
+        filtered_song = analog_to_digital(filtered_song, Q)
+        
+        #filtered_song = filtered_song + 1
+
         #print("Filtered song", filtered_song.shape)
         #print(filtered_song)
         

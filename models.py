@@ -242,7 +242,7 @@ class Model(object):
 
         num_blocks = 1
         num_layers = int(self.n_levels/2)
-        num_hidden = 128
+        num_hidden = 32
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -325,8 +325,8 @@ class Model(object):
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
-        input_level = tf.placeholder(tf.int64, [None,self.clip_size])
-        input_all = tf.placeholder(tf.int64, [self.n_levels, None,self.clip_size])
+        input_level = tf.placeholder(tf.float64, [None,self.clip_size])
+        input_all = tf.placeholder(tf.float64, [self.n_levels, None,self.clip_size])
         target_class = tf.placeholder(tf.int64, [None])
 
         self.input_level = input_level
