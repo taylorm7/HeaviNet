@@ -118,10 +118,10 @@ def format_song(song, frequency_list, index_list, n_levels, bits=8, fx=44100):
         level_fx = frequency_list[i]/2.0;
         filtered_song = butter_lowpass_filter(song, level_fx, fx)
 
-        #filtered_song = mu_trasform(filtered_song, mu, Q)
-        #filtered_song = analog_to_digital(filtered_song, Q)        
+        filtered_song = mu_trasform(filtered_song, mu, Q)
+        filtered_song = analog_to_digital(filtered_song, Q)        
         
-        filtered_song = (filtered_song + 1)*128
+        #filtered_song = (filtered_song + 1)*128
 
         #print("Level FX", level_fx)
         #print("Filtered song", filtered_song.shape)

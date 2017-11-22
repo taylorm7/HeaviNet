@@ -20,7 +20,7 @@ def train(data_location, level, receptive_field, epochs, n_levels):
 
     net = Model( level, receptive_field, data_location , n_levels)
     
-    test_songs(song, frequency_list, n_levels, data_location)
+    #test_songs(song, frequency_list, n_levels, data_location)
 
     bits = 8
     level_song = filter_song(song, frequency_list, level)
