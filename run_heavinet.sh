@@ -154,7 +154,7 @@ elif [ $ACTION = "train" ]; then
 		#do
 			echo " running level $i in background process..."
 			level_seconds=$SECONDS
-			python3 heavinet.py $ACTION $DATAPATH 1 $RECEPTIVE_FIELD $EPOCHS $LEVELS #>> "$DATAPATH/$i.txt" 2>&1 #& #parallel
+			python3 heavinet.py $ACTION $DATAPATH 3 $RECEPTIVE_FIELD $EPOCHS $LEVELS #>> "$DATAPATH/$i.txt" 2>&1 #& #parallel
 			level_duration=$(($SECONDS-level_seconds))
 			echo "Level duration: $(($level_duration / 60)) minutes and $(($level_duration % 60)) seconds elapsed."
 			#if [ $train_all_levels == 0 ]; then
@@ -199,7 +199,7 @@ elif [ $ACTION = "generate" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
 		#for ((i=0 ; i<LEVELS ; i++)); do
-		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR 0 $RECEPTIVE_FIELD $LEVELS
+		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR 3 $RECEPTIVE_FIELD $LEVELS
 		#	break
 		#done
 	else

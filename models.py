@@ -312,8 +312,8 @@ class Model(object):
         self.in_bits = 8
         self.out_bits = 8
 
-        #self.clip_size = 2*self.receptive_field+1
-        self.clip_size = self.receptive_field
+        self.clip_size = 2*self.receptive_field+1
+        #self.clip_size = self.receptive_field
         self.middle_index = math.floor( float(self.receptive_field) / 2.0)
         #print("Middle Index", self.middle_index)
         self.n_input_classes = 2**(self.in_bits)
@@ -455,38 +455,16 @@ class Model(object):
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
 
-    def generate(self, song, index_list, frequency_list, sample_length):
-        field_size = abs(np.amin(index_list))
-        
-        print("Sample size:", sample_length, "Field Size", field_size)
-        
-        y_generated = np.append(song, np.zeros(sample_length))
-        x_size = song.size
-        #y_generated = np.append(np.zeros(field_size), np.zeros(sample_length))
-        #x_size = field_size
-        
-        print("Generating with seed:", song.shape, x_size)
+    def generate(self, song_list, index_list, frequency_list):
+        y_generated = np.zeros(len(song_list[0]))
+        print("Generating with seed:", song_list.shape)
         print("Index list:", index_list.shape)
-        y_size = y_generated.size
-        if(y_size <= field_size):
-            raise ValueError('Sample Length too small for receptive field')
-            sys.exit()
-        print("Y generate", y_generated.shape, y_size)
-        #feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
-        #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
-        #print(index.shape, index)
-        for i in range(x_size, y_size):
-            #print( y_generated[i-field_size:i+1])
-            #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
-            feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
-                    1, self.n_levels)
-            #print( y_generated[i-field_size:i+1])
-            #print()
-            #print("Feed val", feed_val.shape)
-            feed_dict_gen = { self.input_all: feed_val }
+        print("Y generate", y_generated.shape )
+        for i in range(0, len(y_generated), self.batch_size):
+            feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i] = raw(y_g[0])
-            #print("y[", i, "] = ", y_g, y_generated[i])
+            y_generated[i:i+self.batch_size] = raw(y_g[0])
+            #print("y[", i, "] = ", y_g[0], y_generated[i:i+self.batch_size])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs

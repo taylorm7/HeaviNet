@@ -101,7 +101,7 @@ def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
 
 
 
-def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8, fx=44100):   
+def format_song(song, frequency_list, index_list, n_levels, bits=8, fx=44100):   
     N = 2**bits
     mu = float(N-1)
     xmax = 1.0
@@ -109,8 +109,9 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
     Q=(xmax-xmin)/N
     
     index_length = len(index_list[0])
+    song_length = len(song)
 
-    song_list = np.empty([n_levels, song_length, index_length], dtype=int)
+    song_list = np.empty([n_levels, song_length, index_length], dtype=float)
     filtered_song = np.empty([song_length])
     print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
     for i in range(n_levels):
@@ -120,7 +121,7 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
         #filtered_song = mu_trasform(filtered_song, mu, Q)
         #filtered_song = analog_to_digital(filtered_song, Q)        
         
-        filtered_song = filtered_song + 1
+        filtered_song = (filtered_song + 1)*128
 
         #print("Level FX", level_fx)
         #print("Filtered song", filtered_song.shape)
@@ -131,6 +132,8 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8,
         indicies = np.reshape(indicies, (-1,index_length))
         indicies = indicies + index_list[i]
         #print("indicies", indicies.shape)
+        #print(indicies)
+        indicies = indicies % song_length
         #print(indicies)
 
         song_list[i] = filtered_song[indicies]
