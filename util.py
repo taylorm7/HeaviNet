@@ -17,6 +17,7 @@ def load_matlab(data_location, receptive_field, training_data = True):
         store_file = data_location+"/seed_"
     try:
         with h5py.File(read_file) as matlab_input:
+            fx = int(matlab_input.get('fx')[0,0])
             r_field = int(matlab_input.get('receptive_field')[0,0])
             n_levels = int(matlab_input.get('n_levels')[0,0])
             song = matlab_input.get('song')
@@ -24,7 +25,9 @@ def load_matlab(data_location, receptive_field, training_data = True):
             x_list = []
             index_list = []
             frequency_list = np.zeros(n_levels)
-            print("Reading", read_file, "song", song.shape, "receptive field:", r_field, "levels:", n_levels)
+            factor_list = np.zeros(n_levels)
+            print("Reading", read_file, "song", song.shape, "fx", fx, 
+                    "receptive field:", r_field, "levels:", n_levels)
 
             for i in range(n_levels):
                 '''
@@ -44,13 +47,19 @@ def load_matlab(data_location, receptive_field, training_data = True):
                         for element in matlab_input['indicies']]
                 fx = [matlab_input[element[i]][:] 
                         for element in matlab_input['frequencies']]
+                level_factor = [matlab_input[element[i]][:] 
+                        for element in matlab_input['factors']]
                 
                 level_index = level_index[0].flatten()
                 fx = fx[0][0,0]
+                level_factor = level_factor[0][0,0]
+
+
                 sf = store_file + str(i)+"_r"+str(receptive_field)+".pkl"
                 index_list.append(level_index)
                 frequency_list[i] = fx
-                print("Read level", i, "Frequency", fx, "Index", level_index)
+                factor_list[i] = level_factor
+                print("Read level", i, "Frequency", fx, "Factor", level_factor, "Index", level_index)
                 #with open(sf, "wb") as output_file:
                 #    pkl.dump(data_list, output_file, protocol=4)
             
@@ -61,7 +70,7 @@ def load_matlab(data_location, receptive_field, training_data = True):
             print("Index List", np.shape(index_list))
             print("Frequencies", frequency_list)
             with open(x_file, "wb") as output_file:
-                pkl.dump([index_list, frequency_list, song] , output_file, protocol=4)
+                pkl.dump([fx, index_list, frequency_list, factor_list, song] , output_file, protocol=4)
     except IOError:
         print("Failed to load:", store_file)
         sys.exit()
@@ -71,11 +80,14 @@ def read_index(data_location, receptive_field):
     try:
         with open(x_file, "rb") as input_file:
             _list = pkl.load(input_file)
-            index_list = _list[0]
-            frequency_list = _list[1]
-            song = _list[2]
-        print("Read index:", np.shape(index_list), np.shape(frequency_list), np.shape(song))
-        return index_list, frequency_list, song
+            fx = _list[0]
+            index_list = _list[1]
+            frequency_list = _list[2]
+            factor_list = _list[3]
+            song = _list[4]
+        print("Read index:", fx,  np.shape(index_list), np.shape(frequency_list), np.shape(factor_list), np.shape(song))
+
+        return index_list, frequency_list, factor_list, song, fx
     except IOError:
         print("Failed to load:", store_file)
         sys.exit() 

@@ -1,4 +1,4 @@
-function [index] = format_indicies(receptive_field, fx, passband_fx)
+function [index, factor] = format_indicies(receptive_field, fx, passband_fx)
 
 [index, limit, factor] = get_index(receptive_field, fx, passband_fx);
 %disp(index);
