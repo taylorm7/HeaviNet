@@ -4,13 +4,14 @@ from scipy.signal import butter, lfilter, freqz
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
-    if normal_cutoff == 1:
-        normal_cutoff = 0.99
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
 
 def butter_lowpass_filter(data, cutoff, fx, order=5):
     #print("Filter:", cutoff, "fx:", fx, "order:", order, "size", len(data))
+    if cutoff >= fx/2.0:
+        #print("No filter for fx", cutoff)
+        return data
     b, a = butter_lowpass(cutoff, fx, order=order)
     y = lfilter(b, a, data)
     return y

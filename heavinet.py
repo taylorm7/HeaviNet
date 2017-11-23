@@ -25,7 +25,7 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     fx = 44100
     bits = 8
     song_length = len(song)
-    song_list = format_song(song, frequency_list, index_list, song_length, n_levels, bits, fx)
+    song_list = format_song(song, frequency_list, index_list, song_length, n_levels, data_location, bits, fx)
     ytrue = quantize(song, bits=bits)
     
     '''
