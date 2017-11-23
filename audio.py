@@ -1,5 +1,6 @@
 import scipy.io.wavfile as wav
 import numpy as np
+import hdf5storage
 
 from filter import butter_lowpass_filter, savitzky_golay
 
@@ -53,6 +54,42 @@ def quantize(analog, bits=8):
     y_nonlinear = mu_trasform(analog, mu, Q)
     y_d = analog_to_digital(y_nonlinear, Q)
     return y_d
+
+def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
+    for i in range(n_levels):
+        l_fx = frequency_list[i]/2.0
+        print("L:", i, "Fx", l_fx)
+        filtered = butter_lowpass_filter(song, l_fx, fx)
+        #wav.write(str('s'+str(i)+'.wav'), fx, filtered)
+
+        digital = quantize(filtered)
+        out = raw(digital)
+        #wav.write(str('o'+str(i)+'.wav'), fx, out)
+
+        #filter with moving mean at half the fx
+        # f1 = movmean(t1, 1489/2);
+
+        song_name = "s" + str(i)
+        song_file = data_location + "/" + song_name + ".mat"
+        song_dict = {}
+        song_dict[str(song_name)] = filtered
+        hdf5storage.savemat(song_file, song_dict)
+        print("Saved song:", song_file)
+
+        song_name = "d" + str(i)
+        song_file = data_location + "/" + song_name + ".mat"
+        song_dict = {}
+        song_dict[str(song_name)] = digital
+        hdf5storage.savemat(song_file, song_dict)
+        print("Saved song:", song_file)
+
+        target_name = "t" + str(i)
+        target_file = data_location + "/" + target_name + ".mat"
+        target_dict = {}
+        target_dict[str(target_name)] = out
+        hdf5storage.savemat(target_file, target_dict)
+        print("Saved target:", target_file)
+
 
 
 def format_song(song, frequency_list, index_list, song_length, n_levels, bits=8, fx=44100):   

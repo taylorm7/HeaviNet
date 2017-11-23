@@ -4,6 +4,8 @@ from scipy.signal import butter, lfilter, freqz
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
+    if normal_cutoff == 1:
+        normal_cutoff = 0.99
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
 

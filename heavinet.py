@@ -6,7 +6,7 @@ import sys
 from util import read_data, read_seed, load_matlab, write_song, read_index
 from models import Model
 from filter import butter_lowpass_filter
-from audio import mu_trasform, analog_to_digital, digital_to_analog, mu_inverse, format_song, quantize
+from audio import format_song, quantize, test_songs
 
 def load(data_location, receptive_field, training_data):
     print("Loading", data_location, "for receptive field:", receptive_field)
@@ -18,6 +18,8 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     #x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
     index_list, frequency_list, song = read_index(data_location, receptive_field)
 
+    #test_songs(song, frequency_list, n_levels, data_location)
+    
     net = Model( level, receptive_field, data_location , n_levels)
     
     fx = 44100
