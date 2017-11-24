@@ -149,7 +149,6 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
     #song = savitzky_golay(song, 41, 5)
     #print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
     #print(song[ len(song)-1], song[len(song)-2] )
-    #print(song)
     for i in range(n_levels):
         filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
         if levels[i] > 1:
@@ -163,11 +162,13 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
         #print(filtered_song)
         
         
+        #indicies = np.arange(song_length)
+        #indicies = np.repeat(indicies, index_length)
+        #indicies = np.reshape(indicies, (-1,index_length))
         indicies = len(song)-1 + index_list[i]
         
         #print("indicies", indicies.shape)
         #print(indicies)
-        #print(song[indicies])
 
         song_list[i] = filtered_song[indicies]
     #print("Song List", song_list.shape)
