@@ -12,7 +12,7 @@ from filter import butter_lowpass_filter, savitzky_golay
 #Q=(xmax-xmin)/N
 
 # hard coded levels; derived from 8 levels with piano music
-levels = [ 100.0, 50.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+levels = [ 100.0, 100.0, 50.0, 10.0, 1.0, 1.0, 1.0, 1.0]
 
 def analog_to_digital(y_nonlinear, Q):
     analog = y_nonlinear + 1
