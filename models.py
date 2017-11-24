@@ -459,6 +459,13 @@ class Model(object):
         field_size = abs(np.amin(index_list))
         
         print("Sample size:", sample_length, "Field Size", field_size)
+
+        song[-1] = -0.1
+        song[-2] = -0.2
+        song[-3] = -0.3
+        song[-4] = -0.4
+        song[-5] = -0.5
+        song[-6] = -0.6
         
         y_generated = np.append(song, np.zeros(sample_length))
         x_size = song.size
@@ -475,6 +482,7 @@ class Model(object):
         #feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
         #print(index.shape, index)
+        print("Song", song)
         for i in range(x_size, y_size):
             #print( y_generated[i-field_size:i+1])
             #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
@@ -487,6 +495,7 @@ class Model(object):
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i] = raw(y_g[0])
             #print("y[", i, "] = ", y_g, y_generated[i])
+            #exit()
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs
