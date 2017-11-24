@@ -13,16 +13,13 @@ def load(data_location, receptive_field, training_data):
     load_matlab(data_location, receptive_field, training_data)
 
 def train(data_location, level, receptive_field, epochs, n_levels):
+    index_list, frequency_list, song, fx = read_index(data_location, receptive_field)
     print("Trainging on", data_location, "levels:", n_levels, 
-          "with receptive_field:" , receptive_field)
-    #x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
-    index_list, frequency_list, song = read_index(data_location, receptive_field)
-
+          "with receptive_field:" , receptive_field, "fx", fx)
     #test_songs(song, frequency_list, n_levels, data_location)
     
     net = Model( level, receptive_field, data_location , n_levels)
     
-    fx = 44100
     bits = 8
     song_length = len(song)
     song_list = format_song(song, frequency_list, index_list, song_length, n_levels, data_location, bits, fx)
@@ -45,7 +42,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
     #seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
-    index_list, frequency_list, song = read_index(data_location, receptive_field)
+    index_list, frequency_list, song, fx = read_index(data_location, receptive_field)
 
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
@@ -54,7 +51,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     song_data, epochs = gen_net.generate(song, index_list, frequency_list, sample_length)
 
     gen_net.close()
-    song_name = write_song( song_data, seed_location, level, receptive_field, epochs)
+    song_name = write_song( song_data, fx, seed_location, level, receptive_field, epochs)
     
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
