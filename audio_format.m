@@ -74,5 +74,5 @@ end
 fprintf('Song:%d fx:%g\n', length(song), fx);
 
 %save(data_file, 'receptive_field', 'n_levels', 'inputs_formatted', 'targets', 'indicies', 'frequencies', 'song', '-v7.3');
-save(data_file, 'receptive_field', 'n_levels', 'indicies', 'frequencies', 'song', '-v7.3');
+save(data_file, 'fx', 'receptive_field', 'n_levels', 'indicies', 'frequencies', 'song', '-v7.3');
 end
