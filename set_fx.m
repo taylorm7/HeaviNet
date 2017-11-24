@@ -4,7 +4,7 @@ data_file = strcat(data_location, '/fx_info.mat');
 fx_offset = 25;
 fx_order = 3;
 use_exponential = 1;
-fx_target = 44100;
+fx_target = 8000;
 syms f positive
   
 if use_exponential
