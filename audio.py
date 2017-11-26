@@ -12,7 +12,7 @@ from filter import butter_lowpass_filter, savitzky_golay
 #Q=(xmax-xmin)/N
 
 # hard coded levels; derived from 8 levels with piano music
-levels = [ 100.0, 100.0, 50.0, 10.0, 1.0, 1.0, 1.0, 1.0]
+levels = [ 5.0, 5.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
 def analog_to_digital(y_nonlinear, Q):
     analog = y_nonlinear + 1
@@ -110,11 +110,11 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, data_lo
         level_fx = frequency_list[i]/2.0;
         filtered_song = butter_lowpass_filter(song, level_fx, fx)
 
-        song_max = max(abs(filtered_song))
+        #song_max = max(abs(filtered_song))
         #print("Max at", song_max)
         #print("Rate:", 1.0/song_max)
 
-        filtered_song = filtered_song * levels[i]
+        #filtered_song = filtered_song * levels[i]
         #test_write(filtered_song, i , data_location)
 
         filtered_song = mu_trasform(filtered_song, mu, Q)
@@ -151,8 +151,8 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
     #print(song[ len(song)-1], song[len(song)-2] )
     for i in range(n_levels):
         filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
-        if levels[i] > 1:
-            filtered_song = filtered_song * levels[i]
+        #if levels[i] > 1:
+        #    filtered_song = filtered_song * levels[i]
 
         #test_write(filtered_song, i , '/home/sable/HeaviNet/data')
 
