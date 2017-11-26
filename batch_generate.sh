@@ -22,7 +22,7 @@
 #PBS -m ea
 
 module purge
-module load gcc/5.2.0 cuda/8.0.61
+module generate gcc/5.2.0 cuda/8.0.61
 
 export PATH=$PATH:/home/taylorm7/opt_py35/bin
 export PYTHONUSERBASE=/home/taylorm7/opt_py35/newriver/python
@@ -35,12 +35,34 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh train beethoven_7.wav 128 1000
-./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
-./run_heavinet.sh train beethoven_7.wav 128 1000
-./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
-#./run_heavinet.sh generate beethoven_7.wav choir_15.wav 100
+./run_heavinet.sh train choir_15.wav 16 1000
+./run_heavinet.sh generate choir_15.wav choir_15.wav 16
+./run_heavinet.sh train choir_15.wav 16 1000
+./run_heavinet.sh generate choir_15.wav choir_15.wav 16
 
-#./run_heavinet.sh generate beethoven_7.wav bach_10.wav 10
+#./run_heavinet.sh train choir_15.wav 32 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
+#./run_heavinet.sh train choir_15.wav 32 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
+
+#./run_heavinet.sh train choir_15.wav 64 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
+#./run_heavinet.sh train choir_15.wav 64 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
+
+
+#./run_heavinet.sh train choir_15.wav 128 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 128
+#./run_heavinet.sh train choir_15.wav 128 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 128
+
+#./run_heavinet.sh train choir_15.wav 256 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 256
+#./run_heavinet.sh train choir_15.wav 256 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 256
+
+#./run_heavinet.sh train bach.wav 64 100
+#./run_heavinet.sh generate bach.wav beethoven_7.wav 64
+
 echo "Code finished!"
 

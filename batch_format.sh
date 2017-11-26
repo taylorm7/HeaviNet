@@ -38,16 +38,30 @@ cd $dot
 pwd
 
 export dot=$dot
+./run_heavinet.sh format choir_15.wav 16
+./run_heavinet.sh load choir_15.wav choir_15.wav 16
 
-./run_heavinet.sh format beethoven_7.wav 64
-./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 64
-./run_heavinet.sh format beethoven_7.wav 128
-./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 128
-#./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 16
-#./run_heavinet.sh load beethoven_7.wav choir_15.wav 16
-#./run_heavinet.sh load beethoven_7.wav rand.wav 16
+./run_heavinet.sh format choir_15.wav 32
+./run_heavinet.sh load choir_15.wav choir_15.wav 64
 
-#./run_heavinet.sh load beethoven_7.wav beethoven_a.wav 100
+./run_heavinet.sh format choir_15.wav 64
+./run_heavinet.sh load choir_15.wav choir_15.wav 64
+
+./run_heavinet.sh format choir_15.wav 128
+./run_heavinet.sh load choir_15.wav choir_15.wav 128
+
+./run_heavinet.sh format choir_15.wav 256
+./run_heavinet.sh load choir_15.wav choir_15.wav 256
+
+./run_heavinet.sh format bach.wav 64
+./run_heavinet.sh load bach.wav beethoven_7.wav 64
+
+
+#./run_heavinet.sh load choir_15.wav choir_15.wav 16
+#./run_heavinet.sh load choir_15.wav choir_15.wav 16
+#./run_heavinet.sh load choir_15.wav rand.wav 16
+
+#./run_heavinet.sh load choir_15.wav beethoven_a.wav 100
 
 echo "Code finished!"
 
