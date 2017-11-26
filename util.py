@@ -19,12 +19,13 @@ def load_matlab(data_location, receptive_field, training_data = True):
         with h5py.File(read_file) as matlab_input:
             r_field = int(matlab_input.get('receptive_field')[0,0])
             n_levels = int(matlab_input.get('n_levels')[0,0])
+            song_fx = int(matlab_input.get('fx')[0,0])
             song = matlab_input.get('song')
             song = song[0]
             x_list = []
             index_list = []
             frequency_list = np.zeros(n_levels)
-            print("Reading", read_file, "song", song.shape, "receptive field:", r_field, "levels:", n_levels)
+            print("Reading", read_file, "song", song.shape, "receptive field:", r_field, "levels:", n_levels, "fx", song_fx)
 
             for i in range(n_levels):
                 '''
@@ -61,7 +62,7 @@ def load_matlab(data_location, receptive_field, training_data = True):
             print("Index List", np.shape(index_list))
             print("Frequencies", frequency_list)
             with open(x_file, "wb") as output_file:
-                pkl.dump([index_list, frequency_list, song] , output_file, protocol=4)
+                pkl.dump([index_list, frequency_list, song, song_fx] , output_file, protocol=4)
     except IOError:
         print("Failed to load:", store_file)
         sys.exit()
@@ -74,8 +75,9 @@ def read_index(data_location, receptive_field):
             index_list = _list[0]
             frequency_list = _list[1]
             song = _list[2]
+            song_fx = _list[3]
         print("Read index:", np.shape(index_list), np.shape(frequency_list), np.shape(song))
-        return index_list, frequency_list, song
+        return index_list, frequency_list, song, song_fx
     except IOError:
         print("Failed to load:", store_file)
         sys.exit() 
@@ -113,11 +115,12 @@ def read_seed(seed_file):
         print("Failed to load:", seed_file)
         sys.exit()
 
-def write_song(song, data_location, level, receptive_field, epochs):
+def write_song(song, fx, data_location, level, receptive_field, epochs):
     song_name = "song_" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs)
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song
+    song_dict['fx'] = float(fx)
     hdf5storage.savemat(song_file, song_dict)
     print("Saved song:", song_file)
     return song_name
