@@ -22,7 +22,7 @@
 #PBS -m ea
 
 module purge
-module generate gcc/5.2.0 cuda/8.0.61
+module load gcc/5.2.0 cuda/8.0.61
 
 export PATH=$PATH:/home/taylorm7/opt_py35/bin
 export PYTHONUSERBASE=/home/taylorm7/opt_py35/newriver/python
@@ -35,15 +35,15 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh train choir_15.wav 16 1000
-./run_heavinet.sh generate choir_15.wav choir_15.wav 16
-./run_heavinet.sh train choir_15.wav 16 1000
-./run_heavinet.sh generate choir_15.wav choir_15.wav 16
+#./run_heavinet.sh train choir_15.wav 16 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 16
+#./run_heavinet.sh train choir_15.wav 16 1000
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 16
 
 #./run_heavinet.sh train choir_15.wav 32 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 32
 #./run_heavinet.sh train choir_15.wav 32 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
+#./run_heavinet.sh generate choir_15.wav choir_15.wav 32
 
 #./run_heavinet.sh train choir_15.wav 64 1000
 #./run_heavinet.sh generate choir_15.wav choir_15.wav 64
