@@ -13,7 +13,7 @@ def load_matlab(data_location, receptive_field, training_data = True):
         store_file = data_location+"/xytrue_"
     else:
         read_file = data_location + "/matlab_seed_r" + str(receptive_field) + ".mat"
-        x_file = data_location+"/seed_x_r"+str(receptive_field)+".pkl"
+        x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
         store_file = data_location+"/seed_"
     try:
         with h5py.File(read_file) as matlab_input:
@@ -79,7 +79,7 @@ def read_index(data_location, receptive_field):
         print("Read index:", np.shape(index_list), np.shape(frequency_list), np.shape(song))
         return index_list, frequency_list, song, song_fx
     except IOError:
-        print("Failed to load:", store_file)
+        print("Failed to load:", x_file)
         sys.exit() 
 
 def read_data(data_location, receptive_field, level, training_data = True):
@@ -116,7 +116,10 @@ def read_seed(seed_file):
         sys.exit()
 
 def write_song(song, fx, data_location, level, receptive_field, epochs):
-    song_name = "song_" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs)
+    seed_name = os.path.split(data_location)[1].split('.')[0]
+    training_name = (os.path.split( os.path.split(data_location)[0])[1]).split('.')[0]
+
+    song_name = "l" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song
