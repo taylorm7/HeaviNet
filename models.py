@@ -239,7 +239,7 @@ class Model(object):
         n_residual_layers = 15
 
         num_blocks = 1
-        num_layers = int(self.n_levels/2)
+        num_layers = self.n_levels
         num_hidden = 128
 
         reg_channels = self.n_levels
