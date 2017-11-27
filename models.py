@@ -228,8 +228,6 @@ class Model(object):
         return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
  
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
-        conv_offset = 20
-        block = 3
         if self.onehot_mode == False:
             reg_image = tf.squeeze(reg_image, axis=[2])
             norm_image = tf.squeeze(norm_image, axis=[2])
