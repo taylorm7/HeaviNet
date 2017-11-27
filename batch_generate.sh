@@ -35,34 +35,18 @@ cd $dot
 pwd
 
 export dot=$dot
-#./run_heavinet.sh train choir_15.wav 16 1000
+./run_heavinet.sh train bach_10.wav 128 1000
+./run_heavinet.sh generate bach_10.wav bach_10.wav 128
+./run_heavinet.sh train bach_10.wav 128 1000
+./run_heavinet.sh generate bach_10.wav bach_10.wav 128
+./run_heavinet.sh train bach_10.wav 128 1000
+./run_heavinet.sh generate bach_10.wav bach_10.wav 128
+./run_heavinet.sh train bach_10.wav 128 1000
+./run_heavinet.sh generate bach_10.wav bach_10.wav 128
+
 #./run_heavinet.sh generate choir_15.wav choir_15.wav 16
 #./run_heavinet.sh train choir_15.wav 16 1000
 #./run_heavinet.sh generate choir_15.wav choir_15.wav 16
-
-#./run_heavinet.sh train choir_15.wav 32 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 32
-#./run_heavinet.sh train choir_15.wav 32 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 32
-
-#./run_heavinet.sh train choir_15.wav 64 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
-#./run_heavinet.sh train choir_15.wav 64 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 64
-
-
-#./run_heavinet.sh train choir_15.wav 128 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 128
-#./run_heavinet.sh train choir_15.wav 128 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 128
-
-#./run_heavinet.sh train choir_15.wav 256 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 256
-#./run_heavinet.sh train choir_15.wav 256 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 256
-
-#./run_heavinet.sh train bach.wav 64 100
-#./run_heavinet.sh generate bach.wav beethoven_7.wav 64
 
 echo "Code finished!"
 
