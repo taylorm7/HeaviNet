@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # At most XX minute of time
-#PBS -l walltime=60:00:00
+#PBS -l walltime=80:00:00
 
 # One core on any number of nodes
 #PBS -l procs=1,gpus=2
@@ -44,9 +44,32 @@ export dot=$dot
 ./run_heavinet.sh train bach_10.wav 128 1000
 ./run_heavinet.sh generate bach_10.wav bach_10.wav 128
 
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 16
-#./run_heavinet.sh train choir_15.wav 16 1000
-#./run_heavinet.sh generate choir_15.wav choir_15.wav 16
+#./run_heavinet.sh train beethoven_7.wav 128 1000
+#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
+#./run_heavinet.sh train beethoven_7.wav 128 1000
+#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
+#./run_heavinet.sh train beethoven_7.wav 128 1000
+#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
+#./run_heavinet.sh train beethoven_7.wav 128 1000
+#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
+
+#./run_heavinet.sh train bach.wav 128 100
+#./run_heavinet.sh generate bach.wav bach_10.wav 128
+#./run_heavinet.sh train bach.wav 128 100
+#./run_heavinet.sh generate bach.wav bach_10.wav 128
+#./run_heavinet.sh train bach.wav 128 100
+#./run_heavinet.sh generate bach.wav bach_10.wav 128
+#./run_heavinet.sh train bach.wav 128 100
+#./run_heavinet.sh generate bach.wav bach_10.wav 128
+
+#./run_heavinet.sh train obama.wav 128 500
+#./run_heavinet.sh generate obama.wav obama.wav 128
+#./run_heavinet.sh train obama.wav 128 500
+#./run_heavinet.sh generate obama.wav obama.wav 128
+#./run_heavinet.sh train obama.wav 128 500
+#./run_heavinet.sh generate obama.wav obama.wav 128
+#./run_heavinet.sh train obama.wav 128 500
+#./run_heavinet.sh generate obama.wav obama.wav 128
 
 echo "Code finished!"
 
