@@ -10,14 +10,15 @@ from audio import filter_song, format_song, quantize, test_songs
 
 def load(data_location, receptive_field, training_data):
     print("Loading", data_location, "for receptive field:", receptive_field)
+
+def load(data_location, receptive_field, training_data):
+    print("Loading", data_location, "for receptive field:", receptive_field)
     load_matlab(data_location, receptive_field, training_data)
 
 def train(data_location, level, receptive_field, epochs, n_levels):
+    index_list, frequency_list, song, fx = read_index(data_location, receptive_field)
     print("Trainging on", data_location, "levels:", n_levels, 
           "with receptive_field:" , receptive_field)
-    #x_data, ytrue_data, x_list = read_data(data_location, receptive_field, level, training_data=True)
-    index_list, frequency_list, factor_list, song, fx = read_index(data_location, receptive_field)
-
     net = Model( level, receptive_field, data_location , n_levels)
     
     #test_songs(song, frequency_list, n_levels, data_location)
@@ -27,6 +28,13 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     target_song = filter_song(song, frequency_list, level+1)
     song_list = format_song(level_song, frequency_list, index_list, n_levels, bits, fx)
     ytrue = quantize(target_song, bits=bits)
+    
+    '''
+    t_start = 2500
+    t_end = 2510
+    print("Song", song[t_start:t_end].flatten() )
+    print("Ytrue",ytrue.shape, ytrue[t_start:t_end].flatten() )
+    print("Song List", song_list.shape )
     
     '''
     t_start = 2500
@@ -45,6 +53,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Seed:", seed_location)
     #seed_data = read_seed(seed_file)
     #seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
+<<<<<<< HEAD
     index_list, frequency_list, factor_list, song, fx = read_index(data_location, receptive_field)
 
     gen_net = Model( level, receptive_field, data_location, n_levels )
@@ -55,7 +64,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list)
 
     gen_net.close()
-    song_name = write_song( song_data, seed_location, level, receptive_field, epochs)
+    song_name = write_song( song_data[-sample_length:-1] , fx, seed_location, level, receptive_field, epochs)
     
 if __name__ == '__main__':
     if len(sys.argv) >= 3:

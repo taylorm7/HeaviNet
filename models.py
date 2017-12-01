@@ -228,8 +228,6 @@ class Model(object):
         return target_normalized_onehot, target_normalized_class, target_norm_onehot_range
  
     def neural_network_model(self, reg_image, reg_n_inputs, norm_image, norm_n_inputs, n_target_classes, n_channels, use_pooling):
-        conv_offset = 20
-        block = 3
         if self.onehot_mode == False:
             reg_image = tf.squeeze(reg_image, axis=[2])
             norm_image = tf.squeeze(norm_image, axis=[2])
@@ -240,9 +238,9 @@ class Model(object):
         d = 32
         n_residual_layers = 15
 
-        num_blocks = 1
+        num_blocks = 2
         num_layers = int(self.n_levels/2)
-        num_hidden = 128
+        num_hidden = 256
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -255,7 +253,7 @@ class Model(object):
         channels = norm_channels + reg_channels
         print("Image", image.shape, channels)
         
-        hl = tf.transpose(reg_image, perm=[0, 2, 1] )
+        hl = tf.transpose(image, perm=[0, 2, 1] )
         print("Input image", hl.shape)
         hs = []
         for b in range(num_blocks):

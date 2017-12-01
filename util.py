@@ -13,21 +13,20 @@ def load_matlab(data_location, receptive_field, training_data = True):
         store_file = data_location+"/xytrue_"
     else:
         read_file = data_location + "/matlab_seed_r" + str(receptive_field) + ".mat"
-        x_file = data_location+"/seed_x_r"+str(receptive_field)+".pkl"
+        x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
         store_file = data_location+"/seed_"
     try:
         with h5py.File(read_file) as matlab_input:
             fx = int(matlab_input.get('fx')[0,0])
             r_field = int(matlab_input.get('receptive_field')[0,0])
             n_levels = int(matlab_input.get('n_levels')[0,0])
+            song_fx = int(matlab_input.get('fx')[0,0])
             song = matlab_input.get('song')
             song = song[0]
             x_list = []
             index_list = []
             frequency_list = np.zeros(n_levels)
-            factor_list = np.zeros(n_levels)
-            print("Reading", read_file, "song", song.shape, "fx", fx, 
-                    "receptive field:", r_field, "levels:", n_levels)
+            print("Reading", read_file, "song", song.shape, "receptive field:", r_field, "levels:", n_levels, "fx", song_fx)
 
             for i in range(n_levels):
                 '''
@@ -70,7 +69,7 @@ def load_matlab(data_location, receptive_field, training_data = True):
             print("Index List", np.shape(index_list))
             print("Frequencies", frequency_list)
             with open(x_file, "wb") as output_file:
-                pkl.dump([fx, index_list, frequency_list, factor_list, song] , output_file, protocol=4)
+                pkl.dump([index_list, frequency_list, song, song_fx] , output_file, protocol=4)
     except IOError:
         print("Failed to load:", store_file)
         sys.exit()
@@ -80,16 +79,14 @@ def read_index(data_location, receptive_field):
     try:
         with open(x_file, "rb") as input_file:
             _list = pkl.load(input_file)
-            fx = _list[0]
-            index_list = _list[1]
-            frequency_list = _list[2]
-            factor_list = _list[3]
-            song = _list[4]
-        print("Read index:", fx,  np.shape(index_list), np.shape(frequency_list), np.shape(factor_list), np.shape(song))
-
-        return index_list, frequency_list, factor_list, song, fx
+            index_list = _list[0]
+            frequency_list = _list[1]
+            song = _list[2]
+            song_fx = _list[3]
+        print("Read index:", np.shape(index_list), np.shape(frequency_list), np.shape(song))
+        return index_list, frequency_list, song, song_fx
     except IOError:
-        print("Failed to load:", store_file)
+        print("Failed to load:", x_file)
         sys.exit() 
 
 def read_data(data_location, receptive_field, level, training_data = True):
@@ -125,11 +122,15 @@ def read_seed(seed_file):
         print("Failed to load:", seed_file)
         sys.exit()
 
-def write_song(song, data_location, level, receptive_field, epochs):
-    song_name = "song_" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs)
+def write_song(song, fx, data_location, level, receptive_field, epochs):
+    seed_name = os.path.split(data_location)[1].split('.')[0]
+    training_name = (os.path.split( os.path.split(data_location)[0])[1]).split('.')[0]
+
+    song_name = "l" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song
+    song_dict['fx'] = float(fx)
     hdf5storage.savemat(song_file, song_dict)
     print("Saved song:", song_file)
     return song_name
