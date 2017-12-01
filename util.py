@@ -57,8 +57,7 @@ def load_matlab(data_location, receptive_field, training_data = True):
                 sf = store_file + str(i)+"_r"+str(receptive_field)+".pkl"
                 index_list.append(level_index)
                 frequency_list[i] = fx
-                factor_list[i] = level_factor
-                print("Read level", i, "Frequency", fx, "Factor", level_factor, "Index", level_index)
+                print("Read level", i, "Frequency", fx, "Index", level_index)
                 #with open(sf, "wb") as output_file:
                 #    pkl.dump(data_list, output_file, protocol=4)
             

@@ -95,6 +95,13 @@ def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
         test_write(filtered, i, data_location)
 
 
+def filter_song(song, frequency_list, level, fx=44100):
+    level_fx = frequency_list[level]
+    filtered_song = butter_lowpass_filter(song, level_fx, fx)
+    print("Level:", level, "Fx", level_fx)
+    #wav.write(str('s'+str(level)+'.wav'), fx, filtered_song)
+    return filtered_song
+
 def format_song(song, frequency_list, index_list, song_length, n_levels, data_location, bits=8, fx=44100):   
     N = 2**bits
     mu = float(N-1)
