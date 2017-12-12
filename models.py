@@ -440,11 +440,12 @@ class Model(object):
                 # train without calculating accuracy
                 #_, c = self.sess.run([self.optimizer, self.cost],
                 #                        feed_dict = feed_dict_train)
-                reg, norm,image = self.sess.run([self.reg_list, self.norm_list,self.image ],
-                                        feed_dict = feed_dict_train)
-                print("Reg", reg.shape)
-                print("Norm", norm.shape)
-                print("Image", image.shape)
+                
+                #reg, norm,image, hl, out = self.sess.run([self.reg_list, self.norm_list,self.image, self.hl, self.outputs ],
+                #                        feed_dict = feed_dict_train)
+                #print("Reg", reg.shape)
+                #print("Norm", norm.shape)
+                #print("Image", image.shape)
                 #print("Hl", hl.shape)
                 #print("Outputs", out.shape)
 
