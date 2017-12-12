@@ -468,7 +468,6 @@ class Model(object):
 
     def generate(self, song, index_list, frequency_list, sample_length):
         field_size = abs(np.amin(index_list))
-        
         print("Sample size:", sample_length, "Field Size", field_size)
         
         y_generated = np.append(song, np.zeros(sample_length))
@@ -489,15 +488,15 @@ class Model(object):
         for i in range(x_size, y_size):
             #print( y_generated[i-field_size:i+1])
             #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
-            feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
-                    1, self.n_levels)
+            feed_val = format_feedval(y_generated[i-self.batch_size:i+1], frequency_list, index_list,
+                    self.batch_size , self.n_levels)
             #print( y_generated[i-field_size:i+1])
             #print()
-            #print("Feed val", feed_val.shape)
+            print("Feed val", feed_val.shape)
             feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i] = raw(y_g[0])
-            #print("y[", i, "] = ", y_g, y_generated[i])
+            y_generated[i] = raw(y_g[0][-1])
+            print("y[", i, "] = ", y_generated[i])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs
