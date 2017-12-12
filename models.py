@@ -252,9 +252,15 @@ class Model(object):
         image = tf.concat( [reg_image, norm_image ] , axis=2)
         channels = norm_channels + reg_channels
         print("Image", image.shape, channels)
+        self.image = image
         
-        hl = tf.transpose(image, perm=[0, 2, 1] )
+        #hl = tf.transpose(image, perm=[0, 2, 1] )
+
+        
+        hl = tf.reshape(image, (-1, self.batch_size, self.receptive_field*channels) )
         print("Input image", hl.shape)
+        self.hl = hl
+
         hs = []
         for b in range(num_blocks):
             for i in range(num_layers):
@@ -264,18 +270,19 @@ class Model(object):
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
         
-        outputs = dilated_conv1d(hl, n_target_classes, rate=1, name='out')
-        print("Out:", outputs.shape)
-        outputs = tf.transpose(outputs, perm=[0, 2, 1] )
-        print("Out Transpose:", outputs.shape)
-        outputs = conv1d(outputs,
-                         1,
+        #outputs = dilated_conv1d(hl, n_target_classes, rate=1, name='out')
+        #print("Out:", outputs.shape)
+        #outputs = tf.transpose(outputs, perm=[0, 2, 1] )
+        #print("Out Transpose:", outputs.shape)
+        outputs = conv1d(hl,
+                         n_target_classes,
                          filter_width=1,
                          gain=1.0,
                          activation=None,
                          bias=True)
-        outputs = tf.squeeze(outputs, axis=[2])
+        outputs = tf.reshape(outputs, (-1, n_target_classes) )
         print("Final Out:", outputs.shape)
+        self.outputs = outputs
 
         #flat, features = flatten_layer(l2)
         #print("Flat", flat.shape, features)
@@ -296,7 +303,8 @@ class Model(object):
 
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 2048
+        self.batch_size = 35316
+        self.n_batch = self.batch_size
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -355,14 +363,6 @@ class Model(object):
             normalized_level, _ = normalized_call(input_all[i])
             normalized_inputs.append(normalized_level)
 
-        #if self.level == 0:
-        #    regular_inputs = normalized_inputs
-        #else:
-        #    del regular_inputs[self.level]
-        
-        self.reg_list = regular_inputs
-        self.norm_list = normalized_inputs
-
         regular_inputs = tf.concat( regular_inputs, axis=3)
         _, reg_n_inputs = regular_call(input_level)
         normalized_inputs = tf.concat( normalized_inputs, axis=3)
@@ -370,8 +370,8 @@ class Model(object):
         nn_targets, nn_target_class, nn_n_targets = out_call(input_level, target_class)
         n_channels = self.level
         
-        #if self.level ==0:
-        #    reg_n_inputs = norm_n_inputs
+        self.reg_list = regular_inputs
+        self.norm_list = normalized_inputs
 
         logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
 
@@ -430,12 +430,24 @@ class Model(object):
             epoch_correct = 0
             epoch_total = 0
             for i in range(0, len(ytrue_class), self.batch_size):
-                feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
-                                   self.input_all: x_list[:,i:i+self.batch_size,:] }
+                if i + self.batch_size >= len(ytrue_class):
+                    feed_dict_train = {self.target_class: ytrue_class[-self.batch_size:],
+                        self.input_all: x_list[:,-self.batch_size:,:] }
+                else:
+                    feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
+                        self.input_all: x_list[:,i:i+self.batch_size,:] }
+
                 # train without calculating accuracy
                 #_, c = self.sess.run([self.optimizer, self.cost],
                 #                        feed_dict = feed_dict_train)
-                
+                reg, norm,image = self.sess.run([self.reg_list, self.norm_list,self.image ],
+                                        feed_dict = feed_dict_train)
+                print("Reg", reg.shape)
+                print("Norm", norm.shape)
+                print("Image", image.shape)
+                #print("Hl", hl.shape)
+                #print("Outputs", out.shape)
+
                 # train while calculating epoch accuracy
                 _, c, correct = self.sess.run([self.optimizer, self.cost, self.correct_prediction ],
                                         feed_dict = feed_dict_train)
