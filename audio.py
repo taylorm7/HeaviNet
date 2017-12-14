@@ -94,13 +94,14 @@ def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
         test_write(filtered, i, data_location)
 
 
-def format_song(song, frequency_list, index_list, song_length, n_levels, data_location, bits=8, fx=44100):   
+def format_song(song, frequency_list, index_list, n_levels, bits=8, fx=44100):   
     N = 2**bits
     mu = float(N-1)
     xmax = 1.0
     xmin = -1.0
     Q=(xmax-xmin)/N
     
+    song_length = len(song)
     index_length = len(index_list[0])
 
     song_list = np.empty([n_levels, song_length, index_length], dtype=int)

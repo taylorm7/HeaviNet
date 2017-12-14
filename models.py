@@ -4,7 +4,7 @@ import os
 import sys
 import math
 
-from audio import format_feedval, raw
+from audio import format_song, format_feedval, raw
 from filter import savitzky_golay
 from layers import conv1d, dilated_conv1d
 
@@ -303,7 +303,7 @@ class Model(object):
 
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 27138
+        self.batch_size = 2048
         self.n_batch = self.batch_size
         self.normalize_mode = False
         self.onehot_mode = False
@@ -485,18 +485,26 @@ class Model(object):
         #feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
         #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
         #print(index.shape, index)
+        song_list = format_song(song, frequency_list, index_list, self.n_levels)
+        gen_list = np.append(song_list, np.zeros( (self.n_levels,sample_length,self.receptive_field)), axis = 1)
+        
+        print("Gen List", gen_list.shape)
         for i in range(x_size, y_size):
             #print( y_generated[i-field_size:i+1])
             #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
-            feed_val = format_feedval(y_generated[i-self.batch_size:i+1], frequency_list, index_list,
-                    self.batch_size , self.n_levels)
+            feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
+                    1, self.n_levels)
+            #print(gen_list[:, i-2:i+2,:])
+            #print("Feed val", feed_val.shape)
+            #print(feed_val)
+            gen_list[:,i:i+1,:] = feed_val
+            #print(gen_list[:, i+1-2:i+1,:])
             #print( y_generated[i-field_size:i+1])
             #print()
-            #print("Feed val", feed_val.shape)
-            feed_dict_gen = { self.input_all: feed_val }
+            feed_dict_gen = { self.input_all: gen_list[:, i+1-self.batch_size:i+1, :] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i] = raw(y_g[0][-1])
-            #print("y[", i, "] = ", y_generated[i])
+            print("y[", i, "] = ", y_generated[i])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs
