@@ -504,7 +504,7 @@ class Model(object):
             feed_dict_gen = { self.input_all: gen_list[:, i+1-self.batch_size:i+1, :] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i] = raw(y_g[0][-1])
-            print("y[", i, "] = ", y_generated[i])
+            #print("y[", i, "] = ", y_generated[i])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs
