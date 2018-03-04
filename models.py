@@ -296,7 +296,7 @@ class Model(object):
 
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 2048
+        self.batch_size = 256
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -484,7 +484,8 @@ class Model(object):
             feed_dict_gen = { self.input_all: feed_val }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i] = raw(y_g[0])
-            #print("y[", i, "] = ", y_g, y_generated[i])
+            if i % 10000 == 0:
+                print("y[", i, "] = ", y_g, y_generated[i])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs

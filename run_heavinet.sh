@@ -12,7 +12,8 @@ if [ -z $dot ]; then
 	# regular call with matlab script at ~/Matlab/matlab
 	dot="$(cd "$(dirname "$0")"; pwd)"
 	echo "Regular call:$dot"
-	MATLABCALL=~/Matlab/matlab
+	#MATLABCALL=~/Matlab/matlab
+	MATLABCALL=~/Documents/matlab/bin/matlab
 else
 	# ARC batch call
 	echo "Batch call:$dot"
