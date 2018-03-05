@@ -40,7 +40,7 @@ frequencies = cell(n_levels,1);
 song =  hampel(song, 3, 0.5);
 song = sgolayfilt(song,5,41);
 song_max = max(abs(song));
-song = (song./song_max)*0.05;
+%song = (song./song_max)*0.05;
 
 for i = 1:n_levels
     

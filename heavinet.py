@@ -52,6 +52,21 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
 
     gen_net.close()
     song_name = write_song( song_data[-sample_length:-1] , fx, seed_location, level, receptive_field, epochs)
+
+def predict(data_location, seed_location, level, receptive_field, n_levels):
+    print("Predicting:", level, data_location, receptive_field, n_levels)
+    print("Seed:", seed_location)
+    index_list, frequency_list, song, fx = read_index(seed_location, receptive_field)
+
+    gen_net = Model( level, receptive_field, data_location, n_levels )
+    
+    sample_length = 2000
+    song_data, epochs = gen_net.generate(song, index_list, frequency_list, sample_length)
+
+    gen_net.close()
+    song_name = write_song( song_data[-sample_length:-1] , fx, seed_location, level, receptive_field, epochs)
+
+
     
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
@@ -61,6 +76,8 @@ if __name__ == '__main__':
             train(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
         elif sys.argv[1]=='generate':
             generate(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
+        elif sys.argv[1]=='predict':
+            predict(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))
         else:
             print("Invalid call, use:")
             print(" heavinet load [/path/to/data] [receptive field]")

@@ -101,6 +101,20 @@ elif [ $ACTION = "generate" ]; then
 	else
 		DOWNSAMPLE_RATE=$5
 	fi
+elif [ $ACTION = "predict" ]; then
+	SEED=$3
+	SEEDPATH="$dot/data/songs/$SEED"
+	SEEDDIR="$DATAPATH/$SEED.seed"
+	if [ -z $4 ]; then
+		RECEPTIVE_FIELD=1
+	else
+		RECEPTIVE_FIELD=$4
+	fi
+	if [ -z $5 ]; then
+		DOWNSAMPLE_RATE=0
+	else
+		DOWNSAMPLE_RATE=$5
+	fi
 elif [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
 	SEED=$3
 	SEEDPATH="$dot/data/songs/$SEED"
@@ -209,7 +223,21 @@ elif [ $ACTION = "generate" ]; then
 		echo "Then training with ./run_heavinet.sh train song_name.mp3"
 	fi
 	duration=$SECONDS
-	echo "Create: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+	echo "Generate: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+elif [ $ACTION = "predict" ]; then
+	SECONDS=0
+	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
+		#for ((i=0 ; i<LEVELS ; i++)); do
+		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR 0 $RECEPTIVE_FIELD $LEVELS
+		#	break
+		#done
+	else
+		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
+		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
+		echo "Then training with ./run_heavinet.sh train song_name.mp3"
+	fi
+	duration=$SECONDS
+	echo "Predict: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "create" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
@@ -220,7 +248,7 @@ elif [ $ACTION = "create" ]; then
 		echo "Then training with ./run_heavinet.sh train song_name.mp3"
 	fi
 	duration=$SECONDS
-	echo "Generate: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+	echo "Create: $(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
 elif [ $ACTION = "run" ]; then
 	SECONDS=0
 	if [[ -f $SONGPATH && -f $SEEDPATH ]]; then
