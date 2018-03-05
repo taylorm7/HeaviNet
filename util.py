@@ -128,3 +128,11 @@ def write_song(song, fx, data_location, level, receptive_field, epochs):
     print("Saved song:", song_file)
     return song_name
 
+def write_data(data_dict, fx, data_location, level, receptive_field, epochs):
+    seed_name = os.path.split(data_location)[1].split('.')[0]
+    training_name = (os.path.split( os.path.split(data_location)[0])[1]).split('.')[0]
+
+    song_name = "d"+str(level)+"_r"+str(receptive_field)+"_"+str(epochs)+"_"+training_name+"_"+seed_name 
+    song_file = data_location + "/" + song_name + ".mat"
+    hdf5storage.savemat(song_file, data_dict)
+    print("Saved data:", song_file)

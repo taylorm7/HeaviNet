@@ -3,10 +3,10 @@ import numpy as np
 import scipy.io as sio
 import sys
 
-from util import read_data, read_seed, load_matlab, write_song, read_index
+from util import read_data, read_seed, load_matlab, write_song, read_index, write_data
 from models import Model
 from filter import butter_lowpass_filter
-from audio import format_song, quantize, test_songs
+from audio import format_song, quantize, test_songs, raw
 
 def load(data_location, receptive_field, training_data):
     print("Loading", data_location, "for receptive field:", receptive_field)
@@ -58,13 +58,25 @@ def predict(data_location, seed_location, level, receptive_field, n_levels):
     print("Seed:", seed_location)
     index_list, frequency_list, song, fx = read_index(seed_location, receptive_field)
 
-    gen_net = Model( level, receptive_field, data_location, n_levels )
-    
-    sample_length = 2000
-    song_data, epochs = gen_net.generate(song, index_list, frequency_list, sample_length)
+    net = Model( level, receptive_field, data_location, n_levels )
 
-    gen_net.close()
-    song_name = write_song( song_data[-sample_length:-1] , fx, seed_location, level, receptive_field, epochs)
+    bits = 8
+    song_length = len(song)
+    song_list = format_song(song, frequency_list, index_list, song_length, n_levels, data_location, bits, fx)
+    ytrue = quantize(song, bits=bits)
+    
+    prediction, epoch_accuracy, epoch_loss, epochs = net.predict( song_list, ytrue)
+    data = { "prediction_q" : prediction,
+            "prediction" : raw(prediction),
+            "actual_q" : ytrue,
+            "actual" : raw(ytrue),
+            "epoch_accuracy" : epoch_accuracy,
+            "epoch_loss" : epoch_loss,
+            "epochs" : epochs,
+            "fx" : float(fx),
+            "song_list": song_list }
+    write_data( data , fx, seed_location, level, receptive_field, epochs)
+    net.close()
 
 
     

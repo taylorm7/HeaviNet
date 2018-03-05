@@ -57,6 +57,11 @@ elif [ $ACTION = "train" ]; then
 		TRAIN_START=$5
 		train_all_levels=0
 	fi
+	if [ -z $6 ]; then
+		FORWARD_PREDICT=0
+	else
+		FORWARD_PREDICT=$6
+	fi
 	train_all_levels=0
 elif [ $ACTION = "load" ]; then
 	SEED=$3

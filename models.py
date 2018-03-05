@@ -422,7 +422,7 @@ class Model(object):
         
         #for e in range(epochs):
         e = 0
-        print("Previos Epochs", self.n_epochs.eval(session=self.sess) )
+        print("Previous Epochs", self.n_epochs.eval(session=self.sess) )
         inc_epochs = self.n_epochs.assign(self.n_epochs + epochs)
         inc_epochs.op.run(session=self.sess)
         while ((e < epochs) and (self.best_accuracy < 100.1 )):
@@ -489,6 +489,38 @@ class Model(object):
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs
+
+    def predict(self, x_list, ytrue_class ):
+        ytrue_class = np.reshape(ytrue_class, (-1))
+        print("Predicting:",  self.name, x_list.shape, ytrue_class.shape)
+        
+        prediction = np.zeros(len(ytrue_class))
+        epochs = self.n_epochs.eval(session=self.sess)
+        epoch_loss = 0
+        epoch_correct = 0
+        epoch_total = 0
+        print("Previous Epochs", epochs )
+        for i in range(0, len(ytrue_class), self.batch_size):
+            feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
+                               self.input_all: x_list[:,i:i+self.batch_size,:] }
+            # train without calculating accuracy
+            #_, c = self.sess.run([self.optimizer, self.cost],
+            #                        feed_dict = feed_dict_train)
+            
+            # train while calculating epoch accuracy
+            c, correct, guess = self.sess.run([self.cost, self.correct_prediction, self.prediction_value ],
+                                    feed_dict = feed_dict_train)
+            prediction[i:i+self.batch_size] = guess
+
+            epoch_correct+= np.sum(correct)
+            epoch_total+= correct.size
+            
+            epoch_loss+= c
+
+        epoch_accuracy = 100.0 * float(epoch_correct) / float(epoch_total)
+        print("Prediction:", "loss", epoch_loss, "accuracy", epoch_accuracy)
+        return prediction, epoch_accuracy, epoch_loss, epochs
+
 
     def save(self, close=False):
         self.saver.save(self.sess, self.save_file)
