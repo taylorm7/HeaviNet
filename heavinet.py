@@ -75,7 +75,7 @@ def predict(data_location, seed_location, level, receptive_field, n_levels):
             "epochs" : epochs,
             "fx" : float(fx),
             "song_list": song_list }
-    write_data( data , fx, seed_location, level, receptive_field, epochs, net.wavenet_string)
+    write_data( data , fx, seed_location, level, receptive_field, epochs, net.model_string)
     net.close()
 
 

@@ -8,7 +8,7 @@ from audio import format_feedval, raw
 from filter import savitzky_golay
 from layers import conv1d, dilated_conv1d
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def nn_layer(input_layer, n_nodes_in, n_nodes, output_layer=False):
     hl_weight = tf.Variable(tf.random_normal([n_nodes_in, n_nodes]))
@@ -289,6 +289,7 @@ class Model(object):
             print("  Image" , image.shape, "channels", channels)
             print("  Regular Image", reg_image.shape, "channels", reg_channels)
             print("  Normal Image", norm_image.shape, "channels", norm_channels)
+            print("  Output:", outputs.shape)
             #print("  flat layer number of features", features)
 
         #return fc_layers[-1]
@@ -318,6 +319,8 @@ class Model(object):
                          gain=1.0,
                          activation=None,
                          bias=True)
+        
+        outputs = tf.reshape(outputs, (-1, self.n_target_classes))
 
         if (not os.path.isdir(self.save_dir)):
             print("  Wavenet Mode")
@@ -327,12 +330,12 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 256
+        self.batch_size = 512
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
         self.use_pooling = False
-        self.wavenet_test = True
+        self.wavenet_test = False
 
         self.level = level
         self.receptive_field = receptive_field
@@ -352,10 +355,10 @@ class Model(object):
         self.target_classes_max = self.n_target_classes - 1
 
         if self.wavenet_test == False:
-            self.wavenet_string = "h"
+            self.model_string = "h"+str(self.batch_size)+"_"
         else:
-            self.wavenet_string = "w"
-        self.name = "model_" + str(level) + "_r" + str(self.receptive_field) + self.wavenet_string
+            self.model_string = "w"+str(self.batch_size)+"_"
+        self.name = self.model_string + str(level) + "_r" + str(self.receptive_field)
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
