@@ -240,7 +240,7 @@ class Model(object):
 
         num_blocks = 2
         num_layers = int(self.n_levels/2)
-        num_hidden = 256
+        num_hidden = 128
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -294,6 +294,37 @@ class Model(object):
         #return fc_layers[-1]
         return outputs
 
+    def wavenet_model(self, image):
+        num_blocks = 2
+        num_layers = 14
+        num_hidden = 128
+    
+        image = tf.reshape(image, (-1, self.batch_size, 1))
+        image = tf.cast(image, tf.float32)
+        print("Image", image.shape, image.dtype)
+
+        h = image
+        hs = []
+        for b in range(num_blocks):
+            for i in range(num_layers):
+                rate = 2**i
+                name = 'b{}-l{}'.format(b, i)
+                h = dilated_conv1d(h, num_hidden, rate=rate, name=name)
+                hs.append(h)
+
+        outputs = conv1d(h,
+                         self.n_target_classes,
+                         filter_width=1,
+                         gain=1.0,
+                         activation=None,
+                         bias=True)
+
+        if (not os.path.isdir(self.save_dir)):
+            print("  Wavenet Mode")
+            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
+            print("  Image" , image.shape)
+            print("  Outputs" , outputs.shape)
+        return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
         self.batch_size = 256
@@ -301,6 +332,7 @@ class Model(object):
         self.onehot_mode = False
         self.multichannel_mode = True
         self.use_pooling = False
+        self.wavenet_test = True
 
         self.level = level
         self.receptive_field = receptive_field
@@ -319,12 +351,16 @@ class Model(object):
         self.n_target_classes = 2**(self.out_bits)
         self.target_classes_max = self.n_target_classes - 1
 
-        self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
+        if self.wavenet_test == False:
+            self.wavenet_string = "h"
+        else:
+            self.wavenet_string = "w"
+        self.name = "model_" + str(level) + "_r" + str(self.receptive_field) + self.wavenet_string
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
-        input_level = tf.placeholder(tf.int64, [None,self.clip_size])
-        input_all = tf.placeholder(tf.int64, [self.n_levels, None,self.clip_size])
+        input_level = tf.placeholder(tf.float64, [None,self.clip_size])
+        input_all = tf.placeholder(tf.float64, [self.n_levels, None,self.clip_size])
         target_class = tf.placeholder(tf.int64, [None])
 
         self.input_level = input_level
@@ -372,8 +408,11 @@ class Model(object):
         
         #if self.level ==0:
         #    reg_n_inputs = norm_n_inputs
-
-        logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
+        
+        if self.wavenet_test == False:
+            logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
+        else:
+            logits = self.wavenet_model(nn_target_class)
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -430,6 +469,8 @@ class Model(object):
             epoch_correct = 0
             epoch_total = 0
             for i in range(0, len(ytrue_class), self.batch_size):
+                if i + self.batch_size >= len(ytrue_class):
+                    continue
                 feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] }
                 # train without calculating accuracy
@@ -501,6 +542,8 @@ class Model(object):
         epoch_total = 0
         print("Previous Epochs", epochs )
         for i in range(0, len(ytrue_class), self.batch_size):
+            if i + self.batch_size >= len(ytrue_class):
+                continue
             feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                self.input_all: x_list[:,i:i+self.batch_size,:] }
             # train without calculating accuracy
