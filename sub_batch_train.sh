@@ -1,7 +1,7 @@
 #!/bin/bash
 
-num_levels=8
-batches=8
+num_levels=7
+batches=7
 
 epochs=1000
 receptive_field=1
