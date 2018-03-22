@@ -8,7 +8,7 @@ receptive_field=1
 song=beethoven_7.wav
 generate=beethoven_7.wav
 
-train_time=144:00:00
+train_time=14:00:00
 
 step_size=$(($num_levels / $batches))
 
