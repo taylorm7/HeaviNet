@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import scipy.io as sio
 import sys
+import os
 
 from util import read_data, read_seed, load_matlab, write_song, read_index
 from models import Model
@@ -42,19 +43,32 @@ def train(data_location, level, receptive_field, epochs, n_levels):
 def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Generating:", level, data_location, receptive_field, n_levels)
     print("Seed:", seed_location)
-    #seed_data = read_seed(seed_file)
+
     #seed_data, seed, seed_list = read_data(seed_location, receptive_field, level, training_data=False)
     index_list, frequency_list, song, fx = read_index(data_location, receptive_field)
 
     gen_net = Model( level, receptive_field, data_location, n_levels )
-
+    
+     
     bits = 8
     seed = filter_song(song, frequency_list, level)
     seed_list = format_song(seed, frequency_list, index_list, n_levels, bits, fx)
-    song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list)
 
+    epochs = gen_net.n_epochs.eval(session=gen_net.sess)
+    seed_name = os.path.split(seed_location)[1].split('.')[0]
+    training_name = (os.path.split( os.path.split(seed_location)[0])[1]).split('.')[0]
+    song_name = gen_net.name + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
+    seed_name = gen_net.seed_name + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
+
+    if level != 0:
+        seed_data = read_seed(seed_name, seed_location)
+    else:
+        seed_data = seed
+    print("Seed", seed_data.shape)
+
+    song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list, seed)
     gen_net.close()
-    song_name = write_song( song_data , fx, seed_location, level, receptive_field, epochs)
+    song_name = write_song( song_data, fx, seed_location, song_name)
     
 if __name__ == '__main__':
     if len(sys.argv) >= 3:

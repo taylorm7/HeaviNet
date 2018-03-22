@@ -109,23 +109,25 @@ def read_data(data_location, receptive_field, level, training_data = True):
         print("Failed to load:", store_file)
         sys.exit() 
 
-def read_seed(seed_file):
+def read_seed(seed_name, seed_location):
+    name = seed_location + '/' + seed_name + '.mat'
+    print("Reading:", name)
     try:
-        with h5py.File(seed_file) as matlab_seed:
-            seed_data = matlab_seed.get('seed')
+        with h5py.File(name) as matlab_seed:
+            seed_data = matlab_seed.get(seed_name)
             seed_data = np.array(seed_data)
             seed_data = seed_data.transpose()
-            print("Read seed:", seed_data.shape)
+            print("Read seed:", seed_data)
             return seed_data
     except IOError:
         print("Failed to load:", seed_file)
         sys.exit()
 
-def write_song(song, fx, data_location, level, receptive_field, epochs):
+def write_song(song, fx, data_location, song_name):
     seed_name = os.path.split(data_location)[1].split('.')[0]
     training_name = (os.path.split( os.path.split(data_location)[0])[1]).split('.')[0]
 
-    song_name = "l" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
+    #song_name = "l" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song

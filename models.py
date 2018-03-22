@@ -294,13 +294,47 @@ class Model(object):
         #return fc_layers[-1]
         return outputs
 
+    def wavenet_model(self, image):
+        num_blocks = 2
+        num_layers = 14
+        num_hidden = 128
+    
+        image = tf.reshape(image, (-1, self.batch_size, 1))
+        image = tf.cast(image, tf.float32)
+        print("Image", image.shape, image.dtype)
+
+        h = image
+        hs = []
+        for b in range(num_blocks):
+            for i in range(num_layers):
+                rate = 2**i
+                name = 'b{}-l{}'.format(b, i)
+                h = dilated_conv1d(h, num_hidden, rate=rate, name=name)
+                hs.append(h)
+
+        outputs = conv1d(h,
+                         self.n_target_classes,
+                         filter_width=1,
+                         gain=1.0,
+                         activation=None,
+                         bias=True)
+        
+        outputs = tf.reshape(outputs, (-1, self.n_target_classes))
+
+        if (not os.path.isdir(self.save_dir)):
+            print("  Wavenet Mode")
+            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
+            print("  Image" , image.shape)
+            print("  Outputs" , outputs.shape)
+        return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 2048
+        self.batch_size = 512
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
         self.use_pooling = False
+        self.wavenet_test = True
 
         self.level = level
         self.receptive_field = receptive_field
@@ -319,7 +353,12 @@ class Model(object):
         self.n_target_classes = 2**(self.out_bits)
         self.target_classes_max = self.n_target_classes - 1
 
-        self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
+        if self.wavenet_test == False:
+            self.model_string = "h"+str(self.batch_size)+"_"
+        else:
+            self.model_string = "w"+str(self.batch_size)+"_"
+        self.name = self.model_string + str(level) + "_r" + str(self.receptive_field)
+        self.seed_name = self.model_string + str(level-1) + "_r" + str(self.receptive_field)
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
@@ -372,8 +411,11 @@ class Model(object):
         
         #if self.level ==0:
         #    reg_n_inputs = norm_n_inputs
-
-        logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
+        
+        if self.wavenet_test == False:
+            logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
+        else:
+            logits = self.wavenet_model(nn_target_class)
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -422,7 +464,7 @@ class Model(object):
         
         #for e in range(epochs):
         e = 0
-        print("Previos Epochs", self.n_epochs.eval(session=self.sess) )
+        print("Previous Epochs", self.n_epochs.eval(session=self.sess) )
         inc_epochs = self.n_epochs.assign(self.n_epochs + epochs)
         inc_epochs.op.run(session=self.sess)
         while ((e < epochs) and (self.best_accuracy < 100.1 )):
@@ -430,6 +472,8 @@ class Model(object):
             epoch_correct = 0
             epoch_total = 0
             for i in range(0, len(ytrue_class), self.batch_size):
+                if i + self.batch_size >= len(ytrue_class):
+                    continue
                 feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] }
                 # train without calculating accuracy
@@ -452,14 +496,20 @@ class Model(object):
                 print(" accuracy:", epoch_accuracy)
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
+ 
 
-    def generate(self, song_list, index_list, frequency_list):
+    def generate(self, song_list, index_list, frequency_list, seed):
         y_generated = np.zeros(len(song_list[0]))
-        print("Generating with seed:", song_list.shape)
+        print("Generating with seed_list:", song_list.shape)
+        print("seed:", seed.shape)
         print("Index list:", index_list.shape)
         print("Y generate", y_generated.shape )
         for i in range(0, len(y_generated), self.batch_size):
-            feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
+            if i + self.batch_size >= len(seed):
+                continue
+            #feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
+            feed_dict_gen = {self.target_class: seed[i:i+self.batch_size],
+                                   self.input_all: song_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i:i+self.batch_size] = raw(y_g[0])
             #print("y[", i, "] = ", y_g[0], y_generated[i:i+self.batch_size])

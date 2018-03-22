@@ -12,7 +12,8 @@ if [ -z $dot ]; then
 	# regular call with matlab script at ~/Matlab/matlab
 	dot="$(cd "$(dirname "$0")"; pwd)"
 	echo "Regular call:$dot"
-	MATLABCALL=~/Matlab/matlab
+	#MATLABCALL=~/Matlab/matlab
+	MATLABCALL=~/Documents/matlab/bin/matlab
 else
 	# ARC batch call
 	echo "Batch call:$dot"
@@ -150,17 +151,17 @@ elif [ $ACTION = "train" ]; then
 	if [ -f $MATLABSONG ]; then
 
 		echo "Training on song $SONG in $MATLABSONG"
-		#for (( i=$TRAIN_START; i<$LEVELS; i++ ))	
-		#do
+		for (( i=$TRAIN_START; i<$LEVELS; i++ ))	
+		do
 			echo " running level $i in background process..."
 			level_seconds=$SECONDS
-			python3 heavinet.py $ACTION $DATAPATH 3 $RECEPTIVE_FIELD $EPOCHS $LEVELS #>> "$DATAPATH/$i.txt" 2>&1 #& #parallel
+			python3 heavinet.py $ACTION $DATAPATH $i $RECEPTIVE_FIELD $EPOCHS $LEVELS #>> "$DATAPATH/$i.txt" 2>&1 #& #parallel
 			level_duration=$(($SECONDS-level_seconds))
 			echo "Level duration: $(($level_duration / 60)) minutes and $(($level_duration % 60)) seconds elapsed."
 			#if [ $train_all_levels == 0 ]; then
 			#	break
 			#fi
-		#done
+		done
 		wait
 		echo "Training finished"
 		for (( i=$TRAIN_START; i<$LEVELS; i++ ))	
@@ -198,10 +199,9 @@ elif [ $ACTION = "load" ]; then
 elif [ $ACTION = "generate" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
-		#for ((i=0 ; i<LEVELS ; i++)); do
-		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR 3 $RECEPTIVE_FIELD $LEVELS
-		#	break
-		#done
+		for ((i=0 ; i<LEVELS ; i++)); do
+		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR $i $RECEPTIVE_FIELD $LEVELS
+		done
 	else
 		echo "The file '$SONGPATH' or '$SEEDPATH' is not valid"
 		echo "First try loading with ./run_heavinet.sh load song_name.mp3"
