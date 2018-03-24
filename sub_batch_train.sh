@@ -3,12 +3,12 @@
 num_levels=7
 batches=7
 
-epochs=1000
+epochs=30000
 receptive_field=1
 song=beethoven_7.wav
 generate=beethoven_7.wav
 
-train_time=14:00:00
+train_time=44:00:00
 
 step_size=$(($num_levels / $batches))
 
