@@ -45,7 +45,6 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
      
     bits = 8
     seed = filter_song(song, frequency_list, level)
-    seed = quantize(seed, bits=bits)
     seed_list = format_song(seed, frequency_list, index_list, n_levels, bits, fx)
 
     epochs = gen_net.n_epochs.eval(session=gen_net.sess)
@@ -62,6 +61,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
         seed_data = seed
     print("Seed", seed_data.shape)
 
+    seed_data = quantize(seed_data, bits=bits)
     song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list, seed_data)
     gen_net.close()
     song_name = write_song( song_data, fx, seed_location, song_name)

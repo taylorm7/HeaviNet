@@ -329,7 +329,7 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 1600
+        self.batch_size = 20000
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
