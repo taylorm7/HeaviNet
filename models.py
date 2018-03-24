@@ -329,7 +329,7 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 10
+        self.batch_size = 65000
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -483,12 +483,12 @@ class Model(object):
             for i in range(0, len(ytrue_class), self.batch_size):
                 if i + self.batch_size >= len(ytrue_class):
                     continue
-                i = 10000
                 feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] ,
                                    self.input_class: x[i:i+self.batch_size]
                                    }
-                # train without calculating accuracy
+                # test logits value
+                '''
                 _, c, inp, in_b,l_back, l_b, l_o, l  = self.sess.run([self.optimizer,self.cost, 
                     self.input_class, 
                     self.in_backwards, 
@@ -505,7 +505,7 @@ class Model(object):
                 print("Logits Original", l_o.shape, l_o )
                 print("Logits", l.shape, l)
                 sys.exit()
-                
+                '''
                 # train while calculating epoch accuracy
                 _, c, correct = self.sess.run([self.optimizer, self.cost, self.correct_prediction ],
                                         feed_dict = feed_dict_train)
