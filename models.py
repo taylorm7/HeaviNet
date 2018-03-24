@@ -329,7 +329,7 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 20000
+        self.batch_size = 100
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -418,6 +418,12 @@ class Model(object):
             logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
         else:
             logits = self.wavenet_model(input_class)
+            
+            self.in_backwards = tf.reverse(input_class,[0])
+            with tf.variable_scope('backwards'):
+                self.logits_backwards = self.wavenet_model( self.in_backwards)
+            self.logits_b = tf.reverse(self.logits_backwards, [0])
+            self.logits = logits
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -476,13 +482,26 @@ class Model(object):
             for i in range(0, len(ytrue_class), self.batch_size):
                 if i + self.batch_size >= len(ytrue_class):
                     continue
+                i = 10000
                 feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] ,
                                    self.input_class: x[i:i+self.batch_size]
                                    }
                 # train without calculating accuracy
-                #_, c = self.sess.run([self.optimizer, self.cost],
-                #                        feed_dict = feed_dict_train)
+                _, c, inp, in_b,l_back, l_b, l  = self.sess.run([self.optimizer,self.cost, 
+                    self.input_class, 
+                    self.in_backwards, 
+                    self.logits_backwards, 
+                    self.logits_b,
+                    self.logits
+                    ],
+                                        feed_dict = feed_dict_train)
+                print("Initial", inp) 
+                print("Input Backwards", in_b)
+                print("Logits Forwards/backwards", l_back)
+                print("Logits Backwards", l_b)
+                print("Logits", l)
+                sys.exit()
                 
                 # train while calculating epoch accuracy
                 _, c, correct = self.sess.run([self.optimizer, self.cost, self.correct_prediction ],
