@@ -329,7 +329,7 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 100
+        self.batch_size = 10
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -417,13 +417,14 @@ class Model(object):
         if self.wavenet_test == False:
             logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
         else:
-            logits = self.wavenet_model(input_class)
+            self.logits_original = self.wavenet_model(input_class)
             
             self.in_backwards = tf.reverse(input_class,[0])
             with tf.variable_scope('backwards'):
                 self.logits_backwards = self.wavenet_model( self.in_backwards)
             self.logits_b = tf.reverse(self.logits_backwards, [0])
-            self.logits = logits
+            self.logits = tf.reduce_sum( tf.stack( [self.logits_original, self.logits_b], axis=0), axis=0)
+            logits = self.logits
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -488,19 +489,21 @@ class Model(object):
                                    self.input_class: x[i:i+self.batch_size]
                                    }
                 # train without calculating accuracy
-                _, c, inp, in_b,l_back, l_b, l  = self.sess.run([self.optimizer,self.cost, 
+                _, c, inp, in_b,l_back, l_b, l_o, l  = self.sess.run([self.optimizer,self.cost, 
                     self.input_class, 
                     self.in_backwards, 
                     self.logits_backwards, 
                     self.logits_b,
+                    self.logits_original,
                     self.logits
                     ],
                                         feed_dict = feed_dict_train)
-                print("Initial", inp) 
-                print("Input Backwards", in_b)
-                print("Logits Forwards/backwards", l_back)
-                print("Logits Backwards", l_b)
-                print("Logits", l)
+                print("Initial", inp.shape, inp  ) 
+                print("Input Backwards", in_b.shape, in_b )
+                print("Logits Forwards/backwards", l_back.shape, l_back)
+                print("Logits Backwards", l_b.shape, l_b  )
+                print("Logits Original", l_o.shape, l_o )
+                print("Logits", l.shape, l)
                 sys.exit()
                 
                 # train while calculating epoch accuracy
