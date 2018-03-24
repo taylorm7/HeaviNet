@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import butter, lfilter, freqz
+from scipy.signal import butter, lfilter, freqz, filtfilt
 
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
@@ -14,6 +14,7 @@ def butter_lowpass_filter(data, cutoff, fx, order=5):
         return data
     b, a = butter_lowpass(cutoff, fx, order=order)
     y = lfilter(b, a, data)
+    #y = filtfilt(b, a, data)
     return y
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):

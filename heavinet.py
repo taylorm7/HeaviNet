@@ -25,19 +25,12 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     level_song = filter_song(song, frequency_list, level)
     target_song = filter_song(song, frequency_list, level+1)
     song_list = format_song(level_song, frequency_list, index_list, n_levels, bits, fx)
+    x = quantize(level_song, bits=bits)
     ytrue = quantize(target_song, bits=bits)
     
-    '''
-    t_start = 2500
-    t_end = 2510
-    print("Song", song[t_start:t_end].flatten() )
-    print("Ytrue",ytrue.shape, ytrue[t_start:t_end].flatten() )
-    print("Song List", song_list.shape )
-    for i in range(n_levels):
-        print("Level",i,song_list[i,t_start:t_end,:] )
-    '''
-    
-    net.train( song_list, ytrue, epochs=epochs)
+    #test_songs(song, frequency_list, n_levels, data_location)
+        
+    net.train( song_list, ytrue, x, epochs=epochs)
     net.save(close=True)
 
 def generate(data_location, seed_location, level, receptive_field, n_levels):
@@ -52,6 +45,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
      
     bits = 8
     seed = filter_song(song, frequency_list, level)
+    seed = quantize(seed, bits=bits)
     seed_list = format_song(seed, frequency_list, index_list, n_levels, bits, fx)
 
     epochs = gen_net.n_epochs.eval(session=gen_net.sess)
@@ -60,13 +54,15 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     song_name = gen_net.name + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
     seed_name = gen_net.seed_name + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
 
-    if level != 0:
+    if level != 0 and os.path.isfile(seed_location + '/' + seed_name + '.mat'):
+        print("Reading Sead")
         seed_data = read_seed(seed_name, seed_location)
     else:
+        print("Using seed")
         seed_data = seed
     print("Seed", seed_data.shape)
 
-    song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list, seed)
+    song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list, seed_data)
     gen_net.close()
     song_name = write_song( song_data, fx, seed_location, song_name)
     

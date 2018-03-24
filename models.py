@@ -329,7 +329,7 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 16000
+        self.batch_size = 1600
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -365,10 +365,12 @@ class Model(object):
         input_level = tf.placeholder(tf.float64, [None,self.clip_size])
         input_all = tf.placeholder(tf.float64, [self.n_levels, None,self.clip_size])
         target_class = tf.placeholder(tf.int64, [None])
+        input_class = tf.placeholder(tf.float64, [None])
 
         self.input_level = input_level
         self.input_all = input_all
         self.target_class = target_class
+        self.input_class = input_class
 
         if self.onehot_mode == False:
             normalized_call = self.format_in_norm_flat
@@ -415,7 +417,7 @@ class Model(object):
         if self.wavenet_test == False:
             logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
         else:
-            logits = self.wavenet_model(nn_target_class)
+            logits = self.wavenet_model(input_class)
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -457,7 +459,7 @@ class Model(object):
             os.makedirs( self.save_dir )
             print("Creating level directory at:", self.save_dir)
 
-    def train(self, x_list, ytrue_class, epochs=1 ):
+    def train(self, x_list, ytrue_class, x, epochs=1 ):
         #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print("Trainging:",  self.name, x_list.shape, ytrue_class.shape, "epochs:", epochs)
@@ -475,7 +477,9 @@ class Model(object):
                 if i + self.batch_size >= len(ytrue_class):
                     continue
                 feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
-                                   self.input_all: x_list[:,i:i+self.batch_size,:] }
+                                   self.input_all: x_list[:,i:i+self.batch_size,:] ,
+                                   self.input_class: x[i:i+self.batch_size]
+                                   }
                 # train without calculating accuracy
                 #_, c = self.sess.run([self.optimizer, self.cost],
                 #                        feed_dict = feed_dict_train)
@@ -501,14 +505,14 @@ class Model(object):
     def generate(self, song_list, index_list, frequency_list, seed):
         y_generated = np.zeros(len(song_list[0]))
         print("Generating with seed_list:", song_list.shape)
-        print("seed:", seed.shape)
+        print("seed:", seed.shape, seed)
         print("Index list:", index_list.shape)
         print("Y generate", y_generated.shape )
         for i in range(0, len(y_generated), self.batch_size):
             if i + self.batch_size >= len(seed):
                 continue
             #feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
-            feed_dict_gen = {self.target_class: seed[i:i+self.batch_size],
+            feed_dict_gen = {self.input_class: seed[i:i+self.batch_size],
                                    self.input_all: song_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
             y_generated[i:i+self.batch_size] = raw(y_g[0])

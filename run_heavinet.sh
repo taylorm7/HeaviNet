@@ -57,7 +57,6 @@ elif [ $ACTION = "train" ]; then
 		TRAIN_START=$5
 		train_all_levels=0
 	fi
-	train_all_levels=0
 elif [ $ACTION = "load" ]; then
 	SEED=$3
 	SEEDPATH="$dot/data/songs/$SEED"
@@ -100,6 +99,11 @@ elif [ $ACTION = "generate" ]; then
 		DOWNSAMPLE_RATE=0
 	else
 		DOWNSAMPLE_RATE=$5
+	fi
+	if [ -z $6 ]; then
+		generate_start=0
+	else
+		generate_start=$6
 	fi
 elif [ $ACTION = "train_generate" ] || [ $ACTION = "run" ]; then
 	SEED=$3
@@ -199,7 +203,7 @@ elif [ $ACTION = "load" ]; then
 elif [ $ACTION = "generate" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
-		for ((i=0 ; i<LEVELS ; i++)); do
+		for ((i=$generate_start ; i<LEVELS ; i++)); do
 		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR $i $RECEPTIVE_FIELD $LEVELS
 		done
 	else

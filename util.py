@@ -117,6 +117,7 @@ def read_seed(seed_name, seed_location):
             seed_data = matlab_seed.get(seed_name)
             seed_data = np.array(seed_data)
             seed_data = seed_data.transpose()
+            seed_data = np.ndarray.flatten(seed_data)
             print("Read seed:", seed_data)
             return seed_data
     except IOError:
