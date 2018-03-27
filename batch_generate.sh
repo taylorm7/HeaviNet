@@ -35,34 +35,8 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh train bach_10.wav 128 1000
-./run_heavinet.sh generate bach_10.wav bach_10.wav 128
-./run_heavinet.sh train bach_10.wav 128 1000
-./run_heavinet.sh generate bach_10.wav bach_10.wav 128
-./run_heavinet.sh train bach_10.wav 128 1000
-./run_heavinet.sh generate bach_10.wav bach_10.wav 128
-./run_heavinet.sh train bach_10.wav 128 1000
-./run_heavinet.sh generate bach_10.wav bach_10.wav 128
 
-#./run_heavinet.sh train beethoven_7.wav 128 1000
-#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
-#./run_heavinet.sh train beethoven_7.wav 128 1000
-#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
-#./run_heavinet.sh train beethoven_7.wav 128 1000
-#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
-#./run_heavinet.sh train beethoven_7.wav 128 1000
-#./run_heavinet.sh generate beethoven_7.wav beethoven_7.wav 128
+./run_heavinet.sh generate beethoven_7.wav bach_10.wav 1
 
-#./run_heavinet.sh train bach.wav 128 100
-#./run_heavinet.sh generate bach.wav bach_10.wav 128
-#./run_heavinet.sh train bach.wav 128 100
-#./run_heavinet.sh generate bach.wav bach_10.wav 128
-#./run_heavinet.sh train bach.wav 128 100
-#./run_heavinet.sh generate bach.wav bach_10.wav 128
-#./run_heavinet.sh train bach.wav 128 100
-#./run_heavinet.sh generate bach.wav bach_10.wav 128
-
-#./run_heavinet.sh train obama.wav 128 500
-#./run_heavinet.sh generate obama.wav obama.wav 128
 echo "Code finished!"
 
