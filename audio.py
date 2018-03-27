@@ -89,7 +89,7 @@ def test_write(song, level, data_location ):
 
 def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
     for i in range(n_levels):
-        l_fx = frequency_list[i]/2.0
+        l_fx = frequency_list[i]
         print("L:", i, "Fx", l_fx)
         filtered = butter_lowpass_filter(song, l_fx, fx)
         test_write(filtered, i, data_location)
