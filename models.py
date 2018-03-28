@@ -329,7 +329,8 @@ class Model(object):
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 120000
+        self.batch_size = 1000
+        self.batch_hot = 500
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
@@ -343,6 +344,10 @@ class Model(object):
         
         self.in_bits = 8
         self.out_bits = 8
+
+        self.batch_iterate = round((self.batch_size - self.batch_hot ) / 2)
+        self.batch_start = self.batch_iterate
+        self.batch_stop = self.batch_iterate + self.batch_hot
 
         self.clip_size = 2*self.receptive_field+1
         #self.clip_size = self.receptive_field
@@ -424,6 +429,8 @@ class Model(object):
                 self.logits_backwards = self.wavenet_model( self.in_backwards)
             self.logits_b = tf.reverse(self.logits_backwards, [0])
             self.logits = tf.reduce_sum( tf.stack( [self.logits_original, self.logits_b], axis=0), axis=0)
+            self.logits = self.logits[self.batch_start:self.batch_stop, : ]
+            #nn_targets = nn_targets[self.batch_start:self.batch_stop, : ]
             logits = self.logits
 
         prediction = tf.nn.softmax(logits)
@@ -480,10 +487,10 @@ class Model(object):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
-            for i in range(0, len(ytrue_class), self.batch_size):
+            for i in range(0, len(ytrue_class), self.batch_iterate):
                 if i + self.batch_size >= len(ytrue_class):
                     continue
-                feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
+                feed_dict_train = {self.target_class: ytrue_class[i+self.batch_start:i+self.batch_stop],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] ,
                                    self.input_class: x[i:i+self.batch_size]
                                    }
@@ -530,14 +537,14 @@ class Model(object):
         print("seed:", seed.shape, seed)
         print("Index list:", index_list.shape)
         print("Y generate", y_generated.shape )
-        for i in range(0, len(y_generated), self.batch_size):
+        for i in range(0, len(seed), self.batch_iterate):
             if i + self.batch_size >= len(seed):
                 continue
             #feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
             feed_dict_gen = {self.input_class: seed[i:i+self.batch_size],
                                    self.input_all: song_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i:i+self.batch_size] = raw(y_g[0])
+            y_generated[i+self.batch_start:i+self.batch_stop] = raw(y_g[0])
             #print("y[", i, "] = ", y_g[0], y_generated[i:i+self.batch_size])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
