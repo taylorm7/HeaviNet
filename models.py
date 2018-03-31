@@ -326,6 +326,7 @@ class Model(object):
             print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
             print("  Image" , image.shape)
             print("  Outputs" , outputs.shape)
+            print("  Batch size" , self.batch_size, "Batch Hot", self.batch_hot, "Start", self.batch_start, "Stop", self.batch_stop)
         return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
@@ -487,7 +488,7 @@ class Model(object):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
-            for i in range(0, len(ytrue_class), self.batch_iterate):
+            for i in range(0, len(ytrue_class), self.batch_hot):
                 if i + self.batch_size >= len(ytrue_class):
                     continue
                 feed_dict_train = {self.target_class: ytrue_class[i+self.batch_start:i+self.batch_stop],
@@ -537,7 +538,7 @@ class Model(object):
         print("seed:", seed.shape, seed)
         print("Index list:", index_list.shape)
         print("Y generate", y_generated.shape )
-        for i in range(0, len(seed), self.batch_iterate):
+        for i in range(0, len(seed), self.batch_hot):
             if i + self.batch_size >= len(seed):
                 continue
             #feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
