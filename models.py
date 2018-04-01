@@ -430,7 +430,7 @@ class Model(object):
                 self.logits_backwards = self.wavenet_model( self.in_backwards)
             self.logits_b = tf.reverse(self.logits_backwards, [0])
             self.logits = tf.reduce_sum( tf.stack( [self.logits_original, self.logits_b], axis=0), axis=0)
-            self.logits = self.logits[self.batch_start:self.batch_stop, : ]
+            #self.logits = self.logits[self.batch_start:self.batch_stop, : ]
             #nn_targets = nn_targets[self.batch_start:self.batch_stop, : ]
             logits = self.logits
 
@@ -488,10 +488,12 @@ class Model(object):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
-            for i in range(0, len(ytrue_class), self.batch_hot):
+            for i in range(0, len(ytrue_class), self.batch_iterate):
                 if i + self.batch_size >= len(ytrue_class):
                     continue
-                feed_dict_train = {self.target_class: ytrue_class[i+self.batch_start:i+self.batch_stop],
+                feed_dict_train = {
+                                   #self.target_class: ytrue_class[i+self.batch_start:i+self.batch_stop],
+                                   self.target_class: ytrue_class[i:i+self.batch_size],
                                    self.input_all: x_list[:,i:i+self.batch_size,:] ,
                                    self.input_class: x[i:i+self.batch_size]
                                    }
@@ -545,7 +547,14 @@ class Model(object):
             feed_dict_gen = {self.input_class: seed[i:i+self.batch_size],
                                    self.input_all: song_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i+self.batch_start:i+self.batch_stop] = raw(y_g[0])
+            if i == 0:
+                #print("First batch", i, i+self.batch_stop)
+                #print(y_g[0][i:i+self.batch_stop])
+                y_generated[i:i+self.batch_stop] = raw(y_g[0][i:i+self.batch_stop])
+            else:
+                #print(i, i+self.batch_start, i + self.batch_stop)
+                #print(y_g[0][self.batch_start:self.batch_stop])
+                y_generated[i+self.batch_start:i+self.batch_stop] = raw( y_g[0][self.batch_start:self.batch_stop] )
             #print("y[", i, "] = ", y_g[0], y_generated[i:i+self.batch_size])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
