@@ -1,3 +1,10 @@
+% set_fx: store frequency rate for given heavinet run
+% inputs:
+% fx, integer sampling rate of audio
+% data_location, string of data location to read from
+% n_level, integer of given level in run
+% outputs:
+% filter_fx, double filter frequency of given level
 function [filter_fx] = set_fx(fx, data_location, n_levels)
 
 data_file = strcat(data_location, '/fx_info.mat');

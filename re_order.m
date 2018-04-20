@@ -1,3 +1,10 @@
+% re_order: reorder index matrix to center values
+% inputs:
+% receptive_field, integer of levels receptive field
+% iterable, the audio matrix to be sampled
+% outputs:
+% iterable, matrix of the audio to be sampled
+% indices, matrix of re_ordered indicies
 function [iterable, indicies] = re_order(receptive_field, iterable)
 clip_size = receptive_field;
 

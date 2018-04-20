@@ -1,3 +1,10 @@
+% audio_read: read wav file at location according to downsample_rate
+% inputs:
+% song_location, string of audio file to read
+% downsampling_rate, rate to downsample audio
+% outputs:
+% song, matrix of double values for the wav file in mono
+% fx, sampling frequency of song
 function [song, fx ] = audio_read(song_location, downsample_rate)
 [song, fx] = audioread(song_location);
 song_info = audioinfo(song_location);
