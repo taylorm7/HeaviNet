@@ -1,5 +1,6 @@
 import scipy.io.wavfile as wav
 import numpy as np
+import h5py
 import hdf5storage
 
 from filter import butter_lowpass_filter, savitzky_golay
@@ -88,11 +89,18 @@ def test_write(song, level, data_location ):
 
 def test_songs(song, frequency_list, n_levels, data_location, fx=44100):
     for i in range(n_levels):
-        l_fx = frequency_list[i]/2.0
+        l_fx = frequency_list[i]
         print("L:", i, "Fx", l_fx)
         filtered = butter_lowpass_filter(song, l_fx, fx)
         test_write(filtered, i, data_location)
 
+
+def filter_song(song, frequency_list, level, fx=44100):
+    level_fx = frequency_list[level]
+    filtered_song = butter_lowpass_filter(song, level_fx, fx)
+    print("Level:", level, "Fx", level_fx)
+    #wav.write(str('s'+str(level)+'.wav'), fx, filtered_song)
+    return filtered_song
 
 def format_song(song, frequency_list, index_list, song_length, n_levels, data_location, bits=8, fx=44100):   
     N = 2**bits
@@ -102,8 +110,9 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, data_lo
     Q=(xmax-xmin)/N
     
     index_length = len(index_list[0])
+    song_length = len(song)
 
-    song_list = np.empty([n_levels, song_length, index_length], dtype=int)
+    song_list = np.empty([n_levels, song_length, index_length], dtype=float)
     filtered_song = np.empty([song_length])
     print("Song:", song_length, "Index", index_length, "Song List", song_list.shape)
     for i in range(n_levels):
@@ -129,6 +138,8 @@ def format_song(song, frequency_list, index_list, song_length, n_levels, data_lo
         indicies = indicies + index_list[i]
         #print("indicies", indicies.shape)
         #print(indicies)
+        indicies = indicies % song_length
+        #print(indicies)
 
         song_list[i] = filtered_song[indicies]
 
@@ -151,11 +162,6 @@ def format_feedval(song, frequency_list, index_list, song_length, n_levels, bits
     #print(song[ len(song)-1], song[len(song)-2] )
     for i in range(n_levels):
         filtered_song = butter_lowpass_filter(song, frequency_list[i]/2.0, fx)
-        #if levels[i] > 1:
-        #    filtered_song = filtered_song * levels[i]
-
-        #test_write(filtered_song, i , '/home/sable/HeaviNet/data')
-
         filtered_song = mu_trasform(filtered_song, mu, Q)
         filtered_song = analog_to_digital(filtered_song, Q)        
         #print("Filtered song", filtered_song.shape)

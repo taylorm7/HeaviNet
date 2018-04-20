@@ -238,9 +238,9 @@ class Model(object):
         d = 32
         n_residual_layers = 15
 
-        num_blocks = 2
+        num_blocks = 1
         num_layers = int(self.n_levels/2)
-        num_hidden = 256
+        num_hidden = 32
 
         reg_channels = self.n_levels
         norm_channels = self.n_levels
@@ -259,7 +259,7 @@ class Model(object):
         for b in range(num_blocks):
             for i in range(num_layers):
                 rate = 2**i
-                #rate = (i+1)
+                #rate = 1
                 name = 'b{}-l{}'.format(b, i)
                 hl = dilated_conv1d(hl, num_hidden, rate=rate, name=name)
                 hs.append(hl)
@@ -294,13 +294,49 @@ class Model(object):
         #return fc_layers[-1]
         return outputs
 
+    def wavenet_model(self, image):
+        num_blocks = 2
+        num_layers = 14
+        num_hidden = 128
+    
+        image = tf.reshape(image, (-1, self.batch_size, 1))
+        image = tf.cast(image, tf.float32)
+        print("Image", image.shape, image.dtype)
+
+        h = image
+        hs = []
+        for b in range(num_blocks):
+            for i in range(num_layers):
+                rate = 2**i
+                name = 'b{}-l{}'.format(b, i)
+                h = dilated_conv1d(h, num_hidden, rate=rate, name=name)
+                hs.append(h)
+
+        outputs = conv1d(h,
+                         self.n_target_classes,
+                         filter_width=1,
+                         gain=1.0,
+                         activation=None,
+                         bias=True)
+        
+        outputs = tf.reshape(outputs, (-1, self.n_target_classes))
+
+        if (not os.path.isdir(self.save_dir)):
+            print("  Wavenet Mode")
+            print("  Normalized Mode", self.normalize_mode, "Onehot Mode", self.onehot_mode, "Multichannel Mode", self.multichannel_mode)
+            print("  Image" , image.shape)
+            print("  Outputs" , outputs.shape)
+            print("  Batch size" , self.batch_size, "Batch Hot", self.batch_hot, "Start", self.batch_start, "Stop", self.batch_stop)
+        return outputs
    
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 2048
+        self.batch_size = 1000
+        self.batch_hot = 500
         self.normalize_mode = False
         self.onehot_mode = False
         self.multichannel_mode = True
         self.use_pooling = False
+        self.wavenet_test = True
 
         self.level = level
         self.receptive_field = receptive_field
@@ -310,8 +346,12 @@ class Model(object):
         self.in_bits = 8
         self.out_bits = 8
 
-        #self.clip_size = 2*self.receptive_field+1
-        self.clip_size = self.receptive_field
+        self.batch_iterate = round((self.batch_size - self.batch_hot ) / 2)
+        self.batch_start = self.batch_iterate
+        self.batch_stop = self.batch_iterate + self.batch_hot
+
+        self.clip_size = 2*self.receptive_field+1
+        #self.clip_size = self.receptive_field
         self.middle_index = math.floor( float(self.receptive_field) / 2.0)
         #print("Middle Index", self.middle_index)
         self.n_input_classes = 2**(self.in_bits)
@@ -319,17 +359,24 @@ class Model(object):
         self.n_target_classes = 2**(self.out_bits)
         self.target_classes_max = self.n_target_classes - 1
 
-        self.name = "model_" + str(level) + "_r" + str(self.receptive_field)
+        if self.wavenet_test == False:
+            self.model_string = "h"+str(self.batch_size)+"_"
+        else:
+            self.model_string = "w"+str(self.batch_size)+"_"
+        self.name = self.model_string + str(level) + "_r" + str(self.receptive_field)
+        self.seed_name = self.model_string + str(level-1) + "_r" + str(self.receptive_field)
         self.save_dir = data_location + "/" + self.name
         self.save_file = self.save_dir + "/" + self.name + ".ckpt"
 
-        input_level = tf.placeholder(tf.int64, [None,self.clip_size])
-        input_all = tf.placeholder(tf.int64, [self.n_levels, None,self.clip_size])
+        input_level = tf.placeholder(tf.float64, [None,self.clip_size])
+        input_all = tf.placeholder(tf.float64, [self.n_levels, None,self.clip_size])
         target_class = tf.placeholder(tf.int64, [None])
+        input_class = tf.placeholder(tf.float64, [None])
 
         self.input_level = input_level
         self.input_all = input_all
         self.target_class = target_class
+        self.input_class = input_class
 
         if self.onehot_mode == False:
             normalized_call = self.format_in_norm_flat
@@ -372,8 +419,20 @@ class Model(object):
         
         #if self.level ==0:
         #    reg_n_inputs = norm_n_inputs
-
-        logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
+        
+        if self.wavenet_test == False:
+            logits = self.neural_network_model(regular_inputs, reg_n_inputs, normalized_inputs, norm_n_inputs, nn_n_targets, n_channels, self.use_pooling)
+        else:
+            self.logits_original = self.wavenet_model(input_class)
+            
+            self.in_backwards = tf.reverse(input_class,[0])
+            with tf.variable_scope('backwards'):
+                self.logits_backwards = self.wavenet_model( self.in_backwards)
+            self.logits_b = tf.reverse(self.logits_backwards, [0])
+            self.logits = tf.reduce_sum( tf.stack( [self.logits_original, self.logits_b], axis=0), axis=0)
+            #self.logits = self.logits[self.batch_start:self.batch_stop, : ]
+            #nn_targets = nn_targets[self.batch_start:self.batch_stop, : ]
+            logits = self.logits
 
         prediction = tf.nn.softmax(logits)
         prediction_class = tf.argmax(prediction, dimension=1)
@@ -415,27 +474,48 @@ class Model(object):
             os.makedirs( self.save_dir )
             print("Creating level directory at:", self.save_dir)
 
-    def train(self, x_list, ytrue_class, epochs=1 ):
+    def train(self, x_list, ytrue_class, x, epochs=1 ):
         #x = np.reshape(x, (-1, self.clip_size))
         ytrue_class = np.reshape(ytrue_class, (-1))
         print("Trainging:",  self.name, x_list.shape, ytrue_class.shape, "epochs:", epochs)
         
         #for e in range(epochs):
         e = 0
-        print("Previos Epochs", self.n_epochs.eval(session=self.sess) )
+        print("Previous Epochs", self.n_epochs.eval(session=self.sess) )
         inc_epochs = self.n_epochs.assign(self.n_epochs + epochs)
         inc_epochs.op.run(session=self.sess)
         while ((e < epochs) and (self.best_accuracy < 100.1 )):
             epoch_loss = 0
             epoch_correct = 0
             epoch_total = 0
-            for i in range(0, len(ytrue_class), self.batch_size):
-                feed_dict_train = {self.target_class: ytrue_class[i:i+self.batch_size],
-                                   self.input_all: x_list[:,i:i+self.batch_size,:] }
-                # train without calculating accuracy
-                #_, c = self.sess.run([self.optimizer, self.cost],
-                #                        feed_dict = feed_dict_train)
-                
+            for i in range(0, len(ytrue_class), self.batch_iterate):
+                if i + self.batch_size >= len(ytrue_class):
+                    continue
+                feed_dict_train = {
+                                   #self.target_class: ytrue_class[i+self.batch_start:i+self.batch_stop],
+                                   self.target_class: ytrue_class[i:i+self.batch_size],
+                                   self.input_all: x_list[:,i:i+self.batch_size,:] ,
+                                   self.input_class: x[i:i+self.batch_size]
+                                   }
+                # test logits value
+                '''
+                _, c, inp, in_b,l_back, l_b, l_o, l  = self.sess.run([self.optimizer,self.cost, 
+                    self.input_class, 
+                    self.in_backwards, 
+                    self.logits_backwards, 
+                    self.logits_b,
+                    self.logits_original,
+                    self.logits
+                    ],
+                                        feed_dict = feed_dict_train)
+                print("Initial", inp.shape, inp  ) 
+                print("Input Backwards", in_b.shape, in_b )
+                print("Logits Forwards/backwards", l_back.shape, l_back)
+                print("Logits Backwards", l_b.shape, l_b  )
+                print("Logits Original", l_o.shape, l_o )
+                print("Logits", l.shape, l)
+                sys.exit()
+                '''
                 # train while calculating epoch accuracy
                 _, c, correct = self.sess.run([self.optimizer, self.cost, self.correct_prediction ],
                                         feed_dict = feed_dict_train)
@@ -452,39 +532,30 @@ class Model(object):
                 print(" accuracy:", epoch_accuracy)
                 if epoch_accuracy > self.best_accuracy :
                     self.best_accuracy = epoch_accuracy
+ 
 
-    def generate(self, song, index_list, frequency_list, sample_length):
-        field_size = abs(np.amin(index_list))
-        
-        print("Sample size:", sample_length, "Field Size", field_size)
-        
-        y_generated = np.append(song, np.zeros(sample_length))
-        x_size = song.size
-        #y_generated = np.append(np.zeros(field_size), np.zeros(sample_length))
-        #x_size = field_size
-        
-        print("Generating with seed:", song.shape, x_size)
+    def generate(self, song_list, index_list, frequency_list, seed):
+        y_generated = np.zeros(len(song_list[0]))
+        print("Generating with seed_list:", song_list.shape)
+        print("seed:", seed.shape, seed)
         print("Index list:", index_list.shape)
-        y_size = y_generated.size
-        if(y_size <= field_size):
-            raise ValueError('Sample Length too small for receptive field')
-            sys.exit()
-        print("Y generate", y_generated.shape, y_size)
-        #feed_val = np.empty( (self.n_levels, 1 , self.receptive_field) )
-        #index = np.reshape(index_list, (self.n_levels, 1, self.receptive_field))
-        #print(index.shape, index)
-        for i in range(x_size, y_size):
-            #print( y_generated[i-field_size:i+1])
-            #y_generated[i-field_size:i+1] = savitzky_golay(y_generated[i-field_size:i+1], 41, 5) 
-            feed_val = format_feedval(y_generated[i-field_size:i+1], frequency_list, index_list,
-                    1, self.n_levels)
-            #print( y_generated[i-field_size:i+1])
-            #print()
-            #print("Feed val", feed_val.shape)
-            feed_dict_gen = { self.input_all: feed_val }
+        print("Y generate", y_generated.shape )
+        for i in range(0, len(seed), self.batch_hot):
+            if i + self.batch_size >= len(seed):
+                continue
+            #feed_dict_gen = { self.input_all: song_list[:,i:i+self.batch_size,:] }
+            feed_dict_gen = {self.input_class: seed[i:i+self.batch_size],
+                                   self.input_all: song_list[:,i:i+self.batch_size,:] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i] = raw(y_g[0])
-            #print("y[", i, "] = ", y_g, y_generated[i])
+            if i == 0:
+                #print("First batch", i, i+self.batch_stop)
+                #print(y_g[0][i:i+self.batch_stop])
+                y_generated[i:i+self.batch_stop] = raw(y_g[0][i:i+self.batch_stop])
+            else:
+                #print(i, i+self.batch_start, i + self.batch_stop)
+                #print(y_g[0][self.batch_start:self.batch_stop])
+                y_generated[i+self.batch_start:i+self.batch_stop] = raw( y_g[0][self.batch_start:self.batch_stop] )
+            #print("y[", i, "] = ", y_g[0], y_generated[i:i+self.batch_size])
         prev_epochs = self.n_epochs.eval(session=self.sess)
         print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
         return y_generated, prev_epochs

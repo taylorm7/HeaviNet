@@ -39,18 +39,10 @@ pwd
 
 export dot=$dot
 
-./run_heavinet.sh format bach_10.wav 128
-./run_heavinet.sh load bach_10.wav bach_10.wav 128
 
-./run_heavinet.sh format beethoven_7.wav 128
-./run_heavinet.sh load beethoven_7.wav beethoven_7.wav 128
-
-./run_heavinet.sh format bach.wav 128
-./run_heavinet.sh load bach.wav bach_10.wav 128
-
-./run_heavinet.sh format obama.wav 128
-./run_heavinet.sh load obama.wav obama.wav 128
-
+./run_heavinet.sh format obama.wav 1
+./run_heavinet.sh load obama.wav beethoven_7.wav 1
+#./run_heavinet.sh load beethoven_7.wav bach_10.wav 1
 
 echo "Code finished!"
 
