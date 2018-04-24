@@ -5,7 +5,7 @@ import sys
 import math
 
 from audio import format_feedval, raw
-from filter import savitzky_golay
+#from filter import savitzky_golay
 from layers import conv1d, dilated_conv1d
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'

@@ -6,7 +6,15 @@ import h5py
 import hdf5storage
 import pickle as pkl
 
+# load_matlab: load the matlab seed or song, and return corresponding python array values
+# inputs:
+# data_location, string value of data location to read
+# receptive_field, integer value of the receptive field
+# training_data, bool value (True if training data, False if seed/generation data)
+# outputs:
+# stored pkl file with corresponding .mat data values in data location
 def load_matlab(data_location, receptive_field, training_data = True):
+    # create read name and store name according to training or seed
     if training_data == True:
         read_file = data_location + "/matlab_song_r" + str(receptive_field) + ".mat"
         x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
@@ -15,8 +23,10 @@ def load_matlab(data_location, receptive_field, training_data = True):
         read_file = data_location + "/matlab_seed_r" + str(receptive_field) + ".mat"
         x_file = data_location+"/x_r"+str(receptive_field)+".pkl"
         store_file = data_location+"/seed_"
+    # open read file
     try:
         with h5py.File(read_file) as matlab_input:
+            # read values from matlab data file
             fx = int(matlab_input.get('fx')[0,0])
             r_field = int(matlab_input.get('receptive_field')[0,0])
             n_levels = int(matlab_input.get('n_levels')[0,0])
@@ -27,21 +37,9 @@ def load_matlab(data_location, receptive_field, training_data = True):
             index_list = []
             frequency_list = np.zeros(n_levels)
             print("Reading", read_file, "song", song.shape, "receptive field:", r_field, "levels:", n_levels, "fx", song_fx)
-
+            
+            # iterate through levels to read indicie, frequency, and factor values
             for i in range(n_levels):
-                '''
-                x_data = [matlab_input[element[i]][:] 
-                        for element in matlab_input['inputs_formatted']] 
-                ytrue_data = [matlab_input[element[i]][:] 
-                        for element in matlab_input['targets']]
-
-                x_data = x_data[0].transpose()
-                ytrue_data = ytrue_data[0].transpose()
-                
-                data_list = [ x_data, ytrue_data ]
-                x_list.append(x_data)
-                '''
-
                 level_index = [matlab_input[element[i]][:] 
                         for element in matlab_input['indicies']]
                 fx = [matlab_input[element[i]][:] 
@@ -58,13 +56,8 @@ def load_matlab(data_location, receptive_field, training_data = True):
                 index_list.append(level_index)
                 frequency_list[i] = fx
                 print("Read level", i, "Frequency", fx, "Index", level_index)
-                #with open(sf, "wb") as output_file:
-                #    pkl.dump(data_list, output_file, protocol=4)
-            
-            #x_list = np.asarray(x_list)
             index_list = np.asarray(index_list)
             index_list = index_list.astype(int)
-            #print(np.shape(x_list))
             print("Index List", np.shape(index_list))
             print("Frequencies", frequency_list)
             with open(x_file, "wb") as output_file:
@@ -128,7 +121,6 @@ def write_song(song, fx, data_location, song_name):
     seed_name = os.path.split(data_location)[1].split('.')[0]
     training_name = (os.path.split( os.path.split(data_location)[0])[1]).split('.')[0]
 
-    #song_name = "l" + str(level) + "_r" + str(receptive_field) + "_" + str(epochs) + "_" + training_name + "_" + seed_name 
     song_file = data_location + "/" + song_name + ".mat"
     song_dict = {}
     song_dict[str(song_name)] = song
