@@ -155,7 +155,7 @@ elif [ $ACTION = "train" ]; then
 	if [ -f $MATLABSONG ]; then
 
 		echo "Training on song $SONG in $MATLABSONG"
-		for (( i=$TRAIN_START; i<$LEVELS; i++ ))	
+		for (( i=$TRAIN_START; i<$LEVELS-1; i++ ))	
 		do
 			echo " running level $i in background process..."
 			level_seconds=$SECONDS
@@ -203,7 +203,7 @@ elif [ $ACTION = "load" ]; then
 elif [ $ACTION = "generate" ]; then
 	SECONDS=0
 	if [[ -f $MATLABSONG && -f $SEEDPATH ]]; then
-		for ((i=$generate_start ; i<LEVELS ; i++)); do
+		for ((i=$generate_start ; i<LEVELS-1 ; i++)); do
 		python3 heavinet.py $ACTION $DATAPATH $SEEDDIR $i $RECEPTIVE_FIELD $LEVELS
 		done
 	else

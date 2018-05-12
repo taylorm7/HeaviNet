@@ -13,6 +13,7 @@ def butter_lowpass(cutoff, fs, order=5):
     normal_cutoff = cutoff / nyq
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
+
 # butter_lowpass_filter: filter data according to cuttoff frequency and sampling rate
 # inputs:
 # data, double array of audio data to be filtered

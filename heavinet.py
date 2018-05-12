@@ -47,7 +47,7 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     ytrue = quantize(target_song, bits=bits)
     
     # train neural network
-    net.train( song_list, ytrue, x, epochs=epochs)
+    net.train( ytrue, x, epochs=epochs)
     net.save(close=True)
 # generate: generates audio given for a given level, uses either previous levels generation or seed audio
 # inputs
@@ -89,7 +89,7 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
 
     # quantize data, feed into neural network, and write to .mat file
     seed_data = quantize(seed_data, bits=bits)
-    song_data, epochs = gen_net.generate(seed_list, index_list, frequency_list, seed_data)
+    song_data, epochs = gen_net.generate(seed_data)
     gen_net.close()
     song_name = write_song( song_data, fx, seed_location, song_name)
     
