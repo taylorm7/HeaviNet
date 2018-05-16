@@ -115,16 +115,16 @@ class Model(object):
 
         # compute original wavenet logits
 
-        self.logits_original = self.wavenet_model(input_class)
+        self.logits = self.wavenet_model(input_class)
 
         # compute reversed wavenet logits
-        self.in_backwards = tf.reverse(input_class,[0])
-        with tf.variable_scope('backwards'):
-            self.logits_backwards = self.wavenet_model( self.in_backwards)
-        self.logits_b = tf.reverse(self.logits_backwards, [0])
+        #self.in_backwards = tf.reverse(input_class,[0])
+        #with tf.variable_scope('backwards'):
+        #    self.logits_backwards = self.wavenet_model( self.in_backwards)
+        #self.logits_b = tf.reverse(self.logits_backwards, [0])
 
         # sum logits and backwards logits
-        self.logits = tf.reduce_sum( tf.stack( [self.logits_original, self.logits_b], axis=0), axis=0)
+        #self.logits = tf.reduce_sum( tf.stack( [self.logits_original, self.logits_b], axis=0), axis=0)
         logits = self.logits
 
         # compute prediction and prediction class based on logits
@@ -216,19 +216,30 @@ class Model(object):
     # seed, matrix of level seed to generate next level
     # outputs:
     # y_generate, matrix of generated audio samples
-    def generate(self, seed):
-        y_generated = np.zeros(len(seed))
+    def generate(self, seed, sample_length):
+        y_generate = np.append(seed, np.zeros(sample_length))
         print("Generating with seed:", seed.shape)
-        print("Y generate", y_generated.shape )
-        for i in range(0, len(seed), self.batch_size):
-            if i + self.batch_size >= len(seed):
-                continue
-            feed_dict_gen = {self.input_class: seed[i:i+self.batch_size] }
+        print("Y generate", y_generate.shape )
+
+        x_size = len(seed)
+        y_size = len(y_generate)
+
+        #print("X size", x_size)
+        #print("y size", y_size)
+
+        #print("Seed", y_generate[x_size - 100: x_size + 1])
+        for i in range(x_size, y_size):
+            #print("i:", i)
+            #print("y_gen", i-self.batch_size, i )
+            #print(y_generate[i-10:i])
+            feed_dict_gen = {self.input_class: y_generate[i-self.batch_size:i] }
             y_g = self.sess.run( [self.prediction_value], feed_dict=feed_dict_gen)
-            y_generated[i:i+self.batch_size] = raw(y_g[0])
+            y_generate[i] = y_g[0][-1]
+            #print("New value", y_g[0][-1])
+        y_generate = raw(y_generate[x_size:])
         prev_epochs = self.n_epochs.eval(session=self.sess)
-        print("Generated song:",  len(y_generated), "with Epochs", prev_epochs)
-        return y_generated, prev_epochs
+        print("Generated song:",  len(y_generate), "with Epochs", prev_epochs)
+        return y_generate, prev_epochs
 
     # save: save neural network in specified self.data_location
     # inputs

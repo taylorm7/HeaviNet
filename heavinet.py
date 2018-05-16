@@ -38,8 +38,8 @@ def train(data_location, level, receptive_field, epochs, n_levels):
     
     bits = 8
     # create inputs and targets for the neural network
-    level_song = filter_song(song, frequency_list, level)
-    target_song = filter_song(song, frequency_list, level+1)
+    level_song = song
+    target_song = np.roll(song, -1)
 
     # quantize audio, using mu law companding
     x = quantize(level_song, bits=bits)
@@ -61,13 +61,11 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
     print("Generating:", level, data_location, receptive_field, n_levels)
     print("Seed:", seed_location)
 
-    index_list, frequency_list, song, fx = read_index(seed_location, receptive_field)
+    index_list, frequency_list, seed, fx = read_index(seed_location, receptive_field)
     gen_net = Model( level, receptive_field, data_location, n_levels )
     
      
     bits = 8
-    # filter and format seed value
-    seed = filter_song(song, frequency_list, level)
     
     # read number of epochs trained on, used to distinguish runs at different number of epochs
     epochs = gen_net.n_epochs.eval(session=gen_net.sess)
@@ -87,7 +85,9 @@ def generate(data_location, seed_location, level, receptive_field, n_levels):
 
     # quantize data, feed into neural network, and write to .mat file
     seed_data = quantize(seed_data, bits=bits)
-    song_data, epochs = gen_net.generate(seed_data)
+
+    sample_length = 4000
+    song_data, epochs = gen_net.generate(seed_data, sample_length)
     gen_net.close()
     song_name = write_song( song_data, fx, seed_location, song_name)
     
