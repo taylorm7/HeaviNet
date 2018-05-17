@@ -37,3 +37,32 @@ McGough, Taylor, and JoAnn Paul. "HeaviNet: Music Generation", (2017), Github Re
   journal = {GitHub repository},
   howpublished = {\url{https://github.com/taylorm7/HeaviNet}}
 }
+
+Usage:
+
+# formats the audio and creates directory
+./run_heavinet.sh format bach_10.wav [receptive_field]
+
+# formats the seed for generation, can be audio or random white noise
+./run_heavinet.sh load bach_10.wav rand.wav [receptive_field]
+
+# trains according to number of epochs
+./run_heavinet.sh train bach_10.wav [receptive_field] [epochs]
+
+# generates using the seed value supplied, 
+./run_heavinet.sh generate bach_10.wav rand.wav [receptive_field]
+output goes into /data/bach_10.wav.data/rand.wav.data/...
+
+# parameters
+Number of Levels is specified in run_heavinet 
+LEVELS=8
+
+Frequencies to filter are specified in set_fx.m
+fx_offset = 25; $ frequency to start filtering at 
+fx_order = 3; $ order of polynomial function for frequncies, x^1 specifies linear frequencies 
+use_exponential = 1; $ using 2^x for frequencies; 1 uses exponential and 0 uses polynomial (order with fx_order)
+fx_target = 8000; $ highest frequency to filter
+
+When using branch 'master', i.e. using the WaveNet model, receptive field should be [1]. It's used in the sampling methods in the audio_format.m and can sample at the corresponding level frequencies. 
+
+Let me know if you have any questions!
