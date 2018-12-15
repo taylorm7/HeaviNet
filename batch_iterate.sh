@@ -12,7 +12,7 @@
 # queue
 #PBS -q vis_q
 
-#PBS -A heavinet
+#PBS -A CASLAB_18_A
 
 # write output and error to the same file
 #PBS -j oe

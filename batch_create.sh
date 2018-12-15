@@ -12,7 +12,7 @@
 # queue
 #PBS -q normal_q
 
-#PBS -A heavinet
+#PBS -A CASLAB_18_A
 
 # write output and error to the same file
 #PBS -j oe
@@ -38,7 +38,7 @@ cd $dot
 pwd
 
 export dot=$dot
-./run_heavinet.sh create beethoven_7.wav choir_15.wav 16
+./run_heavinet.sh create beethoven_7.wav bach_10.wav 16
 #./run_heavinet.sh create beethoven_7.wav rand.wav 16
 
 #./run_heavinet.sh create beethoven_7.wav rand.wav 100

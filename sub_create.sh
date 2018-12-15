@@ -18,7 +18,7 @@ echo "#PBS -l walltime=$train_time" >> $1
 echo '#PBS -l procs=1,gpus=2' >> $1
 echo '#PBS -W group_list=newriver' >> $1
 echo '#PBS -q p100_normal_q' >> $1
-echo '#PBS -A heavinet' >> $1
+echo '#PBS -A CASLAB_18_A' >> $1
 echo '#PBS -j oe' >> $1
 if [ "$level_stop" == "$num_levels" ]; then
 	echo '#PBS -M taylorm7@vt.edu' >> $1
