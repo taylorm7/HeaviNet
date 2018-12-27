@@ -82,7 +82,7 @@ class Model(object):
     # outputs:
     # neural network stored in data_location with save command and loaded with load command  
     def __init__(self, level, receptive_field, data_location, n_levels ):
-        self.batch_size = 1000
+        self.batch_size = 75000
 
         self.level = level
         self.receptive_field = receptive_field
