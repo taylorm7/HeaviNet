@@ -8,10 +8,10 @@
 function [filter_fx] = set_fx(fx, data_location, n_levels)
 
 data_file = strcat(data_location, '/fx_info.mat');
-fx_offset = 25;
-fx_order = 3;
-use_exponential = 1;
-fx_target = 8000;
+fx_offset = 100;
+fx_order = 1;
+use_exponential = 0;
+fx_target = 1000;
 syms f positive
   
 if use_exponential

@@ -3,7 +3,7 @@
 num_levels=7
 batches=7
 
-epochs=100
+epochs=10000
 receptive_field=1
 song=beethoven_7.wav
 generate=bach_10.wav
